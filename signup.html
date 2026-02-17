@@ -1,1 +1,175 @@
-nu
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>404 Life Skills | Subscribe</title>
+
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+
+<body>
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+    <div class="container">
+      <a class="navbar-brand fw-bold" href="index.html">404 Life Skills</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="mainNav">
+        <ul class="navbar-nav ms-auto gap-lg-2">
+          <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
+          <li class="nav-item"><a class="nav-link active" href="signup.html">Subscribe</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Page Header -->
+  <header class="py-5 bg-light border-bottom">
+    <div class="container">
+      <h1 class="fw-bold mb-2">Subscribe for Daily Fixes</h1>
+      <p class="text-muted mb-0">
+        Add, update, and display subscribers (stored as JSON in localStorage).
+      </p>
+    </div>
+  </header>
+
+  <main class="py-5">
+    <div class="container">
+      <div class="row g-4">
+
+        <!-- Form -->
+        <div class="col-lg-5">
+          <div class="card shadow-sm">
+            <div class="card-body">
+              <h2 class="h5 fw-bold mb-3">Subscriber Sign-Up</h2>
+
+              <!-- Used for UPDATE (blank = add mode, number = edit mode) -->
+              <input type="hidden" id="editIndex" value="" />
+
+              <form id="subscriberForm" novalidate>
+
+                <!-- Full Name (required) -->
+                <div class="mb-3">
+                  <label for="fullName" class="form-label">Full Name *</label>
+                  <input type="text" class="form-control" id="fullName" placeholder="Jane Doe" required>
+                  <div class="invalid-feedback">Please enter a full name (at least 2 characters).</div>
+                </div>
+
+                <!-- Email (required) -->
+                <div class="mb-3">
+                  <label for="email" class="form-label">Email Address *</label>
+                  <input type="email" class="form-control" id="email" placeholder="jane@email.com" required>
+                  <div class="invalid-feedback">Please enter a valid email address.</div>
+                </div>
+
+                <!-- Phone (optional) -->
+                <div class="mb-3">
+                  <label for="phone" class="form-label">Phone Number (optional)</label>
+                  <input type="tel" class="form-control" id="phone" placeholder="(555) 123-4567">
+                  <div class="form-text">Optional. If included, must be 10 digits.</div>
+                  <div class="invalid-feedback">Phone must be 10 digits if provided.</div>
+                </div>
+
+                <!-- Age (required) -->
+                <div class="mb-3">
+                  <label for="age" class="form-label">Age *</label>
+                  <input type="number" class="form-control" id="age" placeholder="18" required>
+                  <div class="invalid-feedback">Please enter a valid age (13–120).</div>
+                </div>
+
+                <!-- Address/Affiliation (required) -->
+                <div class="mb-3">
+                  <label for="address" class="form-label">Address / Affiliation *</label>
+                  <input type="text" class="form-control" id="address" placeholder="Brooklyn, NY / Student / Working parent" required>
+                  <div class="invalid-feedback">Please enter an address or affiliation.</div>
+                </div>
+
+                <div class="d-flex gap-2 flex-wrap">
+                  <button type="submit" class="btn btn-dark" id="submitBtn">Add Subscriber</button>
+                  <button type="button" class="btn btn-outline-secondary" id="resetBtn">Clear</button>
+                </div>
+
+                <p class="text-muted small mt-3 mb-0">
+                  * Required fields: name, email, age, address/affiliation. Phone is optional.
+                </p>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <!-- Table + JSON Preview -->
+        <div class="col-lg-7">
+          <div class="card shadow-sm mb-4">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                <div>
+                  <h2 class="h5 fw-bold mb-0">Subscribers List</h2>
+                  <p class="text-muted small mb-0">This updates dynamically when you add/edit/delete.</p>
+                </div>
+                <button class="btn btn-outline-dark btn-sm" id="showJsonBtn" type="button">Show Stored JSON</button>
+              </div>
+
+              <div class="table-responsive">
+                <table class="table table-striped align-middle mb-0">
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Email</th>
+                      <th>Phone</th>
+                      <th>Age</th>
+                      <th>Address/Affiliation</th>
+                      <th class="text-end">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="subscriberTableBody">
+                    <!-- Filled by JS -->
+                  </tbody>
+                </table>
+              </div>
+
+              <p class="text-muted small mt-3 mb-0">
+                Tip: Add 2–3 subscribers so your screenshots clearly show dynamic rendering.
+              </p>
+            </div>
+          </div>
+
+          <div class="card shadow-sm">
+            <div class="card-body">
+              <h2 class="h6 fw-bold mb-2">JSON Preview (for screenshot)</h2>
+              <p class="text-muted small mb-3">
+                This is what is stored in localStorage as JSON.
+              </p>
+              <pre class="bg-light border rounded p-3 mb-0" id="jsonPreview" style="min-height: 120px;">Click "Show Stored JSON" to preview.</pre>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-dark text-white py-4 mt-5">
+    <div class="container d-flex flex-wrap justify-content-between align-items-center gap-2">
+      <p class="mb-0">&copy; 2026 404 Life Skills</p>
+      <div class="d-flex gap-3">
+        <a class="link-light text-decoration-none" href="index.html">Home</a>
+        <a class="link-light text-decoration-none" href="signup.html">Subscribe</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- Your JS -->
+  <script src="js/app.js"></script>
+</body>
+</html>
