@@ -24,12 +24,18 @@ function nameIsValid(name) {
     return re.test(name);
 }
 
+function clearWidget(widget) {
+    widget.setCustomValidity(''); // :valid
+    widget.classList.remove("is-invalid");
+    widget.classList.remove("is-valid");
+    widget.value = "";
+}
+
 function checkWidget(widget, validator) {
     if (typeof(widget) != "HTMLElement" && typeof(validator) != "function")
         return false;
 
-    let widgetVal = widget.value.trim();
-    let isValid = validator(widgetVal);
+    let isValid = validator(widget.value.trim());
     if (isValid) {
         widget.setCustomValidity(''); // :valid
         widget.classList.add("is-valid"); // .is-valid
@@ -72,16 +78,12 @@ function checkForm(event) {
     }
 }
 
-function clearForm(event) {
-//     nameWidget.value = "";
-//     emailWidget.value = "";
-//     phoneWidget.value = "";
-//     ageWidget.value = "";
-//     addressWidget.value = "";
-
-//     widget.setCustomValidity(false); // :invalid
-//     widget.classList.remove("is-invalid"); // .is-invalid
-//     widget.classList.remove("is-valid"); // .is-valid
+function resetForm() {
+    clearWidget(nameWidget);
+    clearWidget(emailWidget);
+    clearWidget(phoneWidget);
+    clearWidget(ageWidget);
+    clearWidget(addressWidget);
 }
 
 let signupForm = document.getElementById("subscriberForm");
@@ -103,8 +105,8 @@ ageWidget.addEventListener("input", checkAge);
 let addressWidget = document.getElementById("address");
 addressWidget.addEventListener("input", checkAddressOrAffiliation);
 
-let clearButton = document.getElementById("resetBtn");
-clearButton.addEventListener("click", clearForm);
+let resetButton = document.getElementById("resetBtn");
+resetButton.addEventListener("click", resetForm);
 
 
 
