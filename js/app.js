@@ -5,30 +5,27 @@ function emailIsValid(email) {
 }
 
 function phoneNumberIsValid(phoneNum) {
-    let re = /^\s*(\(?\d\d\d\)?\s*-?\s*\d\d\d\s*-?\s*\d\d\d\d)?\s*$/;
+    let re = /^\s*(\(?\s*\d\s*\d\s*\d\s*\)?\s*-?\s*\d\s*\d\s*\d\s*-?\s*\d\s*\d\s*\d\s*\d)?\s*$/;
     return re.test(phoneNum);
 }
 
 function ageIsValid(age) {
     age = parseInt(age);
-    return !isNaN(age) && age >= 0 && age < 200;
+    return !isNaN(age) && age >= 13 && age <= 120;
 }
 
 function addressIsValid(addr) {
-    let re = /\w+/i;
-    return re.test(addr);
+    return addr.length >= 2;
 }
 
 function nameIsValid(name) {
-    let re = /\w+/i
-    return re.test(name);
+    return name.length >= 2;
 }
 
-function clearWidget(widget) {
+function clearValidity(widget) {
     widget.setCustomValidity(''); // :valid
     widget.classList.remove("is-invalid");
     widget.classList.remove("is-valid");
-    widget.value = "";
 }
 
 function checkWidget(widget, validator) {
@@ -79,11 +76,13 @@ function checkForm(event) {
 }
 
 function resetForm() {
-    clearWidget(nameWidget);
-    clearWidget(emailWidget);
-    clearWidget(phoneWidget);
-    clearWidget(ageWidget);
-    clearWidget(addressWidget);
+    signupForm.reset();
+
+    clearValidity(nameWidget);
+    clearValidity(emailWidget);
+    clearValidity(phoneWidget);
+    clearValidity(ageWidget);
+    clearValidity(addressWidget);
 }
 
 let signupForm = document.getElementById("subscriberForm");
@@ -107,9 +106,3 @@ addressWidget.addEventListener("input", checkAddressOrAffiliation);
 
 let resetButton = document.getElementById("resetBtn");
 resetButton.addEventListener("click", resetForm);
-
-
-
-
-
-
