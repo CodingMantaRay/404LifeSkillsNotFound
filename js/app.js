@@ -1,3 +1,6 @@
+let subscribers = JSON.parse(localStorage.getItem('subscribersData')) || [];
+let tableBody =document.getElementById("subscriberTableBody");
+
 /**
  * Checks whether an email address is of a valid format, using RegEx.
  * @param {*} email email address, String
@@ -127,6 +130,44 @@ function checkFullName() {
     return checkWidget(nameWidget, nameIsValid);
 }
 
+function renderTable(){
+    console.log("Subscribers array: ", subscribers);
+    tableBody.innerHTML = '';
+    subscribers.forEach((sub, index) => {
+        tableBody.innerHTML += `
+        <tr>
+         <td>${sub.name}</td>
+         <td>${sub.email}</td>
+         <td>${sub.phone}</td>
+         <td>${sub.ageOrYear}</td>
+         <td>${sub.address}</td>
+         <td class="text-end">
+        <button class="btn btn-sm btn-primary me-1" onclick="editSub(${index})">Edit</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteSub(${index})">Delete</button>
+         </td>
+        </tr>`;
+     });
+    }
+
+  
+ function editSub(index) {
+const sub = subscribers[index];
+document.getElementById('fullName').value = sub.name;
+document.getElementById('email').value = sub.email;
+document.getElementById('phone').value = sub.phone;
+document.getElementById('age').value = sub.ageOrYear;
+document.getElementById('address').value = sub.address;
+
+document.getElementById('editIndex').value = index;
+document.getElementById('submitBtn').textContent = "Update Subscriber";
+ }   
+
+ function deleteSub(index) {
+    subscribers.splice(index, 1);
+    localStorage.setItem('subscribersData', JSON.stringify(subscribers));
+    renderTable();
+ }   
+
 /**
  * Checks if the submitted signup form is valid
  * and updates the Bootstrap UI accordingly.
@@ -135,6 +176,36 @@ function checkForm(event) {
     if (!checkEmail() || !checkPhoneNumber() || !checkAge() || !checkAddressOrAffiliation() || !checkFullName()) {
         signupForm.classList.add('was-validated');
         event.preventDefault();
+    } else {
+        event.preventDefault()
+        
+// object creation
+        const newUser = {
+            name: nameWidget.value,
+            email: emailWidget.value,
+            phone: phoneWidget.value,
+            ageOrYear: ageWidget.value,
+            address: addressWidget.value
+        };
+        const editIndex = document.getElementById('editIndex').value
+
+        if (editIndex !== "") {
+            subscribers[editIndex] = newUser;
+            document.getElementById('editIndex').value = "";
+            document.getElementById('submitBtn').textContent = "Add Subscriber";
+        } else {   
+        
+// adds to the array
+subscribers.push(newUser);
+
+        }
+// Saves it to local storage
+localStorage.setItem('subscribersData', JSON.stringify(subscribers));
+
+renderTable();
+resetForm();
+
+console.log("Storage Updated");
     }
 }
 
@@ -143,7 +214,8 @@ function checkForm(event) {
  */
 function resetForm() {
     signupForm.reset();
-
+    document.getElementById('editIndex').value = "";
+    document.getElementById('submitBtn').textContent = "Add Subscriber";
     clearValidity(nameWidget);
     clearValidity(emailWidget);
     clearValidity(phoneWidget);
@@ -171,3 +243,11 @@ addressWidget.addEventListener("input", checkAddressOrAffiliation);
 
 let resetButton = document.getElementById("resetBtn");
 resetButton.addEventListener("click", resetForm);
+
+document.getElementById("showJsonBtn").addEventListener("click", () => {
+    document.getElementById("jsonPreview").textContent = JSON.stringify(subscribers, null, 2);
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+    renderTable();
+});
