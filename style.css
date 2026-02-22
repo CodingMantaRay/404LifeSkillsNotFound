@@ -1,0 +1,60 @@
+h1 {color: brown; font-size: 48;}
+h2 {color: #3b1a0a;}
+h3 {color: #3b1a0a;}
+
+.bg-dark-brown {
+  background-color: #3b1a0a !important;
+}
+
+.bg-warm {
+  background-color: #fdf6ee !important;
+}
+
+.btn-brown {
+  background-color: brown;
+  border-color: brown;
+  color: #fff;
+}
+.btn-brown:hover {
+  background-color: #fff;
+  border-color: #8B1A1A;
+  color: #8B1A1A;
+}
+
+.btn-outline-brown {
+  border: 2px solid brown;
+  color: brown;
+  background-color: transparent;
+}
+.btn-outline-brown:hover {
+  background-color: brown;
+  color: #fff;
+}
+
+.text-bg-brown {
+  background-color: brown !important;
+  color: #fff !important;
+}
+
+.text-bg-brown-light {
+  background-color: #c97a3a !important;
+  color: #fff !important;
+}
+
+#categories .badge {
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+}
+#categories .badge:hover {
+  background-color: #fff !important;
+  color: brown !important;
+  outline: 2px solid brown;
+}
+
+
+/* 
+git add .
+git commit -m "commit message"
+git push origin main
+*/
+
