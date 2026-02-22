@@ -1,3 +1,143 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Lato:wght@400;600&display=swap');
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Lato', sans-serif;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Playfair Display', serif;
+}
+
+/* Announcement bar */
+.announcement-bar {
+  background-color: #3b1a0a;
+  color: #fdf6ee;
+  text-align: center;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+}
+.announcement-bar a {
+  color: #c97a3a;
+  text-decoration: none;
+  font-weight: 600;
+}
+.announcement-bar a:hover {
+  text-decoration: underline;
+}
+
+/* Card hover lift */
+.card {
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(59, 26, 10, 0.15) !important;
+}
+
+/* Nav link underline on hover */
+.navbar-nav .nav-link {
+  position: relative;
+}
+.navbar-nav .nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background-color: #c97a3a;
+  transition: width 0.2s;
+}
+.navbar-nav .nav-link:hover::after,
+.navbar-nav .nav-link.active::after {
+  width: 100%;
+}
+
+/* Warm brown section borders */
+.border-top, .border-bottom {
+  border-color: rgba(139, 69, 19, 0.2) !important;
+}
+
+/* Hero subtle texture */
+header.bg-warm {
+  background-image: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 12px,
+    rgba(139, 69, 19, 0.03) 12px,
+    rgba(139, 69, 19, 0.03) 13px
+  );
+}
+
+/* Navbar brand font */
+.navbar-brand {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.4rem;
+  letter-spacing: 0.5px;
+}
+
+/* Section h2 accent underline */
+section h2::after {
+  content: '';
+  display: block;
+  width: 40px;
+  height: 3px;
+  background-color: brown;
+  margin-top: 0.4rem;
+  border-radius: 2px;
+}
+
+/* Article card left accent */
+#articles .card {
+  border-left: 3px solid brown;
+}
+
+/* Feedback quote left border */
+#feedback .card {
+  border-left: 4px solid #c97a3a;
+}
+
+/* Focus ring override */
+:focus-visible {
+  outline-color: brown;
+}
+.btn:focus-visible,
+.form-control:focus {
+  box-shadow: 0 0 0 0.25rem rgba(139, 69, 19, 0.25) !important;
+  border-color: brown !important;
+}
+
+/* Icon bullet color */
+.text-brown {
+  color: brown;
+}
+
+/* Scroll-to-top button */
+#scrollTop {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  background-color: brown;
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  font-size: 1.2rem;
+  cursor: pointer;
+  display: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  transition: background-color 0.2s;
+  z-index: 1000;
+}
+#scrollTop:hover {
+  background-color: #8B1A1A;
+}
+
 h1 {color: brown; font-size: 48;}
 h2 {color: #3b1a0a;}
 h3 {color: #3b1a0a;}
@@ -41,6 +181,82 @@ h3 {color: #3b1a0a;}
   color: #fff !important;
 }
 
+/* Fade-in on scroll */
+.fade-in {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.fade-in.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Stagger delay for card rows */
+.fade-in:nth-child(2) { transition-delay: 0.1s; }
+.fade-in:nth-child(3) { transition-delay: 0.2s; }
+
+/* Stat counter strip */
+.stat-num {
+  font-size: 2.5rem;
+  font-family: 'Playfair Display', serif;
+  line-height: 1.1;
+}
+
+/* Tag filter input */
+.tag-filter-wrap .input-group-text {
+  background-color: #fdf6ee;
+  border-color: rgba(139, 69, 19, 0.3);
+}
+.tag-filter-wrap .form-control {
+  background-color: #fdf6ee;
+  border-color: rgba(139, 69, 19, 0.3);
+}
+.tag-filter-wrap .form-control:focus {
+  background-color: #fff;
+}
+
+/* Benefit strip cards */
+.benefit-card {
+  border-top: 3px solid brown;
+}
+.benefit-icon {
+  font-size: 2rem;
+  color: brown;
+  margin-bottom: 0.5rem;
+}
+
+/* Dark brown table header */
+.table-dark-brown {
+  background-color: #3b1a0a !important;
+  color: #fff !important;
+}
+.table-dark-brown th {
+  color: #fff !important;
+  font-weight: 600;
+}
+
+/* Warm table striping */
+.table-warm-stripe.table-striped > tbody > tr:nth-of-type(odd) > * {
+  --bs-table-striped-bg: rgba(253, 246, 238, 0.7);
+}
+
+/* Brown success alert */
+.alert-brown {
+  background-color: #fdf6ee;
+  border-color: brown;
+  color: #3b1a0a;
+}
+
+/* Mobile divider between form and table */
+@media (max-width: 991px) {
+  .signup-divider {
+    border-top: 2px solid rgba(139, 69, 19, 0.25);
+    padding-top: 1.5rem;
+    margin-top: 0.5rem;
+  }
+}
+
 #categories .badge {
   cursor: pointer;
   transition: background-color 0.2s, color 0.2s;
@@ -52,9 +268,5 @@ h3 {color: #3b1a0a;}
 }
 
 
-/* 
-git add .
-git commit -m "commit message"
-git push origin main
-*/
+
 
