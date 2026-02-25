@@ -75,7 +75,7 @@ function checkForm(event) {
     article.notes = $notes.val().trim();
 
     if (formIsValid) {
-        addNewArticle(article);
+        addArticle(article);
         clearForm();
         loadArticles();
     }
@@ -95,7 +95,14 @@ function clearForm() {
     $notes.val("");
 }
 
-function addNewArticle(article) {
+/**
+ * Adds new article to local storage.
+ * If an article with the same ID already exists, does NOT add article.
+ * 
+ * @param {} article 
+ * @returns true if article was added successfully, else false
+ */
+function addArticle(article) {
     let articlesJson = localStorage.getItem("articles");
     let articles;
     if (articlesJson == null) {
@@ -105,10 +112,25 @@ function addNewArticle(article) {
         if (!Array.isArray(articles))
             throw new Error("localStorage item \"articles\" is not an array");
     }
+    for (a in articles) {
+        if (a.id == article.id)
+            // Don't add article with duplicate ID
+            return false;
+    }
     articles.push(article);
     localStorage.setItem("articles", JSON.stringify(articles));
+    return true;
 }
 
+/**
+ * Updates the article with the given ID.
+ * 
+ * Note: if articleId and newArticle.id differ, the existing article 
+ * with id equal to articleId is removed and replaced with newArticle.
+ * 
+ * @param {} article 
+ * @returns true if article was added successfully, else false
+ */
 function updateArticle(articleId, newArticle) {
     // Verify newArticle parameter
     if (!("id" in newArticle && "title" in newArticle && "category" in newArticle 
@@ -144,6 +166,28 @@ function updateArticle(articleId, newArticle) {
 
     localStorage.setItem("articles", JSON.stringify(articles));
 }
+
+function deleteArticle(articleId) {
+    let articlesJson = localStorage.getItem("articles");
+    if (articlesJson == null) {
+        // No saved articles
+        return;
+    } 
+    let articles = JSON.parse(articlesJson);
+    if (!Array.isArray(articles))
+        throw new Error("localStorage item \"articles\" is not an array");
+    
+    // Delete all article with the given id (articleId parameter)
+    let numArticles = articles.length;
+    articles = articles.filter(function (a) {
+        return a.id != articleId;
+    });
+    if (articles.length < numArticles) {
+        localStorage.setItem("articles", JSON.stringify(articles));
+    }
+    
+}
+
 function loadArticles() {
     let articlesJSON = localStorage.getItem("articles");
     if (articlesJSON == null)
