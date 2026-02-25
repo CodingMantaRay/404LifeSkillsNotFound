@@ -34,29 +34,6 @@ function checkForm(event) {
     event.preventDefault();
     
     let article = {};
-    
-    // Load jQuery objects
-    if (!$articleId)
-        $articleId = $("#articleId");
-    if (!$articleTitle)
-        $articleTitle = $("#articleTitle");
-    if (!$category)
-        $category = $("#category");
-    if (!$format)
-        $format = $("#format");
-    if (!$value)
-        $value = $("#value");
-    if (!$notes)
-        $notes = $("#notes");
-
-    // Load options of "select" inputs
-    if (!categories)
-        categories = loadOptions($category);
-    if (!formats)
-        formats = loadOptions($format);
-    if (!values) 
-        values = loadOptions($value);
-
     let isError, formIsValid = true;
 
     // Check article ID
@@ -133,5 +110,17 @@ function addNewArticle(article) {
 }
 
 $(document).ready(function() {
-    $("#articleForm").on("submit", checkForm);
+    let $articleForm = $("#articleForm");
+    $articleForm.on("submit", checkForm);
+
+    $articleId = $articleForm.children("#articleId");
+    $articleTitle = $articleForm.children("#articleTitle");
+    $category = $articleForm.children("#category");
+    $format = $articleForm.children("#format");
+    $value = $articleForm.children("#value");
+    $notes = $articleForm.children("#notes");
+    
+    categories = loadOptions($category);
+    formats = loadOptions($format);
+    values = loadOptions($value);
 });
