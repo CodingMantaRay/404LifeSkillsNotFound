@@ -77,6 +77,7 @@ function checkForm(event) {
     if (formIsValid) {
         addNewArticle(article);
         clearForm();
+        loadArticles();
     }
 }
 
@@ -107,6 +108,26 @@ function addNewArticle(article) {
     articles.push(article);
     localStorage.setItem("articles", JSON.stringify(articles));
 }
+
+function loadArticles() {
+    let articlesJSON = localStorage.getItem("articles");
+    if (articlesJSON == null)
+        return;
+    let articles = JSON.parse(articlesJSON);
+    if (!Array.isArray(articles))
+        throw new Error("localStorage item \"articles\" is not an array");
+
+    // TODO
+    let html = '<div class="row g-3">';
+        for (article of articles) {
+            html += '<div class="col-md-6"><div class="border rounded p-3 h-100 bg-white">';
+            html += `<div class="fw-bold">${article.id}</div>`;
+            html += `<div class="text-muted small">${article.category} • ${article.format} • ${article.value}</div>`;
+            html += `<div class="mt-2">${article.title}</div>`;
+            html += "</div></div>";
+        }
+    html += "</div>";
+    $("#articleEntries").html(html);
 }
 
 $(document).ready(function() {
@@ -123,4 +144,6 @@ $(document).ready(function() {
     categories = loadOptions($category);
     formats = loadOptions($format);
     values = loadOptions($value);
+
+    loadArticles();
 });
