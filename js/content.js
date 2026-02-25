@@ -1,5 +1,6 @@
 // Global variables
 let $articleId, $articleTitle, $category, $format, $value;
+let $articleId, $articleTitle, $category, $format, $value, $notes;
 let categories, formats, values;
 
 // function assignRandomID() {
@@ -46,6 +47,8 @@ function checkForm(event) {
         $format = $("#format");
     if (!$value)
         $value = $("#value");
+    if (!$notes)
+        $notes = $("#notes");
 
     // Load options of "select" inputs
     if (!categories)
@@ -69,6 +72,8 @@ function checkForm(event) {
 
     article.value = $value.val().trim();
     setError($value, isValidOption(article.value, values));
+    // Add article notes (no checking)
+    article.notes = $notes.val().trim();
 }
 
 $(document).ready(function() {
