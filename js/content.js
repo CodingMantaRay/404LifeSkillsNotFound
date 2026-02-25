@@ -109,6 +109,41 @@ function addNewArticle(article) {
     localStorage.setItem("articles", JSON.stringify(articles));
 }
 
+function updateArticle(articleId, newArticle) {
+    // Verify newArticle parameter
+    if (!("id" in newArticle && "title" in newArticle && "category" in newArticle 
+            && "format" in newArticle && "value" in newArticle && "notes" in newArticle))
+        throw new Error("New article missing a required property");
+    
+    let articlesJson = localStorage.getItem("articles");
+    let articles;
+    if (articlesJson == null) {
+        // No saved articles - create new article list
+        articles = [newArticle];
+    } else {
+        articles = JSON.parse(articlesJson);
+        if (!Array.isArray(articles))
+            throw new Error("localStorage item \"articles\" is not an array");
+        let articleIndex = null;
+    
+        // Find an existing article with the given id (articleId parameter)
+        for (let i = 0; i < articles.length; i++) {
+            if (articles[i].id == articleId) {
+                articleIndex = i;
+                break;
+            }
+        }
+        if (articleIndex != null) {
+            // If article exists, modify it
+            articles[articleIndex] = newArticle;
+        } else {
+            // If article doesn't exist, add it
+            articles.push(newArticle);
+        }
+    }
+
+    localStorage.setItem("articles", JSON.stringify(articles));
+}
 function loadArticles() {
     let articlesJSON = localStorage.getItem("articles");
     if (articlesJSON == null)
