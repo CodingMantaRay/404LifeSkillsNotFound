@@ -7,9 +7,12 @@ let categories, formats, values;
 //     return Math.floor(Math.random() * 256);
 // }
 
-function setError(widget, isError) {
-    // TODO - update UI to reflect error
-    console.log("error " + isError);
+function setError($widget, isError) {
+    if (isError) {
+        $widget.addClass("is-invalid"); // .is-invalid
+    } else {
+        $widget.removeClass("is-invalid"); // .is-valid
+    }
 }
 
 function loadOptions($select) {
@@ -236,6 +239,21 @@ $(document).ready(function() {
     $format = $($articleForm.find("#format")[0]);
     $value = $($articleForm.find("#value")[0]);
     $notes = $($articleForm.find("#notes")[0]);
+
+    let checkEmpty = function() {
+        let isError = ($(this).val().trim() == "");
+        setError($(this), isError);
+    };
+    let checkOption = function($widget, options) {
+        let isError = isValidOption($widget.val().trim(), options);
+        setError($widget, isError);
+    };
+
+    $articleId.on("keyup", checkEmpty);
+    $articleTitle.on("keyup", checkEmpty);
+    $category.on("change", () => checkOption($category, categories));
+    $format.on("change", () => checkOption($format, formats));
+    $value.on("change", () => checkOption($value, values));
     
     categories = loadOptions($category);
     formats = loadOptions($format);
