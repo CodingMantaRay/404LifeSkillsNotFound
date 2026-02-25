@@ -169,12 +169,12 @@ $(document).ready(function() {
     let $articleForm = $("#articleForm");
     $articleForm.on("submit", checkForm);
 
-    $articleId = $articleForm.children("#articleId");
-    $articleTitle = $articleForm.children("#articleTitle");
-    $category = $articleForm.children("#category");
-    $format = $articleForm.children("#format");
-    $value = $articleForm.children("#value");
-    $notes = $articleForm.children("#notes");
+    $articleId = $($articleForm.find("#articleId")[0]);
+    $articleTitle = $($articleForm.find("#articleTitle")[0]);
+    $category = $($articleForm.find("#category")[0]);
+    $format = $($articleForm.find("#format")[0]);
+    $value = $($articleForm.find("#value")[0]);
+    $notes = $($articleForm.find("#notes")[0]);
     
     categories = loadOptions($category);
     formats = loadOptions($format);
