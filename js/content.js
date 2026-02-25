@@ -1,5 +1,4 @@
 // Global variables
-let $articleId, $articleTitle, $category, $format, $value;
 let $articleId, $articleTitle, $category, $format, $value, $notes;
 let categories, formats, values;
 
@@ -58,22 +57,79 @@ function checkForm(event) {
     if (!values) 
         values = loadOptions($value);
 
+    let isError, formIsValid = true;
+
+    // Check article ID
     article.id = $articleId.val().trim();
-    setError($articleId, article.id == "");
+    isError = (article.id == "");
+    setError($articleId, isError);
+    if (isError)
+        formIsValid = false;
 
+    // Check article title
     article.title = $articleTitle.val().trim();
-    setError($articleTitle, article.title == "");
+    isError = (article.title == "");
+    setError($articleTitle, isError);
+    if (isError)
+        formIsValid = false;
     
+    // Check article category
     article.category = $category.val().trim();
-    setError($category, isValidOption(article.category, categories));
+    isError = isValidOption(article.category, categories);
+    setError($category, isError);
+    if (isError)
+        formIsValid = false;
 
+    // Check article format
     article.format = $format.val().trim();
-    setError($format, isValidOption(article.format, formats));
+    isError = isValidOption(article.format, formats);
+    setError($format, isError);
+    if (isError)
+        formIsValid = false;
 
+    // Check article value
     article.value = $value.val().trim();
-    setError($value, isValidOption(article.value, values));
+    isError = isValidOption(article.value, values);
+    setError($value, isError);
+    if (isError)
+        formIsValid = false;
+
     // Add article notes (no checking)
     article.notes = $notes.val().trim();
+
+    if (formIsValid) {
+        addNewArticle(article);
+        clearForm();
+    }
+}
+
+function clearForm() {
+    setError($articleId, false);
+    $articleId.val("");
+    setError($articleTitle, false);
+    $articleTitle.val("");
+    setError($category, false);
+    $category.val("");
+    setError($format, false);
+    $format.val("");
+    setError($value, false);
+    $value.val("");
+    $notes.val("");
+}
+
+function addNewArticle(article) {
+    let articlesJson = localStorage.getItem("articles");
+    let articles;
+    if (articlesJson == null) {
+        articles = [];
+    } else {
+        articles = JSON.parse(articlesJson);
+        if (!Array.isArray(articles))
+            throw new Error("localStorage item \"articles\" is not an array");
+    }
+    articles.push(article);
+    localStorage.setItem("articles", JSON.stringify(articles));
+}
 }
 
 $(document).ready(function() {
