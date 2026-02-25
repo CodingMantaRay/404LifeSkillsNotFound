@@ -11,6 +11,11 @@
 
    <!-- Custom CSS (Person 2 will style this) -->
    <link rel="stylesheet" href="css/styles.css" />
+
+   <!-- jQuery 3.7.1 -->
+   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+   
+   <script src="js/content.js"></script>
 </head>
 
 <body class="bg-light">
@@ -56,21 +61,21 @@
                   <h2 class="h5 fw-bold mb-3">Create New Article</h2>
 
                   <!-- HTML only (no JS logic) -->
-                  <form>
+                  <form id="articleForm">
 
                      <div class="mb-3">
                         <label class="form-label">Article ID *</label>
-                        <input type="text" class="form-control" placeholder="E.g., A101 or LS-FOOD-001" required>
+                        <input type="text" class="form-control" id="articleId" placeholder="E.g., A101 or LS-FOOD-001" required>
                      </div>
 
                      <div class="mb-3">
                         <label class="form-label">Article Title *</label>
-                        <input type="text" class="form-control" placeholder="E.g., Fix a Leaky Faucet" required>
+                        <input type="text" class="form-control" id="articleTitle" placeholder="E.g., Fix a Leaky Faucet" required>
                      </div>
 
                      <div class="mb-3">
                         <label class="form-label">Category *</label>
-                        <select class="form-select" required>
+                        <select class="form-select" id="category" required>
                   <option value="">Choose one…</option>
                   <option>Home & Cleaning</option>
                   <option>Food & Cooking</option>
@@ -83,7 +88,7 @@
 
                      <div class="mb-3">
                         <label class="form-label">Content Format *</label>
-                        <select class="form-select" required>
+                        <select class="form-select" id="format" required>
                   <option value="">Choose one…</option>
                   <option>Blog Post</option>
                   <option>Video</option>
@@ -94,7 +99,7 @@
 
                      <div class="mb-3">
                         <label class="form-label">Value *</label>
-                        <select class="form-select" required>
+                        <select class="form-select" id="value" required>
                   <option value="">Choose one…</option>
                   <option>Free</option>
                   <option>Premium</option>
@@ -107,7 +112,7 @@
                   placeholder="E.g., beginner-friendly, under 30 minutes, small-space tips"></textarea>
                      </div>
 
-                     <button class="btn btn-dark w-100" type="submit">Save Article</button>
+                     <button class="btn btn-dark w-100" type="submit" id="saveButton">Save Article</button>
 
                      <p class="text-muted small mt-3 mb-0">
                         * Form validation + add/update features will be implemented by Person 3.
