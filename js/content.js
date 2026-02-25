@@ -96,6 +96,24 @@ function clearForm() {
 }
 
 /**
+ * Gets array of articles from local storage.
+ * If articles not found (i.e. item with key "articles" not found 
+ * in local storage), then returns undefined.
+ * @returns Array of articles, or undefined
+ */
+function getArticles() {
+    let articlesJson = localStorage.getItem("articles");
+    let articles;
+    if (articlesJson == null) {
+        return undefined;
+    }
+    articles = JSON.parse(articlesJson);
+    if (!Array.isArray(articles))
+        throw new Error("localStorage item \"articles\" is not an array");
+    return articles;
+}
+
+/**
  * Adds new article to local storage.
  * If an article with the same ID already exists, does NOT add article.
  * 
@@ -103,21 +121,17 @@ function clearForm() {
  * @returns true if article was added successfully, else false
  */
 function addArticle(article) {
-    let articlesJson = localStorage.getItem("articles");
-    let articles;
-    if (articlesJson == null) {
-        articles = [];
-    } else {
-        articles = JSON.parse(articlesJson);
-        if (!Array.isArray(articles))
-            throw new Error("localStorage item \"articles\" is not an array");
+    let articles = getArticles();
+    if (articles == undefined)
+        articles = [article];
+    else {
+        for (a of articles) {
+            if (a.id == article.id)
+                // Don't add article with duplicate ID
+                return false;
+        }
+        articles.push(article);
     }
-    for (a in articles) {
-        if (a.id == article.id)
-            // Don't add article with duplicate ID
-            return false;
-    }
-    articles.push(article);
     localStorage.setItem("articles", JSON.stringify(articles));
     return true;
 }
@@ -125,8 +139,10 @@ function addArticle(article) {
 /**
  * Updates the article with the given ID.
  * 
- * Note: if articleId and newArticle.id differ, the existing article 
- * with id equal to articleId is removed and replaced with newArticle.
+ * Note: If articleId and newArticle.id differ, the existing article 
+ * with id equal to articleId is removed and replaced with newArticle,
+ * UNLESS another article with newArticle.id exists (in which case
+ * nothing is updated).
  * 
  * @param {} article 
  * @returns true if article was added successfully, else false
@@ -137,22 +153,25 @@ function updateArticle(articleId, newArticle) {
             && "format" in newArticle && "value" in newArticle && "notes" in newArticle))
         throw new Error("New article missing a required property");
     
-    let articlesJson = localStorage.getItem("articles");
-    let articles;
-    if (articlesJson == null) {
+    let articles = getArticles();
+    if (articles == undefined) {
         // No saved articles - create new article list
         articles = [newArticle];
     } else {
-        articles = JSON.parse(articlesJson);
-        if (!Array.isArray(articles))
-            throw new Error("localStorage item \"articles\" is not an array");
-        let articleIndex = null;
-    
+        let idChanged = (articleId != newArticle.id);
         // Find an existing article with the given id (articleId parameter)
+        let articleIndex = null;
         for (let i = 0; i < articles.length; i++) {
+            // Case 1: idChanged false. Assumes only ONE article with given ID, returns first one.
+            // Case 2: idChanged true, no articles with newArticle.id. Update & return true.
+            // Case 3: idChanged true, article with newArticle.id exists. Return false.
             if (articles[i].id == articleId) {
                 articleIndex = i;
-                break;
+                if (!idChanged)
+                    break;
+            } if (idChanged && articles[i].id == newArticle.id) {
+                // Article with given ID already exists and we are not updating it
+                return false;
             }
         }
         if (articleIndex != null) {
@@ -165,17 +184,15 @@ function updateArticle(articleId, newArticle) {
     }
 
     localStorage.setItem("articles", JSON.stringify(articles));
+    return true;
 }
 
 function deleteArticle(articleId) {
-    let articlesJson = localStorage.getItem("articles");
-    if (articlesJson == null) {
+    let articles = getArticles();
+    if (articles == undefined) {
         // No saved articles
         return;
-    } 
-    let articles = JSON.parse(articlesJson);
-    if (!Array.isArray(articles))
-        throw new Error("localStorage item \"articles\" is not an array");
+    }
     
     // Delete all article with the given id (articleId parameter)
     let numArticles = articles.length;
