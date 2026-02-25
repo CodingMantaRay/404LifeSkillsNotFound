@@ -10,6 +10,11 @@
 
   <!-- Custom CSS -->
   <link rel="stylesheet" href="css/styles.css" />
+  
+  <!-- jQuery 3.7.1 -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+   
+  <script src="js/content.js"></script>
 </head>
 
 <body class="bg-light">
@@ -55,12 +60,12 @@
             <h2 class="h5 fw-bold mb-3">Create New Article</h2>
 
             <!-- Person 1 only builds structure -->
-            <form class="needs-validation" novalidate>
+            <form class="needs-validation" id="articleForm" novalidate>
 
               <!-- Article ID -->
               <div class="mb-3">
                 <label class="form-label">Article ID *</label>
-                <input type="text" class="form-control" placeholder="E.g., A101" required>
+                <input type="text" class="form-control" id="articleId" placeholder="E.g., A101" required>
                 <div class="invalid-feedback">
                   Please enter an Article ID.
                 </div>
@@ -69,7 +74,7 @@
               <!-- Article Title -->
               <div class="mb-3">
                 <label class="form-label">Article Title *</label>
-                <input type="text" class="form-control" placeholder="E.g., Fix a Leaky Faucet" required>
+                <input type="text" class="form-control" id="articleTitle" placeholder="E.g., Fix a Leaky Faucet" required>
                 <div class="invalid-feedback">
                   Please enter an Article Title.
                 </div>
@@ -78,7 +83,7 @@
               <!-- Category -->
               <div class="mb-3">
                 <label class="form-label">Category *</label>
-                <select class="form-select" required>
+                <select class="form-select" id="category" required>
                   <option value="">Choose one…</option>
                   <option>Home & Cleaning</option>
                   <option>Food & Cooking</option>
@@ -95,7 +100,7 @@
               <!-- Content Format -->
               <div class="mb-3">
                 <label class="form-label">Content Format *</label>
-                <select class="form-select" required>
+                <select class="form-select" id="format" required>
                   <option value="">Choose one…</option>
                   <option>Blog Post</option>
                   <option>Video</option>
@@ -110,7 +115,7 @@
               <!-- Value -->
               <div class="mb-3">
                 <label class="form-label">Value *</label>
-                <select class="form-select" required>
+                <select class="form-select" id="value" required>
                   <option value="">Choose one…</option>
                   <option>Free</option>
                   <option>Premium</option>
@@ -123,12 +128,12 @@
               <!-- Additional Notes -->
               <div class="mb-3">
                 <label class="form-label">Additional Notes (optional)</label>
-                <textarea class="form-control" rows="3"
+                <textarea class="form-control" rows="3" id="notes" 
                   placeholder="E.g., beginner-friendly, under 30 minutes">
                 </textarea>
               </div>
 
-              <button class="btn btn-dark w-100" type="submit">Save Article</button>
+              <button class="btn btn-dark w-100" type="submit" id="saveButton">Save Article</button>
 
             </form>
           </div>
@@ -185,21 +190,22 @@
         <div class="card shadow-sm">
           <div class="card-body">
             <h2 class="h5 fw-bold mb-3">Article Entries</h2>
-
-            <div class="row g-3">
-              <div class="col-md-6">
-                <div class="border rounded p-3 bg-white h-100">
-                  <div class="fw-bold">A101</div>
-                  <div class="text-muted small">DIY & Repairs • Blog Post • Free</div>
-                  <div class="mt-2">Fix a Leaky Faucet</div>
+            <div id="articleEntries">
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <div class="border rounded p-3 bg-white h-100">
+                    <div class="fw-bold">A101</div>
+                    <div class="text-muted small">DIY & Repairs • Blog Post • Free</div>
+                    <div class="mt-2">Fix a Leaky Faucet</div>
+                  </div>
                 </div>
-              </div>
 
-              <div class="col-md-6">
-                <div class="border rounded p-3 bg-white h-100">
-                  <div class="fw-bold">LS-FOOD-001</div>
-                  <div class="text-muted small">Food & Cooking • Video • Free</div>
-                  <div class="mt-2">30 Useful Life Hacks</div>
+                <div class="col-md-6">
+                  <div class="border rounded p-3 bg-white h-100">
+                    <div class="fw-bold">LS-FOOD-001</div>
+                    <div class="text-muted small">Food & Cooking • Video • Free</div>
+                    <div class="mt-2">30 Useful Life Hacks</div>
+                  </div>
                 </div>
               </div>
             </div>
