@@ -10,11 +10,6 @@
 
   <!-- Custom CSS -->
   <link rel="stylesheet" href="css/styles.css" />
-  
-  <!-- jQuery 3.7.1 -->
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-   
-  <script src="js/content.js"></script>
 </head>
 
 <body class="bg-light">
@@ -57,24 +52,46 @@
         <!-- FORM -->
         <div class="card shadow-sm">
           <div class="card-body">
-            <h2 class="h5 fw-bold mb-3">Create New Article</h2>
+            <div class="d-flex justify-content-between align-items-start mb-2">
+              <h2 class="h5 fw-bold mb-0">Create / Update Article</h2>
+              <!-- Optional: JS can toggle this badge text -->
+              <span class="badge text-bg-secondary" id="formModeBadge">Create</span>
+            </div>
 
-            <!-- Person 1 only builds structure -->
-            <form class="needs-validation" id="articleForm" novalidate>
+            <!-- EDIT MODE BANNER (UI only; JS can show/hide) -->
+            <div class="alert alert-warning py-2 d-none" id="editModeBanner" role="alert">
+              <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <div class="small">
+                  <strong>Edit Mode:</strong> You are updating an existing article.
+                </div>
+                <button type="button" class="btn btn-sm btn-outline-dark" id="cancelEditBtn">
+                  Cancel Edit
+                </button>
+              </div>
+            </div>
+
+            <!-- Hidden field for JS to store which item is being edited -->
+            <input type="hidden" id="editIndex" value="">
+
+            <!-- Person 1 builds structure only -->
+            <form class="needs-validation" novalidate id="contentForm">
 
               <!-- Article ID -->
               <div class="mb-3">
-                <label class="form-label">Article ID *</label>
-                <input type="text" class="form-control" id="articleId" placeholder="E.g., A101" required>
+                <label class="form-label" for="itemId">Article ID *</label>
+                <input type="text" class="form-control" id="itemId" placeholder="E.g., A101" required>
                 <div class="invalid-feedback">
                   Please enter an Article ID.
+                </div>
+                <div class="form-text">
+                  Tip: When editing, your JS can keep this field locked if you want (optional).
                 </div>
               </div>
 
               <!-- Article Title -->
               <div class="mb-3">
-                <label class="form-label">Article Title *</label>
-                <input type="text" class="form-control" id="articleTitle" placeholder="E.g., Fix a Leaky Faucet" required>
+                <label class="form-label" for="title">Article Title *</label>
+                <input type="text" class="form-control" id="title" placeholder="E.g., Fix a Leaky Faucet" required>
                 <div class="invalid-feedback">
                   Please enter an Article Title.
                 </div>
@@ -82,7 +99,7 @@
 
               <!-- Category -->
               <div class="mb-3">
-                <label class="form-label">Category *</label>
+                <label class="form-label" for="category">Category *</label>
                 <select class="form-select" id="category" required>
                   <option value="">Choose one…</option>
                   <option>Home & Cleaning</option>
@@ -99,7 +116,7 @@
 
               <!-- Content Format -->
               <div class="mb-3">
-                <label class="form-label">Content Format *</label>
+                <label class="form-label" for="format">Content Format *</label>
                 <select class="form-select" id="format" required>
                   <option value="">Choose one…</option>
                   <option>Blog Post</option>
@@ -114,7 +131,7 @@
 
               <!-- Value -->
               <div class="mb-3">
-                <label class="form-label">Value *</label>
+                <label class="form-label" for="value">Value *</label>
                 <select class="form-select" id="value" required>
                   <option value="">Choose one…</option>
                   <option>Free</option>
@@ -127,14 +144,35 @@
 
               <!-- Additional Notes -->
               <div class="mb-3">
-                <label class="form-label">Additional Notes (optional)</label>
-                <textarea class="form-control" rows="3" id="notes" 
-                  placeholder="E.g., beginner-friendly, under 30 minutes">
-                </textarea>
+                <label class="form-label" for="extraInfo">Additional Notes (optional)</label>
+                <textarea
+                  class="form-control"
+                  id="extraInfo"
+                  rows="3"
+                  placeholder="E.g., beginner-friendly, under 30 minutes"
+                ></textarea>
               </div>
 
-              <button class="btn btn-dark w-100" type="submit" id="saveButton">Save Article</button>
+              <!-- Action buttons: UI only (JS decides which to show/enable) -->
+              <div class="d-grid gap-2">
+                <!-- Create Mode button -->
+                <button class="btn btn-dark" type="submit" id="saveBtn">
+                  Save New Article
+                </button>
 
+                <!-- Edit Mode button (JS can show this instead of Save) -->
+                <button class="btn btn-primary d-none" type="button" id="updateBtn">
+                  Update Article
+                </button>
+
+                <button class="btn btn-outline-secondary" type="button" id="clearBtn">
+                  Clear Form
+                </button>
+              </div>
+
+              <p class="text-muted small mt-3 mb-0">
+                * Validation + add/update/delete behavior will be implemented by Person 3/4.
+              </p>
             </form>
           </div>
         </div>
@@ -186,36 +224,109 @@
           </div>
         </div>
 
-        <!-- ENTRIES PLACEHOLDER -->
+        <!-- ENTRIES PLACEHOLDER (now includes Edit/Delete UI) -->
         <div class="card shadow-sm">
           <div class="card-body">
-            <h2 class="h5 fw-bold mb-3">Article Entries</h2>
-            <div id="articleEntries">
-              <div class="row g-3">
-                <div class="col-md-6">
-                  <div class="border rounded p-3 bg-white h-100">
-                    <div class="fw-bold">A101</div>
-                    <div class="text-muted small">DIY & Repairs • Blog Post • Free</div>
-                    <div class="mt-2">Fix a Leaky Faucet</div>
-                  </div>
-                </div>
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+              <h2 class="h5 fw-bold mb-0">Article Entries</h2>
+              <span class="text-muted small">Edit/Delete UI only (JS later)</span>
+            </div>
 
-                <div class="col-md-6">
-                  <div class="border rounded p-3 bg-white h-100">
-                    <div class="fw-bold">LS-FOOD-001</div>
-                    <div class="text-muted small">Food & Cooking • Video • Free</div>
-                    <div class="mt-2">30 Useful Life Hacks</div>
+            <div class="row g-3" id="contentCards">
+              <!-- Example card 1 -->
+              <div class="col-md-6">
+                <div class="border rounded p-3 bg-white h-100">
+                  <div class="d-flex justify-content-between align-items-start gap-2">
+                    <div>
+                      <div class="fw-bold">A101</div>
+                      <div class="text-muted small">DIY & Repairs • Blog Post • Free</div>
+                    </div>
+                    <div class="d-flex gap-2">
+                      <!-- JS will attach click handlers -->
+                      <button
+                        type="button"
+                        class="btn btn-sm btn-outline-dark editBtn"
+                        data-id="A101"
+                      >Edit</button>
+
+                      <button
+                        type="button"
+                        class="btn btn-sm btn-outline-danger deleteBtn"
+                        data-id="A101"
+                        data-bs-toggle="modal"
+                        data-bs-target="#deleteModal"
+                      >Delete</button>
+                    </div>
                   </div>
+
+                  <div class="mt-2">Fix a Leaky Faucet</div>
+                  <div class="text-muted small mt-2">Notes: Beginner friendly</div>
+                </div>
+              </div>
+
+              <!-- Example card 2 -->
+              <div class="col-md-6">
+                <div class="border rounded p-3 bg-white h-100">
+                  <div class="d-flex justify-content-between align-items-start gap-2">
+                    <div>
+                      <div class="fw-bold">LS-FOOD-001</div>
+                      <div class="text-muted small">Food & Cooking • Video • Free</div>
+                    </div>
+                    <div class="d-flex gap-2">
+                      <button
+                        type="button"
+                        class="btn btn-sm btn-outline-dark editBtn"
+                        data-id="LS-FOOD-001"
+                      >Edit</button>
+
+                      <button
+                        type="button"
+                        class="btn btn-sm btn-outline-danger deleteBtn"
+                        data-id="LS-FOOD-001"
+                        data-bs-toggle="modal"
+                        data-bs-target="#deleteModal"
+                      >Delete</button>
+                    </div>
+                  </div>
+
+                  <div class="mt-2">30 Useful Life Hacks</div>
+                  <div class="text-muted small mt-2">Notes: Quick tips</div>
                 </div>
               </div>
             </div>
 
+            <p class="text-muted small mt-3 mb-0">
+              Person 3/4 will later render real entries dynamically using JS/jQuery.
+            </p>
           </div>
         </div>
 
       </div>
     </div>
   </main>
+
+  <!-- DELETE CONFIRMATION MODAL (UI only) -->
+  <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold" id="deleteModalLabel">Delete Article</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          Are you sure you want to delete this article?
+          <div class="text-muted small mt-2">
+            (JS can insert the Article ID/title here.)
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+          <!-- JS will handle delete confirm -->
+          <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- FOOTER -->
   <footer class="bg-dark text-white py-3 mt-4">
@@ -231,6 +342,5 @@
 
   <!-- Bootstrap JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
 </body>
 </html>
