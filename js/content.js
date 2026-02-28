@@ -1,11 +1,8 @@
 // Global variables
-let $articleId, $articleTitle, $category, $format, $value, $notes;
+let $formHeader, $formModeBadge, $editModeBanner, $editId;
+let $contentForm, $articleId, $articleTitle, $category, $format, $value, $notes;
+let $confirmDeleteButton;
 let categories, formats, values;
-
-// function assignRandomID() {
-//     // TODO check if ID is unique
-//     return Math.floor(Math.random() * 256);
-// }
 
 function setError($widget, isError) {
     if (isError) {
@@ -33,9 +30,12 @@ function isValidOption(chosenOption, options) {
     return chosenOption == "" || options.indexOf(chosenOption) == -1
 }
 
-function checkForm(event) {
-    event.preventDefault();
-    
+/**
+ * Checks form inputs for validity, and updates UI with any errors.
+ * Has the same functionality for "creating" and "updating" an article.
+ * @returns "Article" object
+ */
+function checkForm() {
     let article = {};
     let isError, formIsValid = true;
 
@@ -78,15 +78,42 @@ function checkForm(event) {
     article.notes = $notes.val().trim();
 
     if (formIsValid) {
-        addArticle(article);
-        clearForm();
-        loadArticles();
+        return article;
     }
+    return null;
 }
 
+function changeToAddForm() {
+    $formHeader.text("Create Article");
+    $formModeBadge.text("Create");
+    $editModeBanner.addClass("d-none");
+    $editId.val("");
+    $contentForm.attr("data-mode", "add");
+    $articleId.attr("disabled", false);
+    $contentForm.find("#saveBtn").removeClass("d-none");
+    $contentForm.find("#updateBtn").addClass("d-none");
+}
+
+function changeToEditForm(id) {
+    $formHeader.text("Update Article");
+    $formModeBadge.text("Update");
+    $editModeBanner.removeClass("d-none");
+    $editId.val(id);
+    $contentForm.attr("data-mode", "edit");
+    $articleId.attr("disabled", true);
+    $contentForm.find("#saveBtn").addClass("d-none");
+    $contentForm.find("#updateBtn").removeClass("d-none");
+}
+
+/**
+ * Clears the form.
+ * If form is in "edit" mode, then doesn't clear the article ID.
+ */
 function clearForm() {
     setError($articleId, false);
-    $articleId.val("");
+    if ($contentForm.attr("data-mode") != "edit") {
+        $articleId.val("");
+    }
     setError($articleTitle, false);
     $articleTitle.val("");
     setError($category, false);
@@ -209,36 +236,125 @@ function deleteArticle(articleId) {
 }
 
 function loadArticles() {
-    let articlesJSON = localStorage.getItem("articles");
-    if (articlesJSON == null)
+    let articles = getArticles();
+    if (articles == undefined)
         return;
-    let articles = JSON.parse(articlesJSON);
-    if (!Array.isArray(articles))
-        throw new Error("localStorage item \"articles\" is not an array");
 
-    // TODO
-    let html = '<div class="row g-3">';
-        for (article of articles) {
-            html += '<div class="col-md-6"><div class="border rounded p-3 h-100 bg-white">';
-            html += `<div class="fw-bold">${article.id}</div>`;
-            html += `<div class="text-muted small">${article.category} • ${article.format} • ${article.value}</div>`;
-            html += `<div class="mt-2">${article.title}</div>`;
-            html += "</div></div>";
+    let html = "";
+    for (article of articles) {
+        html += '<div class="col-md-6"><div class="border rounded p-3 h-100 bg-white">';
+        html += '<div class="d-flex justify-content-between align-items-start gap-2"><div>';
+        html += `<div class="fw-bold">${article.id}</div>`;
+        html += `<div class="text-muted small">${article.category} • ${article.format} • ${article.value}</div></div>`;
+        html += '<div class="d-flex gap-2">';
+        html += `<button type="button" class="btn btn-sm btn-outline-dark editBtn" data-id="${article.id}">Edit</button>`;
+        html += `<button type="button" class="btn btn-sm btn-outline-danger deleteBtn" data-id="${article.id}" data-bs-toggle="modal" data-bs-target="#deleteModal">Delete</button>`;
+        html += "</div></div>";
+        html += `<div class="mt-2">${article.title}</div>`;
+        html += `<div class="text-muted small mt-2">Notes: ${article.notes ? article.notes : "none"}</div>`;
+        html += "</div></div>";
+    }
+    $contentCards = $("#contentCards");
+    $contentCards.html(html);
+
+    editButtons = $contentCards.find(".editBtn").on("click", onEdit);
+    deleteButtons = $contentCards.find(".deleteBtn").on("click", handleDeleteBtn);
+}
+
+/**
+ * Handler for submitting the form,
+ * whether adding a new article or updating an existing one.
+ */
+function onSave(event) {
+    event.preventDefault();
+
+    let article = checkForm();
+    if (!article)
+        return;
+
+    if ($(this).attr("data-mode") == "edit") {
+        updateArticle(article.id, article);
+        changeToAddForm();
+        clearForm();
+        loadArticles();
+    } else {
+        addArticle(article);
+        clearForm();
+        loadArticles();
+    }
+}
+
+/**
+ * Handler for "edit" button.
+ */
+function onEdit() {
+    // Get ID of article to edit
+    let id = $(this).attr("data-id");
+    if (!id)
+        return;
+
+    // Change form to edit form
+    clearForm();
+    changeToEditForm();
+
+    // Get article to edit
+    let articles = getArticles();
+    let article = null;
+    for (a of articles) {
+        if (a.id == id) {
+            article = a;
+            break;
         }
-    html += "</div>";
-    $("#articleEntries").html(html);
+    }
+
+    // Update form to reflect the current article information
+    $articleId.val(id);
+    $articleTitle.val(article.title);
+    $category.val(article.category);
+    $format.val(article.format);
+    $value.val(article.value);
+    $notes.val(article.notes);
+}
+
+function onCancelEdit() {
+    changeToAddForm();
+    clearForm();
+}
+
+/**
+ * Handler for deleting an article (in the "delete" modal).
+ * Deletes the article with an ID matching the button's data-id. 
+ */
+function onDelete() {
+    deleteArticle($("#confirmDeleteBtn").attr("data-id"));
+    loadArticles();
+}
+
+/**
+ * Handler for the "Delete" button. 
+ * Modifies the "delete" modal.
+ */
+function handleDeleteBtn() {
+    $deleteBtn = $(this);
+    let articleId = $deleteBtn.attr("data-id");
+    $confirmDeleteButton.attr("data-id", articleId);
+    $("#deletedInfo").text("ID = " + articleId);
 }
 
 $(document).ready(function() {
-    let $articleForm = $("#articleForm");
-    $articleForm.on("submit", checkForm);
+    $formHeader = $("#formHeader");
+    $formModeBadge = $("#formModeBadge");
+    $editModeBanner = $("#editModeBanner");
+    $editId = $("#editId");
 
-    $articleId = $($articleForm.find("#articleId")[0]);
-    $articleTitle = $($articleForm.find("#articleTitle")[0]);
-    $category = $($articleForm.find("#category")[0]);
-    $format = $($articleForm.find("#format")[0]);
-    $value = $($articleForm.find("#value")[0]);
-    $notes = $($articleForm.find("#notes")[0]);
+    $contentForm = $("#contentForm");
+    $articleId = $($contentForm.find("#itemId")[0]);
+    $articleTitle = $($contentForm.find("#title")[0]);
+    $category = $($contentForm.find("#category")[0]);
+    $format = $($contentForm.find("#format")[0]);
+    $value = $($contentForm.find("#value")[0]);
+    $notes = $($contentForm.find("#extraInfo")[0]);
+    $confirmDeleteButton = $("#confirmDeleteBtn");
 
     let checkEmpty = function() {
         let isError = ($(this).val().trim() == "");
@@ -249,15 +365,19 @@ $(document).ready(function() {
         setError($widget, isError);
     };
 
+    $contentForm.on("submit", onSave);
     $articleId.on("keyup", checkEmpty);
     $articleTitle.on("keyup", checkEmpty);
     $category.on("change", () => checkOption($category, categories));
     $format.on("change", () => checkOption($format, formats));
     $value.on("change", () => checkOption($value, values));
+    $confirmDeleteButton.on("click", onDelete);
+    $("#cancelEditBtn").on("click", onCancelEdit);
     
     categories = loadOptions($category);
     formats = loadOptions($format);
     values = loadOptions($value);
 
+    changeToAddForm();
     loadArticles();
 });

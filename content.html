@@ -10,6 +10,11 @@
 
   <!-- Custom CSS -->
   <link rel="stylesheet" href="css/styles.css" />
+    
+  <!-- jQuery 3.7.1 -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+   
+  <script src="js/content.js"></script>
 </head>
 
 <body class="bg-light">
@@ -53,7 +58,7 @@
         <div class="card shadow-sm">
           <div class="card-body">
             <div class="d-flex justify-content-between align-items-start mb-2">
-              <h2 class="h5 fw-bold mb-0">Create / Update Article</h2>
+              <h2 class="h5 fw-bold mb-0" id="formHeader">Create / Update Article</h2>
               <!-- Optional: JS can toggle this badge text -->
               <span class="badge text-bg-secondary" id="formModeBadge">Create</span>
             </div>
@@ -71,7 +76,7 @@
             </div>
 
             <!-- Hidden field for JS to store which item is being edited -->
-            <input type="hidden" id="editIndex" value="">
+            <input type="hidden" id="editId" value="">
 
             <!-- Person 1 builds structure only -->
             <form class="needs-validation" novalidate id="contentForm">
@@ -161,7 +166,7 @@
                 </button>
 
                 <!-- Edit Mode button (JS can show this instead of Save) -->
-                <button class="btn btn-primary d-none" type="button" id="updateBtn">
+                <button class="btn btn-primary d-none" type="submit" id="updateBtn">
                   Update Article
                 </button>
 
@@ -229,7 +234,6 @@
           <div class="card-body">
             <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
               <h2 class="h5 fw-bold mb-0">Article Entries</h2>
-              <span class="text-muted small">Edit/Delete UI only (JS later)</span>
             </div>
 
             <div class="row g-3" id="contentCards">
@@ -294,10 +298,6 @@
                 </div>
               </div>
             </div>
-
-            <p class="text-muted small mt-3 mb-0">
-              Person 3/4 will later render real entries dynamically using JS/jQuery.
-            </p>
           </div>
         </div>
 
@@ -315,8 +315,8 @@
         </div>
         <div class="modal-body">
           Are you sure you want to delete this article?
-          <div class="text-muted small mt-2">
-            (JS can insert the Article ID/title here.)
+          <div class="text-muted small mt-2" id="deletedInfo">
+            <<!-- JS will insert the Article ID/title here. -->
           </div>
         </div>
         <div class="modal-footer">
