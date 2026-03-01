@@ -4,7 +4,6 @@ let $contentForm, $articleId, $articleTitle, $category, $format, $value, $notes;
 let $confirmDeleteButton;
 let categories, formats, values;
 
-
 function setError($widget, isError) {
     if (isError) {
         $widget.addClass("is-invalid"); // .is-invalid
