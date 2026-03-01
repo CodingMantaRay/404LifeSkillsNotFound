@@ -4,6 +4,7 @@ let $contentForm, $articleId, $articleTitle, $category, $format, $value, $notes;
 let $confirmDeleteButton;
 let categories, formats, values;
 
+
 function setError($widget, isError) {
     if (isError) {
         $widget.addClass("is-invalid"); // .is-invalid
@@ -239,9 +240,14 @@ function loadArticles() {
     let articles = getArticles();
     if (articles == undefined)
         return;
+    let searchText = $("#contentSearch").val() ? $("#contentSearch").val().toLowerCase() : "";
+    let filterCat = $("#filterCategory").val() || "All";
 
     let html = "";
     for (article of articles) {
+        let matchesSearch = article.title.toLowerCase().includes(searchText) || article.id.toLowerCase().includes(searchText);
+        let matchesCategory = (filterCat === "All" || article.category === filterCat);
+        if (matchesSearch && matchesCategory) {
         html += '<div class="col-md-6"><div class="border rounded p-3 h-100 bg-white">';
         html += '<div class="d-flex justify-content-between align-items-start gap-2"><div>';
         html += `<div class="fw-bold">${article.id}</div>`;
@@ -253,6 +259,7 @@ function loadArticles() {
         html += `<div class="mt-2">${article.title}</div>`;
         html += `<div class="text-muted small mt-2">Notes: ${article.notes ? article.notes : "none"}</div>`;
         html += "</div></div>";
+        }
     }
     $contentCards = $("#contentCards");
     $contentCards.html(html);
@@ -342,6 +349,15 @@ function handleDeleteBtn() {
 }
 
 $(document).ready(function() {
+    
+   if (!localStorage.getItem("articles")) {
+        const intialData = [
+            {id: "A101", title: "Fix a leaky faucet", category: "DIY & Repairs", format: "Blog Post", value: "Free", notes: "Beginner friendly"},
+            {id: "LS-FOOD-001", title: "30 Useful Life Hacks", category: "Food & Cooking", format: "Video", value: "Free", notes: "Quick tips"}
+        ];
+        localStorage.setItem("articles", JSON.stringify(intialData));
+    }
+    
     $formHeader = $("#formHeader");
     $formModeBadge = $("#formModeBadge");
     $editModeBanner = $("#editModeBanner");
@@ -373,7 +389,11 @@ $(document).ready(function() {
     $value.on("change", () => checkOption($value, values));
     $confirmDeleteButton.on("click", onDelete);
     $("#cancelEditBtn").on("click", onCancelEdit);
-    
+   
+     $("#contentSearch, #filterCategory").on("keyup change", function () {
+        loadArticles();
+     });
+     
     categories = loadOptions($category);
     formats = loadOptions($format);
     values = loadOptions($value);

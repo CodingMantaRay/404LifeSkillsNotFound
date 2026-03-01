@@ -232,6 +232,26 @@
         <!-- ENTRIES PLACEHOLDER (now includes Edit/Delete UI) -->
         <div class="card shadow-sm">
           <div class="card-body">
+            <div class="row g-2 mb-4">
+            <div class="col-md-8">
+            <div class="input-group">
+              <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+              <input type="text" id="contentSearch" class="form-control" placeholder="Search by ID or Title">
+            </div>
+            </div>
+            <div class="col-md-4">
+              <select id="filterCategory" class="form-select">
+                <option value="All">All Categories</option>
+                <option>Home & Cleaning</option>
+                <option>Food & Cooking</option>
+                <option>DIY & Repairs</option>
+                <option>Organization</option>
+                <option>Money & Budgeting</option>
+                <option>Health & Wellness</option>
+              </select>
+            </div>
+            </div>
+            
             <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
               <h2 class="h5 fw-bold mb-0">Article Entries</h2>
             </div>
