@@ -95,7 +95,7 @@
       <div class="col-lg-4">
 
         <!-- FORM -->
-        <div class="card shadow-sm fade-in" style="border-top: 3px solid brown;">
+        <div class="card shadow-sm fade-in" id="formCard" style="border-top: 3px solid brown;">
           <div class="card-body">
             <div class="d-flex justify-content-between align-items-start mb-2">
               <h2 class="h5 fw-bold mb-0" id="formHeader">Create / Update Article</h2>
@@ -122,7 +122,7 @@
               <!-- Article ID -->
               <div class="mb-3">
                 <label class="form-label" for="itemId">
-                  <i class="bi bi-hash text-brown me-1"></i>Article ID *
+                  <i class="bi bi-hash text-brown me-1" id="itemIdLockIcon"></i>Article ID *
                 </label>
                 <input type="text" class="form-control" id="itemId" placeholder="E.g., A101" required>
                 <div class="invalid-feedback">Please enter an Article ID.</div>
@@ -192,8 +192,12 @@
                   class="form-control"
                   id="extraInfo"
                   rows="3"
+                  maxlength="200"
                   placeholder="E.g., beginner-friendly, under 30 minutes"
                 ></textarea>
+                <div class="d-flex justify-content-end mt-1">
+                  <small class="text-muted" id="charCounter">0 / 200</small>
+                </div>
               </div>
 
               <!-- Action buttons -->
@@ -408,6 +412,137 @@
       });
     }, { threshold: 0.1 });
     document.querySelectorAll('.fade-in').forEach(el => fadeObs.observe(el));
+
+    // Live stats + empty state
+    function updateContentStats() {
+      const cards = document.querySelectorAll('#contentCards .entry-card');
+      const total = cards.length;
+      const categories = new Set();
+      cards.forEach(card => {
+        const catBadge = card.querySelector('.badge.text-bg-brown');
+        if (catBadge) categories.add(catBadge.textContent.trim());
+      });
+      let freeCount = 0;
+      cards.forEach(card => {
+        card.querySelectorAll('.badge').forEach(b => {
+          if (b.textContent.trim() === 'Free') freeCount++;
+        });
+      });
+      document.getElementById('statTotal').textContent = total;
+      document.getElementById('statCategories').textContent = categories.size;
+      document.getElementById('statFree').textContent = freeCount;
+      const countBadge = document.getElementById('articleCountBadge');
+      if (countBadge) countBadge.textContent = total + (total === 1 ? ' article' : ' articles');
+      const emptyState = document.getElementById('emptyState');
+      if (emptyState) emptyState.classList.toggle('d-none', total > 0);
+    }
+    updateContentStats();
+    const contentCardsEl = document.getElementById('contentCards');
+    if (contentCardsEl) {
+      new MutationObserver(updateContentStats).observe(contentCardsEl, { childList: true, subtree: true });
+    }
+
+    // === EDIT MODE UI ENHANCEMENTS ===
+    const formCard   = document.getElementById('formCard');
+    const itemIdInput = document.getElementById('itemId');
+    const lockIcon   = document.getElementById('itemIdLockIcon');
+    const charCounter = document.getElementById('charCounter');
+    const notesField = document.getElementById('extraInfo');
+    const trackFields = ['title', 'category', 'format', 'value', 'extraInfo'];
+    let originalValues = {};
+
+    // Character counter
+    if (notesField && charCounter) {
+      notesField.addEventListener('input', function () {
+        const len = this.value.length;
+        charCounter.textContent = len + ' / 200';
+        charCounter.style.color = len > 180 ? '#dc3545' : '';
+      });
+    }
+
+    function checkFieldChange(e) {
+      const orig = originalValues[e.target.id] ?? '';
+      e.target.classList.toggle('field-changed', e.target.value !== orig);
+    }
+
+    function setEditModeUI(isEditing, articleId) {
+      // 1. Form card top border: amber in edit, brown in create
+      if (formCard) {
+        formCard.style.borderTopColor = isEditing ? '#c97a3a' : 'brown';
+      }
+
+      // 2. Lock / unlock Article ID field
+      if (itemIdInput) {
+        itemIdInput.readOnly = isEditing;
+      }
+      if (lockIcon) {
+        lockIcon.className = isEditing
+          ? 'bi bi-lock text-brown me-1'
+          : 'bi bi-hash text-brown me-1';
+      }
+
+      // 3. Active card highlight + ribbon
+      document.querySelectorAll('.entry-card').forEach(card => {
+        card.classList.remove('editing-active');
+        const existing = card.querySelector('.editing-ribbon');
+        if (existing) existing.remove();
+      });
+      if (isEditing && articleId) {
+        const btn = document.querySelector(`.editBtn[data-id="${articleId}"]`);
+        if (btn) {
+          const card = btn.closest('.entry-card');
+          if (card) {
+            card.classList.add('editing-active');
+            card.style.position = 'relative';
+            const ribbon = document.createElement('div');
+            ribbon.className = 'editing-ribbon';
+            ribbon.textContent = 'Editing';
+            card.prepend(ribbon);
+          }
+        }
+      }
+
+      // 4. Field change tracking
+      trackFields.forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.classList.remove('field-changed');
+        el.removeEventListener('input', checkFieldChange);
+        el.removeEventListener('change', checkFieldChange);
+      });
+      if (isEditing) {
+        originalValues = {};
+        trackFields.forEach(id => {
+          const el = document.getElementById(id);
+          if (!el) return;
+          originalValues[id] = el.value;
+          el.addEventListener('input', checkFieldChange);
+          el.addEventListener('change', checkFieldChange);
+        });
+      } else {
+        originalValues = {};
+      }
+    }
+
+    // Listen for Edit button clicks (works alongside content.js)
+    document.addEventListener('click', function (e) {
+      const btn = e.target.closest('.editBtn');
+      if (!btn) return;
+      const articleId = btn.dataset.id;
+      setEditModeUI(true, articleId);
+      // 5. Smooth scroll to form on mobile / when scrolled past it
+      if (formCard) {
+        setTimeout(() => {
+          formCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }, 60);
+      }
+    });
+
+    // Cancel edit / Clear resets UI
+    const cancelEditBtn = document.getElementById('cancelEditBtn');
+    if (cancelEditBtn) cancelEditBtn.addEventListener('click', () => setEditModeUI(false, null));
+    const clearBtn = document.getElementById('clearBtn');
+    if (clearBtn) clearBtn.addEventListener('click', () => setEditModeUI(false, null));
   </script>
 </body>
 </html>

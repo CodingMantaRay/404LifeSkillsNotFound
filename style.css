@@ -283,6 +283,42 @@ h3 {color: #3b1a0a;}
   background-color: #fffbf5 !important;
 }
 
+/* Active card being edited */
+.entry-card.editing-active {
+  box-shadow: 0 0 0 2px #c97a3a, 0 4px 16px rgba(201, 122, 58, 0.25) !important;
+  border-color: #c97a3a !important;
+  transform: none !important;
+}
+
+/* "EDITING" ribbon on active card */
+.editing-ribbon {
+  position: absolute;
+  top: 0;
+  right: 10px;
+  background: #c97a3a;
+  color: #fff;
+  font-size: 0.6rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 0 0 5px 5px;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+
+/* Field changed highlight when editing */
+.field-changed {
+  background-color: #fffbf0 !important;
+  border-color: #c97a3a !important;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+/* Locked Article ID in edit mode */
+#itemId[readonly] {
+  background-color: #fdf6ee;
+  cursor: not-allowed;
+  opacity: 0.8;
+}
+
 
 
 
