@@ -1,5 +1,6 @@
 // Global variables
 let $productForm, $productId, $productDesc, $category, $unit, $price, $weight, $color, $details;
+let $cartTable;
 let categories, units;
 let formWidgets, formItems;
 
@@ -255,8 +256,76 @@ function onSave(event) {
     loadProducts();
 }
 
+function loadCart() {
+    // Get products from localStorage
+    let productsArr = getItems("products");
+    if (!productsArr)
+        return;
+    // Create map out of products to make it easier to search by ID
+    const products = new Map(productsArr.map((o) => [o.id, o]));
+
+    // Get cart (list of IDs) from localStorage
+    const cartIds = JSON.parse(localStorage.getItem("cart"));
+    if (!Array.isArray(cartIds))
+        return;
+    // Get product objects from cart
+    const cart = new Array(cartIds.map((o) => products.get(o)));
+
+    // Add cart to HTML table
+    let html = "";
+    for (let c of cart[0]) {
+        html += cartItemHtml(c);
+    }
+    $cartTable.html(html);
+
+    setCartTotal();
+}
+
+function cartItemHtml(product) {
+    return `
+        <tr>
+            <td>${product.id}</td>
+            <td>${product.description}</td>
+            <td>${product.category}</td>
+            <td>$${parseFloat(product.price).toFixed(2)}</td>
+            <td class="text-end">
+            <button class="btn btn-sm btn-outline-danger" data-id="${product.id}">Remove</button>
+            </td>
+        </tr>`;
+}
+
 function onAddToCart() {
-    console.log("add to cart"); // TODO
+    let productId = $(this).attr("data-id"); // TODO
+
+    // Get product
+    let products = getItems("products");
+    if (!products)
+        return;
+    let product = null;
+    for (let p of products) {
+        if (p.id == productId) {
+            product = p;
+            break;
+        }  
+    }
+    if (!product)
+        return;
+
+    // Add product to cart in localStorage
+    let cart = JSON.parse(localStorage.getItem("cart"));
+    if (!Array.isArray(cart))
+        cart = [];
+    cart.push(productId); // Only add ID
+    localStorage.setItem("cart", JSON.stringify(cart));
+
+    // Add product to HTML table
+    $cartTable.html($cartTable.html() + cartItemHtml(product));
+
+    setCartTotal();
+}
+
+function setCartTotal() {
+    // TODO
 }
 
 function loadProducts() {
@@ -278,7 +347,7 @@ function loadProducts() {
                         <span class="badge text-bg-brown-light">${product.unit}</span>
                         </div>
                     </div>
-                    <button type="button" class="btn btn-sm btn-brown addToCartBtn">Add to Cart</button>
+                    <button type="button" class="btn btn-sm btn-brown addToCartBtn" data-id="${product.id}">Add to Cart</button>
                 </div>
                 <div class="mt-2 fw-semibold">${product.description}</div>
                 <div class="text-muted small mt-2">$${parseFloat(product.price).toFixed(2)}</div>
@@ -299,6 +368,10 @@ $(document).ready(function() {
             {id: "HS103", description: "Weekly Home Planner Pack", category: "Printable Planners", unit: "Pack", price: 8.99, weight: "", color: "", notes: ""}
         ];
         localStorage.setItem("products", JSON.stringify(initialData));
+    }
+    if (!localStorage.getItem("cart")) {
+        const cart = ["HS102", "HS103"];
+        localStorage.setItem("cart", JSON.stringify(cart));
     }
 
     $productForm = $("#productForm");
@@ -331,5 +404,8 @@ $(document).ready(function() {
     //     loadItems();
     // });
 
+    $cartTable = $("#cartTableBody");
+
     loadProducts();
+    loadCart();
 });
