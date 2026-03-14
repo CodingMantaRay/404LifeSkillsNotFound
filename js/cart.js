@@ -1,14 +1,194 @@
-import * as Util from "./utilities.js";
-
 // Global variables
 let $productForm, $productId, $productDesc, $category, $unit, $price, $weight, $color, $details;
 let categories, units;
 let formWidgets, formItems;
 
+// -----------------------------------------------------------------------------------------------
+// Utility functions:                                                                            |
+// -----------------------------------------------------------------------------------------------
+
+function getError($widget) {
+    return $widget.hasClass("is-invalid");
+}
+
+function setError($widget, isError) {
+    if (isError) {
+        $widget.addClass("is-invalid"); // .is-invalid
+    } else {
+        $widget.removeClass("is-invalid"); // .is-valid
+    }
+}
+
+function loadOptions($select) {
+    let options = [];
+    // Loop through "option" children of $select
+    for (let option of $select.children("option")) {
+        let $option = $(option);
+        // Don't include options with value "" (i.e. placeholder options)
+        if ($option.attr("value") != "") {
+            // Add "option" text to categories
+            options.push($option.text());
+        }
+    }
+    return options; 
+}
+
+function checkEmpty($widget) {
+    let isError = ($widget.val().trim() == "");
+    setError($widget, isError);
+    return isError;
+}
+
+function checkOption($widget, options) {
+    let isError = isValidOption($widget.val().trim(), options);
+    setError($widget, isError);
+    return isError;
+}
+
+function isValidOption(chosenOption, options) {
+    return chosenOption == "" || options.indexOf(chosenOption) == -1
+}
+
+/**
+ * Gets the given collection (a JSON array) from local storage.
+ * If collection not found (i.e. item with key == collectionName not found 
+ * in local storage), then returns undefined.
+ * 
+ * @param {string} collectionName - name (key) of collection to get from storage
+ * @returns Array of objects converted from JSON, or undefined
+ */
+function getItems(collectionName) {
+    let json = localStorage.getItem(collectionName);
+    let items;
+    if (json == null) {
+        return undefined;
+    }
+    items = JSON.parse(json);
+    if (!Array.isArray(items))
+        throw new Error(`localStorage item ${collectionName} is not an array`);
+    return items;
+}
+
+/**
+ * Adds new item to local storage.
+ * If an item with the same ID already exists, does NOT add item.
+ * 
+ * @param {string} collectionName - name of collection to store item in
+ * @param {object} item - object with a unique "id" property
+ * @returns true if item was added successfully, else false
+ */
+function addItem(collectionName, item) {
+    let items = getItems(collectionName);
+    if (items == undefined)
+        items = [item];
+    else {
+        for (let i of items) {
+            if (i.id == item.id)
+                // Don't add item with duplicate ID
+                return false;
+        }
+        items.push(item);
+    }
+    localStorage.setItem(collectionName, JSON.stringify(items));
+    return true;
+}
+
+/**
+ * Updates the item with the given ID in the given collection.
+ * 
+ * Note: If itemId and newItem.id differ, the existing item 
+ * with id equal to itemId is removed and replaced with newItem,
+ * UNLESS another item with newItem.id exists (in which case
+ * nothing is updated).
+ * 
+ * @param {string} collectionName - name of collection to store item in
+ * @param {string} itemId - id of object to update
+ * @param {object} newItem - object with updated properties, including a unique "id" property
+ * @param {function} verifyItem - function with one param that verifies the properties of newItem
+ * @returns true if item was added successfully, else false
+ */
+function updateItem(collectionName, itemId, newItem, verifyItem = (item) => true) {
+    // Verify newItem parameter
+    if (!verifyItem(newItem))
+        throw new Error("New item missing a required property");
+    
+    let items = getItems(collectionName);
+    if (items == undefined) {
+        // No saved items - create new item list
+        items = [newItem];
+    } else {
+        let idChanged = (itemId != newItem.id);
+        // Find an existing item with the given id (itemId parameter)
+        let itemIndex = null;
+        for (let i = 0; i < items.length; i++) {
+            // Case 1: idChanged false. Assumes only ONE item with given ID, returns first one.
+            // Case 2: idChanged true, no items with newItem.id. Update & return true.
+            // Case 3: idChanged true, item with newItem.id exists. Return false.
+            if (items[i].id == itemId) {
+                itemIndex = i;
+                if (!idChanged)
+                    break;
+            } if (idChanged && items[i].id == newItem.id) {
+                // Item with given ID already exists and we are not updating it
+                return false;
+            }
+        }
+        if (itemIndex != null) {
+            // If item exists, modify it
+            items[itemIndex] = newItem;
+        } else {
+            // If item doesn't exist, add it
+            items.push(newItem);
+        }
+    }
+
+    localStorage.setItem(collectionName, JSON.stringify(items));
+    return true;
+}
+
+function deleteItem(collectionName, itemId) {
+    // Get items from the given collection
+    let items = getItems(collectionName);
+    if (items == undefined) {
+        // No saved collection
+        return;
+    }
+    
+    // Delete all items with the given id (itemId parameter)
+    let numItems = items.length;
+    items = items.filter(function (a) {
+        return a.id != itemId;
+    });
+    if (items.length < numItems) {
+        localStorage.setItem(collectionName, JSON.stringify(items));
+    }
+}
+
+function filterItems(collectionName, searchId, filterId, matchesSearchFunc) {
+    let allItems = getItems(collectionName);
+    if (!allItems)
+        return;
+    let searchText = $(`#${searchId}`).val() ? $(`#${searchId}`).val().toLowerCase() : "";
+    let filterCat = $(`#${filterId}`).val() || "All";
+
+    let loadedItems = [];
+    for (let item of allItems) {
+        let matchesSearch = matchesSearchFunc(item, searchText);
+        let matchesCategory = (filterCat === "All" || item.category === filterCat);
+        if (matchesSearch && matchesCategory) {
+            loadedItems.push(item);
+        }
+    }
+
+    return loadedItems;
+}
+
+// -----------------------------------------------------------------------------------------------
+
 function checkPosNum($widget) {
     let number = parseFloat($widget.val().trim());
     let isError = (isNaN(number) || number < 0);
-    Util.setError($widget, isError);
+    setError($widget, isError);
     return isError;
 }
 
@@ -28,16 +208,16 @@ function checkForm() {
         let $widget = formWidgets[i];
 
         if (prop == "category") {
-            if (Util.checkOption($widget, categories))
+            if (checkOption($widget, categories))
                 isError = true;
         } else if (prop == "unit") {
-            if (Util.checkOption($widget, units))
+            if (checkOption($widget, units))
                 isError = true;
         } else if (prop == "price") {
             if (checkPosNum($widget))
                 isError = true;
         } else {
-            if (Util.checkEmpty($widget))
+            if (checkEmpty($widget))
                 isError = true;
         }
         
@@ -55,7 +235,7 @@ function checkForm() {
  */
 function clearForm() {
     for (let $widget of formWidgets) {
-        Util.setError($widget, false);
+        setError($widget, false);
         $widget.val("");
     }
 }
@@ -70,7 +250,7 @@ function onSave(event) {
     if (!product)
         return;
 
-    Util.addItem("products", product);
+    addItem("products", product);
     clearForm();
     loadProducts();
 }
@@ -80,11 +260,11 @@ function onAddToCart() {
 }
 
 function loadProducts() {
-    let products = Util.getItems("products");
+    let products = getItems("products");
     if (!products)
         return;
 
-    // let products = Util.filterItems("contentSearch", "filterCategory", (product, searchText) => {product.title.toLowerCase().includes(searchText) || product.id.toLowerCase().includes(searchText)})
+    // let products = filterItems("contentSearch", "filterCategory", (product, searchText) => {product.title.toLowerCase().includes(searchText) || product.id.toLowerCase().includes(searchText)})
 
     let html = "";
     for (let product of products) {
@@ -112,15 +292,14 @@ function loadProducts() {
 }
 
 $(document).ready(function() {
-    // TODO
-    // if (!localStorage.getItem("products")) {
+    if (!localStorage.getItem("products")) {
         const initialData = [
             {id: "HS101", description: "Kitchen Reset Guide", category: "Kitchen Resources", unit: "Download", price: 12.99, weight: "", color: "", notes: ""},
             {id: "HS102", description: "Closet Refresh Bundle", category: "Home Organization", unit: "Bundle", price: 15.99, weight: "", color: "", notes: ""},
             {id: "HS103", description: "Weekly Home Planner Pack", category: "Printable Planners", unit: "Pack", price: 8.99, weight: "", color: "", notes: ""}
         ];
         localStorage.setItem("products", JSON.stringify(initialData));
-    // }
+    }
 
     $productForm = $("#productForm");
     $productId = $($productForm.find("#productId")[0]);
@@ -132,8 +311,8 @@ $(document).ready(function() {
     $color = $($productForm.find("#color")[0]);
     $details = $($productForm.find("#details")[0]);
 
-    categories = Util.loadOptions($category);
-    units = Util.loadOptions($unit);
+    categories = loadOptions($category);
+    units = loadOptions($unit);
 
     formWidgets = [$productId, $productDesc, $category, $unit,
         $price, $weight, $color, $details];
@@ -141,15 +320,15 @@ $(document).ready(function() {
     "price", "weight", "color", "details"];
 
     $productForm.on("submit", onSave);
-    $productId.on("keyup", () => Util.checkEmpty($(this)));
-    $productDesc.on("keyup", () => Util.checkEmpty($(this)));
-    $category.on("change", () => Util.checkOption($(this), categories));
-    $unit.on("change", () => Util.checkOption($(this), units));
-    $price.on("keyup", () => Util.checkEmpty($(this)));
+    $productId.on("keyup", () => checkEmpty($(this)));
+    $productDesc.on("keyup", () => checkEmpty($(this)));
+    $category.on("change", () => checkOption($(this), categories));
+    $unit.on("change", () => checkOption($(this), units));
+    $price.on("keyup", () => checkEmpty($(this)));
     // Not checking "Weight", "Color", or "Additional Details"
    
     // $("#contentSearch, #filterCategory").on("keyup change", function () {
-    //     Util.loadItems();
+    //     loadItems();
     // });
 
     loadProducts();
