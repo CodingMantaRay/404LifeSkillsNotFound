@@ -7,6 +7,7 @@
    <title>404 Life Skills | Shopping Cart</title>
 
    <!-- Favicon -->
+    
    <link rel="icon"
       href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%23A52A2A' rx='5'/><text x='50%25' y='56%25' dominant-baseline='middle' text-anchor='middle' fill='white' font-size='10' font-family='Arial' font-weight='bold'>404</text></svg>">
 
@@ -302,7 +303,10 @@
                                     <span class="badge text-bg-brown-light">Download</span>
                                  </div>
                               </div>
-                              <button type="button" class="btn btn-sm btn-brown addToCartBtn" data-id="HS101">Add to Cart</button>
+                              <div class="d-flex gap-1">
+                                 <button type="button" class="btn btn-sm btn-brown addToCartBtn" data-id="HS101">Add to Cart</button>
+                                 <button type="button" class="btn btn-sm btn-outline-brown favBtn" data-id="HS101" data-title="Kitchen Reset Guide" data-price="$12.99" title="Add to Favorites"><i class="bi bi-heart"></i></button>
+                              </div>
                            </div>
                            <div class="mt-2 fw-semibold">Kitchen Reset Guide</div>
                            <div class="text-muted small mt-2">$12.99</div>
@@ -319,7 +323,10 @@
                                     <span class="badge text-bg-brown-light">Bundle</span>
                                  </div>
                               </div>
-                              <button type="button" class="btn btn-sm btn-brown addToCartBtn" data-id="HS102">Add to Cart</button>
+                              <div class="d-flex gap-1">
+                                 <button type="button" class="btn btn-sm btn-brown addToCartBtn" data-id="HS102">Add to Cart</button>
+                                 <button type="button" class="btn btn-sm btn-outline-brown favBtn" data-id="HS102" data-title="Closet Refresh Bundle" data-price="$15.99" title="Add to Favorites"><i class="bi bi-heart"></i></button>
+                              </div>
                            </div>
                            <div class="mt-2 fw-semibold">Closet Refresh Bundle</div>
                            <div class="text-muted small mt-2">$15.99</div>
@@ -336,7 +343,10 @@
                                     <span class="badge text-bg-brown-light">Pack</span>
                                  </div>
                               </div>
-                              <button type="button" class="btn btn-sm btn-brown addToCartBtn" data-id="HS103">Add to Cart</button>
+                              <div class="d-flex gap-1">
+                                 <button type="button" class="btn btn-sm btn-brown addToCartBtn" data-id="HS103">Add to Cart</button>
+                                 <button type="button" class="btn btn-sm btn-outline-brown favBtn" data-id="HS103" data-title="Weekly Home Planner Pack" data-price="$8.99" title="Add to Favorites"><i class="bi bi-heart"></i></button>
+                              </div>
                            </div>
                            <div class="mt-2 fw-semibold">Weekly Home Planner Pack</div>
                            <div class="text-muted small mt-2">$8.99</div>
@@ -406,6 +416,22 @@
                      <div class="d-flex gap-2">
                         <button class="btn btn-outline-brown" id="clearCartBtn" type="button">Clear Cart</button>
                         <button class="btn btn-brown" id="checkoutBtn" type="button">Send JSON to API</button>
+                     </div>
+                  </div>
+               </div>
+            </div>
+
+            <!-- FAVORITES -->
+            <div class="card shadow-sm mb-4 fade-in">
+               <div class="card-body">
+                  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                     <h2 class="h5 fw-bold mb-0"><i class="bi bi-heart-fill text-brown me-2"></i>Favorites</h2>
+                     <span class="badge text-bg-brown-light" id="favCountBadge">0 saved</span>
+                  </div>
+                  <div id="favList">
+                     <div id="favEmptyState" class="text-center py-3">
+                        <i class="bi bi-heart" style="font-size:2rem; color:#c97a3a;"></i>
+                        <p class="mt-2 mb-0 text-muted small">No favorites yet. Click ♡ on a product to save it.</p>
                      </div>
                   </div>
                </div>
@@ -518,6 +544,68 @@
         el.addEventListener('animationend', () => el.classList.remove('total-pulse'), { once: true });
       }
     }
+
+    // 5. Favorites
+    const favorites = {};
+
+    function updateFavUI() {
+      const count = Object.keys(favorites).length;
+      const badge = document.getElementById('favCountBadge');
+      if (badge) badge.textContent = count + (count === 1 ? ' saved' : ' saved');
+
+      const favList = document.getElementById('favList');
+      const emptyState = document.getElementById('favEmptyState');
+      favList.querySelectorAll('.fav-item').forEach(el => el.remove());
+
+      if (count === 0) {
+        if (emptyState) emptyState.classList.remove('d-none');
+      } else {
+        if (emptyState) emptyState.classList.add('d-none');
+        Object.values(favorites).forEach(item => {
+          const div = document.createElement('div');
+          div.className = 'fav-item';
+          div.innerHTML = `
+            <div>
+              <div class="fw-semibold">${item.title}</div>
+              <div class="text-muted small">${item.price}</div>
+            </div>
+            <button class="btn btn-sm btn-outline-danger removeFavBtn" data-id="${item.id}" title="Remove from favorites">
+              <i class="bi bi-heart-slash"></i>
+            </button>`;
+          favList.appendChild(div);
+        });
+      }
+    }
+
+    document.addEventListener('click', function (e) {
+      // Toggle favorite
+      const favBtn = e.target.closest('.favBtn');
+      if (favBtn) {
+        const id = favBtn.dataset.id;
+        if (favorites[id]) {
+          delete favorites[id];
+          favBtn.classList.remove('favorited');
+          favBtn.querySelector('i').className = 'bi bi-heart';
+        } else {
+          favorites[id] = { id, title: favBtn.dataset.title, price: favBtn.dataset.price };
+          favBtn.classList.add('favorited');
+          favBtn.querySelector('i').className = 'bi bi-heart-fill';
+        }
+        updateFavUI();
+      }
+      // Remove from favorites list
+      const removeBtn = e.target.closest('.removeFavBtn');
+      if (removeBtn) {
+        const id = removeBtn.dataset.id;
+        delete favorites[id];
+        const btn = document.querySelector(`.favBtn[data-id="${id}"]`);
+        if (btn) {
+          btn.classList.remove('favorited');
+          btn.querySelector('i').className = 'bi bi-heart';
+        }
+        updateFavUI();
+      }
+    });
 
     // Watch cart tbody for changes
     const cartBody = document.getElementById('cartTableBody');
