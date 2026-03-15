@@ -217,6 +217,8 @@ function checkForm() {
         } else if (prop == "price") {
             if (checkPosNum($widget))
                 isError = true;
+        } else if (prop == "weight" || prop == "color" || prop == "details") {
+            continue;
         } else {
             if (checkEmpty($widget))
                 isError = true;
@@ -278,7 +280,8 @@ function loadCart() {
     }
     $cartTable.html(html);
 
-    setCartTotal();
+    $(".cartRemoveBtn").on("click", removeFromCart);
+    modifyCartStats();
 }
 
 function cartItemHtml(product) {
@@ -289,7 +292,7 @@ function cartItemHtml(product) {
             <td>${product.category}</td>
             <td>$${parseFloat(product.price).toFixed(2)}</td>
             <td class="text-end">
-            <button class="btn btn-sm btn-outline-danger" data-id="${product.id}">Remove</button>
+            <button class="btn btn-sm btn-outline-danger cartRemoveBtn" data-id="${product.id}">Remove</button>
             </td>
         </tr>`;
 }
@@ -319,13 +322,33 @@ function onAddToCart() {
     localStorage.setItem("cart", JSON.stringify(cart));
 
     // Add product to HTML table
-    $cartTable.html($cartTable.html() + cartItemHtml(product));
+    let $product = $(cartItemHtml(product));
+    $cartTable.append($product);
+    $product.find(".cartRemoveBtn").on("click", removeFromCart);
 
-    setCartTotal();
+    modifyCartStats();
 }
 
-function setCartTotal() {
+function modifyProductStats(count) {
     // TODO
+    $("#statProducts").text(count);
+    $("#productCountBadge").text(count + " products");
+}
+
+function modifyCartStats() {
+    // # items in cart
+    const cartSize = $cartTable.children().length;
+    $("#statCartItems").text(cartSize);
+    $("#cartCountBadge").text(cartSize + " items");
+
+    // Total cost of cart
+    let total = 0;
+    const rows = $cartTable[0].rows;
+    for (let row of rows) {
+        const price = parseFloat($(row.cells[3]).text().slice(1));
+        total += price;
+    }
+    $("#cartTotal").text("$" + total.toFixed(2));
 }
 
 function loadProducts() {
@@ -358,6 +381,29 @@ function loadProducts() {
     $productCards.html(html);
 
     $productCards.find(".addToCartBtn").on("click", onAddToCart);
+    modifyProductStats(products.length);
+}
+
+function clearCart() {
+    $cartTable.html("");
+    localStorage.removeItem("cart");
+    modifyCartStats();
+}
+
+function removeFromCart() {
+    // Table row ("tr") is grandparent of "remove" button
+    const $row = $(this).parent().parent(); 
+    // Get cart
+    let cart = JSON.parse(localStorage.getItem("cart"));
+    if (!Array.isArray(cart))
+        cart = [];
+    // Remove from storage
+    cart.splice($row.index(), 1);
+    localStorage.setItem("cart", JSON.stringify(cart));
+    // Remove from HTML
+    $row.remove();
+
+    modifyCartStats();
 }
 
 $(document).ready(function() {
@@ -387,6 +433,8 @@ $(document).ready(function() {
     categories = loadOptions($category);
     units = loadOptions($unit);
 
+    $("#statCategories").text(categories.length);
+
     formWidgets = [$productId, $productDesc, $category, $unit,
         $price, $weight, $color, $details];
     formItems = ["id", "description", "category", "unit",
@@ -405,6 +453,7 @@ $(document).ready(function() {
     // });
 
     $cartTable = $("#cartTableBody");
+    $("#clearCart").on("click", clearCart);
 
     loadProducts();
     loadCart();

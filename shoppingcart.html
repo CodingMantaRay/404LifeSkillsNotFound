@@ -377,7 +377,7 @@
                               <td>Kitchen Resources</td>
                               <td>$12.99</td>
                               <td class="text-end">
-                                 <button class="btn btn-sm btn-outline-danger" data-id="HS101">Remove</button>
+                                 <button class="btn btn-sm btn-outline-danger cartRemoveBtn" data-id="HS101">Remove</button>
                               </td>
                            </tr>
                            <tr>
@@ -386,7 +386,7 @@
                               <td>Printable Planners</td>
                               <td>$8.99</td>
                               <td class="text-end">
-                                 <button class="btn btn-sm btn-outline-danger" data-id="HS103">Remove</button>
+                                 <button class="btn btn-sm btn-outline-danger cartRemoveBtn" data-id="HS103">Remove</button>
                               </td>
                            </tr>
                         </tbody>
@@ -398,7 +398,7 @@
                         <strong>Cart Total:</strong> <span id="cartTotal">$21.98</span>
                      </div>
                      <div class="d-flex gap-2">
-                        <button class="btn btn-outline-brown" type="button">Clear Cart</button>
+                        <button class="btn btn-outline-brown" type="button" id="clearCart">Clear Cart</button>
                         <button class="btn btn-brown" type="button">Send JSON to API</button>
                      </div>
                   </div>
@@ -441,19 +441,6 @@
 
    <!-- Scroll to top button -->
    <button id="scrollTop" title="Back to top">&#8679;</button>
-
-   <!-- Bootstrap JS -->
-   <!-- <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script> -->
-
-   <!-- <script>
-      const scrollBtn = document.getElementById('scrollTop');
-    window.addEventListener('scroll', () => {
-      scrollBtn.style.display = window.scrollY > 300 ? 'block' : 'none';
-    });
-    scrollBtn.addEventListener('click', () => {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    });
-   </script> -->
 </body>
 
 </html>
