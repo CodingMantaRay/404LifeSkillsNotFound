@@ -253,9 +253,10 @@ function onSave(event) {
     if (!product)
         return;
 
-    addItem("products", product);
+    updateItem("products", product.id, product);
     clearForm();
     loadProducts();
+    $("#jsonPreview").text(JSON.stringify(getItems("products"), null, 2));
 }
 
 function loadCart() {
