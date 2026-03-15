@@ -217,6 +217,8 @@ function checkForm() {
         } else if (prop == "price") {
             if (checkPosNum($widget))
                 isError = true;
+        } else if (prop == "weight" || prop == "color" || prop == "details") {
+            setError($widget, false); // Not required fields, so no error
         } else {
             if (checkEmpty($widget))
                 isError = true;
@@ -265,21 +267,22 @@ function loadCart() {
     const products = new Map(productsArr.map((o) => [o.id, o]));
 
     // Get cart (list of IDs) from localStorage
-    const cartIds = JSON.parse(localStorage.getItem("cart"));
-    if (!Array.isArray(cartIds))
-        return;
+    const cartIds = JSON.parse(localStorage.getItem("cart")) || [];
+    
     // Get product objects from cart
-    const cart = new Array(cartIds.map((o) => products.get(o)));
+    const cart = cartIds.map((id) => products.get(id)).filter(p => p !== undefined);
 
     // Add cart to HTML table
     let html = "";
-    for (let c of cart[0]) {
+    for (let c of cart) {
         html += cartItemHtml(c);
     }
     $cartTable.html(html);
 
-    setCartTotal();
+    setCartTotal(); 
 }
+        
+
 
 function cartItemHtml(product) {
     return `
@@ -317,15 +320,36 @@ function onAddToCart() {
         cart = [];
     cart.push(productId); // Only add ID
     localStorage.setItem("cart", JSON.stringify(cart));
-
+    loadCart();
     // Add product to HTML table
-    $cartTable.html($cartTable.html() + cartItemHtml(product));
+    
 
     setCartTotal();
 }
 
 function setCartTotal() {
-    // TODO
+    let productsArr = getItems("products");
+        if (!productsArr) return;
+        const products = new Map(productsArr.map((o) => [o.id, o]));
+        const cartIds = JSON.parse(localStorage.getItem("cart")) || [];
+
+        let total = 0;
+        cartIds.forEach(id => {
+            const product = products.get(id);
+            if (product) {
+                total += parseFloat(product.price);
+            }
+    });
+
+    $("#cartTotal").text(`$${total.toFixed(2)}`);
+
+    $("#totalProductsCount").text(productsArr.length);
+    $("#productCountBadge").text(`${productsArr.length} products)`);
+
+    $(".stat-items-count, #cartItemsBadge").text(cartIds.length);
+
+    const uniqueCartIds = [...new Set(productsArr.map(p => p.id).filter(id => cartIds.includes(id)))];
+    $("#totalCategoriesCount").text(uniqueCartIds.length);
 }
 
 function loadProducts() {
@@ -357,8 +381,7 @@ function loadProducts() {
     let $productCards = $("#productCards");
     $productCards.html(html);
 
-    $productCards.find(".addToCartBtn").on("click", onAddToCart);
-}
+    }
 
 $(document).ready(function() {
     if (!localStorage.getItem("products")) {
@@ -392,20 +415,73 @@ $(document).ready(function() {
     formItems = ["id", "description", "category", "unit",
     "price", "weight", "color", "details"];
 
-    $productForm.on("submit", onSave);
-    $productId.on("keyup", () => checkEmpty($(this)));
-    $productDesc.on("keyup", () => checkEmpty($(this)));
-    $category.on("change", () => checkOption($(this), categories));
-    $unit.on("change", () => checkOption($(this), units));
-    $price.on("keyup", () => checkEmpty($(this)));
+    
+
+    $productId.on("keyup", function() { checkEmpty($(this)); });
+    $productDesc.on("keyup", function() { checkEmpty($(this)); });
+    $category.on("change", function() { checkOption($(this), categories); });
+    $unit.on("change", function() { checkOption($(this), units); });
+    $price.on("keyup", function() { checkEmpty($(this)); });
     // Not checking "Weight", "Color", or "Additional Details"
    
     // $("#contentSearch, #filterCategory").on("keyup change", function () {
     //     loadItems();
     // });
 
-    $cartTable = $("#cartTableBody");
+    $productForm.on("submit", onSave);     
 
-    loadProducts();
+$("#searchInput").on("keyup", function() {
+    const searchTerm = $(this).val().toLowerCase();
+    $("#productCards .col-md-6").filter(function() {
+        const cardText = $(this).text().toLowerCase();
+        $(this).toggle(cardText.indexOf(searchTerm) > -1);
+     });
+    });
+    
+$(document).on("click", ".addToCartBtn", onAddToCart);
+$(document).on("click", ".btn-outline-danger", function() {
+    const productId = $(this).attr("data-id");
+    let cartIds = JSON.parse(localStorage.getItem("cart")) || [];
+    cartIds = cartIds.filter(id => id !== productId);
+
+    localStorage.setItem("cart", JSON.stringify(cartIds));
+
     loadCart();
 });
+
+$("#clearCartBtn").on("click", function() {
+    localStorage.removeItem("cart");
+    loadCart();
+});
+
+$("#checkoutBtn").on("click", function() {
+    const cartIds = JSON.parse(localStorage.getItem("cart")) || [];
+    const productsArr = getItems("products") || [];
+    const productsMap = new Map(productsArr.map((o) => [o.id, o]));
+    const fullCartData = cartIds.map(id => productsMap.get(id)).filter(p => p !== undefined);
+
+
+    const JsonData = JSON.stringify(fullCartData, null, 2);
+
+    $.ajax({
+        url: 'https://jsonplaceholder.typicode.com/posts',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JsonData,
+        success: function(response) {
+            $("#ajaxStatus").html('<div class="alert alert-success">AJAX Success: JSON Data Collection Transported!</div>');
+            $("#jsonPreview").text(JsonData);
+            alert("Data sent to Restful API");
+        },
+        error: function(xhr) {
+            $("#ajaxStatus").html('<div class="alert alert-danger">AJAX Error: Status ' + xhr.status + '</div>');
+               
+        }
+              });   
+          });
+
+          $cartTable = $("#cartTableBody");
+          loadProducts();
+          loadCart();
+
+        });

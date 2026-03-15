@@ -51,7 +51,7 @@
                <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
                <li class="nav-item"><a class="nav-link" href="signup.html">Subscribers</a></li>
                <li class="nav-item"><a class="nav-link" href="content.html">Content Manager</a></li>
-               <li class="nav-item"><a class="nav-link active" href="cart.html">Shopping Cart</a></li>
+               <li class="nav-item"><a class="nav-link active" href="shoppingcart.html">Shopping Cart</a></li>
                <li class="nav-item">
                   <a class="btn btn-brown btn-sm ms-lg-2" href="signup.html">Subscribe</a>
                </li>
@@ -83,18 +83,18 @@
       <div class="container">
          <div class="row text-center g-0">
             <div class="col-4">
-               <div id="statProducts"
+               <div id="totalProductsCount"
                   style="font-size:1.5rem; font-family:'Playfair Display',serif; color:brown; font-weight:700;">0</div>
                <p class="mb-0 small text-muted">Products</p>
             </div>
             <div class="col-4"
                style="border-left:1px solid rgba(139,69,19,0.2);border-right:1px solid rgba(139,69,19,0.2);">
-               <div id="statCartItems"
+               <div id="statCartItems" class="stat-items-count"
                   style="font-size:1.5rem; font-family:'Playfair Display',serif; color:brown; font-weight:700;">0</div>
                <p class="mb-0 small text-muted">Cart Items</p>
             </div>
             <div class="col-4">
-               <div id="statCategories"
+               <div id="totalCategoriesCount"
                   style="font-size:1.5rem; font-family:'Playfair Display',serif; color:brown; font-weight:700;">0</div>
                <p class="mb-0 small text-muted">Categories</p>
             </div>
@@ -287,7 +287,7 @@
                <div class="card-body">
                   <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
                      <h2 class="h5 fw-bold mb-0">Available Products</h2>
-                     <span class="badge text-bg-brown-light" id="productCountBadge">3 products</span>
+                     <span class="badge text-bg-brown-light" id="productCountBadge">0 products</span>
                   </div>
 
                   <div class="row g-3" id="productCards">
@@ -356,7 +356,7 @@
                <div class="card-body">
                   <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
                      <h2 class="h5 fw-bold mb-0">Shopping Cart</h2>
-                     <span class="badge text-bg-brown-light" id="cartCountBadge">2 items</span>
+                     <span class="badge text-bg-brown-light" id="cartItemsBadge">0 items</span>
                   </div>
 
                   <div class="table-responsive">
@@ -398,8 +398,8 @@
                         <strong>Cart Total:</strong> <span id="cartTotal">$21.98</span>
                      </div>
                      <div class="d-flex gap-2">
-                        <button class="btn btn-outline-brown" type="button">Clear Cart</button>
-                        <button class="btn btn-brown" type="button">Send JSON to API</button>
+                        <button class="btn btn-outline-brown" id="clearCartBtn" type="button">Clear Cart</button>
+                        <button class="btn btn-brown" id="checkoutBtn" type="button">Send JSON to API</button>
                      </div>
                   </div>
                </div>
@@ -434,7 +434,7 @@
             <a class="link-light text-decoration-none" href="index.html">Home</a>
             <a class="link-light text-decoration-none" href="signup.html">Subscribers</a>
             <a class="link-light text-decoration-none" href="content.html">Content Manager</a>
-            <a class="link-light text-decoration-none" href="cart.html">Shopping Cart</a>
+            <a class="link-light text-decoration-none" href="shoppingcart.html">Shopping Cart</a>
          </div>
       </div>
    </footer>
