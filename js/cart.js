@@ -218,8 +218,6 @@ function checkForm() {
             if (checkPosNum($widget))
                 isError = true;
         } else if (prop == "weight" || prop == "color" || prop == "details") {
-            continue;
-        } else if (prop == "weight" || prop == "color" || prop == "details") {
             setError($widget, false); // Not required fields, so no error
         } else {
             if (checkEmpty($widget))
@@ -281,8 +279,7 @@ function loadCart() {
     }
     $cartTable.html(html);
 
-    $(".cartRemoveBtn").on("click", removeFromCart);
-    modifyCartStats();
+    setCartTotal(); 
 }
         
 
@@ -295,7 +292,7 @@ function cartItemHtml(product) {
             <td>${product.category}</td>
             <td>$${parseFloat(product.price).toFixed(2)}</td>
             <td class="text-end">
-            <button class="btn btn-sm btn-outline-danger cartRemoveBtn" data-id="${product.id}">Remove</button>
+            <button class="btn btn-sm btn-outline-danger" data-id="${product.id}">Remove</button>
             </td>
         </tr>`;
 }
@@ -325,33 +322,34 @@ function onAddToCart() {
     localStorage.setItem("cart", JSON.stringify(cart));
     loadCart();
     // Add product to HTML table
-    let $product = $(cartItemHtml(product));
-    $cartTable.append($product);
-    $product.find(".cartRemoveBtn").on("click", removeFromCart);
+    
 
-    modifyCartStats();
+    setCartTotal();
 }
 
-function modifyProductStats(count) {
-    // TODO
-    $("#statProducts").text(count);
-    $("#productCountBadge").text(count + " products");
-}
+function setCartTotal() {
+    let productsArr = getItems("products");
+        if (!productsArr) return;
+        const products = new Map(productsArr.map((o) => [o.id, o]));
+        const cartIds = JSON.parse(localStorage.getItem("cart")) || [];
 
-function modifyCartStats() {
-    // # items in cart
-    const cartSize = $cartTable.children().length;
-    $("#statCartItems").text(cartSize);
-    $("#cartCountBadge").text(cartSize + " items");
+        let total = 0;
+        cartIds.forEach(id => {
+            const product = products.get(id);
+            if (product) {
+                total += parseFloat(product.price);
+            }
+    });
 
-    // Total cost of cart
-    let total = 0;
-    const rows = $cartTable[0].rows;
-    for (let row of rows) {
-        const price = parseFloat($(row.cells[3]).text().slice(1));
-        total += price;
-    }
-    $("#cartTotal").text("$" + total.toFixed(2));
+    $("#cartTotal").text(`$${total.toFixed(2)}`);
+
+    $("#totalProductsCount").text(productsArr.length);
+    $("#productCountBadge").text(`${productsArr.length} products)`);
+
+    $(".stat-items-count, #cartItemsBadge").text(cartIds.length);
+
+    const uniqueCartIds = [...new Set(productsArr.map(p => p.id).filter(id => cartIds.includes(id)))];
+    $("#totalCategoriesCount").text(uniqueCartIds.length);
 }
 
 function loadProducts() {
@@ -383,31 +381,7 @@ function loadProducts() {
     let $productCards = $("#productCards");
     $productCards.html(html);
 
-    $productCards.find(".addToCartBtn").on("click", onAddToCart);
-    modifyProductStats(products.length);
-}
-
-function clearCart() {
-    $cartTable.html("");
-    localStorage.removeItem("cart");
-    modifyCartStats();
-}
-
-function removeFromCart() {
-    // Table row ("tr") is grandparent of "remove" button
-    const $row = $(this).parent().parent(); 
-    // Get cart
-    let cart = JSON.parse(localStorage.getItem("cart"));
-    if (!Array.isArray(cart))
-        cart = [];
-    // Remove from storage
-    cart.splice($row.index(), 1);
-    localStorage.setItem("cart", JSON.stringify(cart));
-    // Remove from HTML
-    $row.remove();
-
-    modifyCartStats();
-}
+    }
 
 $(document).ready(function() {
     if (!localStorage.getItem("products")) {
@@ -436,8 +410,6 @@ $(document).ready(function() {
     categories = loadOptions($category);
     units = loadOptions($unit);
 
-    $("#statCategories").text(categories.length);
-
     formWidgets = [$productId, $productDesc, $category, $unit,
         $price, $weight, $color, $details];
     formItems = ["id", "description", "category", "unit",
@@ -456,10 +428,29 @@ $(document).ready(function() {
     //     loadItems();
     // });
 
-    $cartTable = $("#cartTableBody");
-    $("#clearCart").on("click", clearCart);
+    $productForm.on("submit", onSave);     
 
-    loadProducts();
+$("#searchInput").on("keyup", function() {
+    const searchTerm = $(this).val().toLowerCase();
+    $("#productCards .col-md-6").filter(function() {
+        const cardText = $(this).text().toLowerCase();
+        $(this).toggle(cardText.indexOf(searchTerm) > -1);
+     });
+    });
+    
+$(document).on("click", ".addToCartBtn", onAddToCart);
+$(document).on("click", ".btn-outline-danger", function() {
+    const productId = $(this).attr("data-id");
+    let cartIds = JSON.parse(localStorage.getItem("cart")) || [];
+    cartIds = cartIds.filter(id => id !== productId);
+
+    localStorage.setItem("cart", JSON.stringify(cartIds));
+
+    loadCart();
+});
+
+$("#clearCartBtn").on("click", function() {
+    localStorage.removeItem("cart");
     loadCart();
 });
 
