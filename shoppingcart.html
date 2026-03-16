@@ -482,15 +482,19 @@
     document.addEventListener('click', function (e) {
       const btn = e.target.closest('.addToCartBtn');
       if (!btn) return;
-      const orig = btn.textContent;
-      btn.textContent = 'Added ✓';
-      btn.classList.replace('btn-brown', 'btn-success');
-      btn.disabled = true;
+
       setTimeout(() => {
-        btn.textContent = orig;
-        btn.classList.replace('btn-success', 'btn-brown');
-        btn.disabled = false;
-      }, 1500);
+        const originalText = btn.textContent;
+        btn.textContent = 'Added!';
+        btn.classList.replace('btn-brown', 'btn-success');
+        btn.disabled = true;
+
+        setTimeout(() => {
+          btn.textContent = originalText;
+          btn.classList.replace('btn-success', 'btn-brown');
+          btn.disabled = false;
+        }, 1500);
+      }, 50);
     });
 
     // 2. Category badge color coding
