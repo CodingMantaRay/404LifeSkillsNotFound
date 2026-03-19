@@ -383,4 +383,82 @@
         <!-- JSON PREVIEW -->
         <div class="card shadow-sm mb-4 fade-in">
           <div class="card-body">
-            <div class="d-flex justify-content-between align-items-center mb-                                                                                                                                                  
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <h2 class="h5 fw-bold mb-0">JSON Preview</h2>
+              <span class="badge text-bg-brown-light">JSON</span>
+            </div>
+            <p class="text-muted small mb-3">
+              This area will display the JSON document created from the final publication form.
+            </p>
+            <pre id="jsonPreview" class="bg-light p-3 rounded border small mb-0" style="min-height: 220px;">
+{
+  "articleId": "HS201",
+  "articleTitle": "Spring Kitchen Reset",
+  "publicationDate": "2026-04-10",
+  "distributionChannel": "Email Newsletter",
+  "reviewStatus": "Approved",
+  "editorName": "Lauren",
+  "featuredOnHomepage": "Yes",
+  "subscriberAccess": "Free",
+  "editorialNotes": "Pair this article with the pantry checklist and feature it next week."
+}
+            </pre>
+          </div>
+        </div>
+
+        <!-- AJAX STATUS -->
+        <div class="card shadow-sm fade-in">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <h2 class="h5 fw-bold mb-0">API Transport Status</h2>
+              <span class="badge text-bg-brown-light">AJAX</span>
+            </div>
+            <p class="text-muted small mb-3">
+              This section will later show whether the finalization JSON was successfully prepared and sent to a RESTful API.
+            </p>
+            <div class="alert alert-secondary mb-0" id="apiStatus">
+              Waiting to send finalization data...
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-dark-brown text-white py-4 mt-4">
+    <div class="container d-flex flex-wrap justify-content-between align-items-center gap-2">
+      <div>
+        <p class="mb-0">&copy; 2026 404 Life Skills</p>
+        <p class="mb-0 small fst-italic" style="opacity: 0.6;">Small fixes. Big wins.</p>
+      </div>
+      <div class="d-flex gap-3 flex-wrap">
+        <a class="link-light text-decoration-none" href="index.html">Home</a>
+        <a class="link-light text-decoration-none" href="signup.html">Subscribers</a>
+        <a class="link-light text-decoration-none" href="content.html">Content Manager</a>
+        <a class="link-light text-decoration-none" href="cart.html">Shopping Cart</a>
+        <a class="link-light text-decoration-none" href="finalize.html">Article Finalization</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scroll to top button -->
+  <button id="scrollTop" title="Back to top">&#8679;</button>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    const scrollBtn = document.getElementById('scrollTop');
+
+    window.addEventListener('scroll', () => {
+      scrollBtn.style.display = window.scrollY > 300 ? 'block' : 'none';
+    });
+
+    scrollBtn.addEventListener('click', () => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  </script>
+</body>
+</html>
