@@ -23,6 +23,9 @@
   <!-- Bootstrap JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="js/scroll.js" defer></script>
+
+  <!-- Custom JS -->
+  <script defer src="js/finalize.js"></script>
 </head>
 
 <body>
@@ -47,7 +50,7 @@
           <li class="nav-item"><a class="nav-link" href="signup.html">Subscribers</a></li>
           <li class="nav-item"><a class="nav-link" href="content.html">Content Manager</a></li>
           <li class="nav-item"><a class="nav-link" href="shoppingcart.html">Shopping Cart</a></li>
-          <li class="nav-item"><a class="nav-link active" href="finalize.html">Article Finalization</a></li>
+          <li class="nav-item"><a class="nav-link active" href="finalizationpage.html">Article Finalization</a></li>
           <li class="nav-item">
             <a class="btn btn-brown btn-sm ms-lg-2" href="signup.html">Subscribe</a>
           </li>
@@ -219,7 +222,7 @@
               <!-- Buttons -->
               <div class="d-grid gap-2">
                 <button class="btn btn-brown" type="submit">Save Publication Options</button>
-                <button class="btn btn-outline-brown" type="reset">Clear Form</button>
+                <button class="btn btn-outline-brown" type="reset" id="clearForm">Clear Form</button>
               </div>
             </form>
           </div>
@@ -294,7 +297,7 @@
                         <span class="badge text-bg-brown-light">Draft</span>
                       </div>
                     </div>
-                    <button type="button" class="btn btn-sm btn-brown">Load</button>
+                    <button type="button" class="btn btn-sm btn-brown loadBtn" data-id="HS201">Load</button>
                   </div>
                   <div class="mt-2 fw-semibold">Spring Kitchen Reset</div>
                   <div class="text-muted small mt-2">Ready for publication details</div>
@@ -311,7 +314,7 @@
                         <span class="badge text-bg-brown-light">Under Review</span>
                       </div>
                     </div>
-                    <button type="button" class="btn btn-sm btn-brown">Load</button>
+                    <button type="button" class="btn btn-sm btn-brown loadBtn" data-id="HS202">Load</button>
                   </div>
                   <div class="mt-2 fw-semibold">Closet Cleanout Weekend Guide</div>
                   <div class="text-muted small mt-2">Awaiting final review choice</div>
@@ -328,7 +331,7 @@
                         <span class="badge text-bg-brown-light">Approved</span>
                       </div>
                     </div>
-                    <button type="button" class="btn btn-sm btn-brown">Load</button>
+                    <button type="button" class="btn btn-sm btn-brown loadBtn" data-id="HS203">Load</button>
                   </div>
                   <div class="mt-2 fw-semibold">Weekly Cleaning Planner Pack</div>
                   <div class="text-muted small mt-2">Approved and ready to schedule</div>
