@@ -2,8 +2,6 @@
 let $articleId, $articleTitle, $pubDate, $distChannel, $reviewStatus, $articleAuthor, $featured, $access, $editNotes;
 let $pubOptionsForm, $articleCards;
 let distChannels, reviewStatuses, featuredOptions, accessTypes, defaultIdErrorMsg;
-let articleCollectionName = "articles";
-let pubOptionsCollectionName = "pubOptions";
 
 function setError($widget, isError, errorMessage=null) {
     // Set error message
@@ -141,7 +139,7 @@ function checkArticleId($widget) {
         return [id, true];
     } 
     // TODO - pulling from storage could increase latency if we check every time the ID field changes
-    const articlesWithId = getItems(articleCollectionName, []).filter((article) => article.id == id);
+    const articlesWithId = getItems("articles", []).filter((article) => article.id == id);
     // Article with ID must be present in "articles" list in storage
     if (articlesWithId.length == 0) {
         setError($widget, true, "Article ID not found.");
@@ -251,16 +249,25 @@ function defaultPubOptions(id) {
 }
 
 function loadPubInfo() {
-    let articles = getItems(articleCollectionName); // TODO filter items
+    // TODO filter pubOptions
+    let articles = getItems("articles");
     if (articles == undefined)
         return;
-    let pubOptionsMap = new Map(getItems(pubOptionsCollectionName, []).map(item => [item.id, item])); // TODO filter items
+    let pubOptionsMap = new Map(getItems("pubOptions", []).map(item => [item.id, item]));
+
+    /**
+     * Notes on structure of storage:
+     * - All values except the article's category are stored in "pubOptions" in localStorage.
+     * - The article's ID, title, and value/access type are stored in both "articles" and "pubOptions".
+     *        - article.value == pubOptions.access
+     * - The article's category is only in "articles" in localStorage. 
+     */
 
     let html = "";
     for (article of articles) {
-        const articleInfo = pubOptionsMap.get(article.id);
-        if (!articleInfo) 
-            articleInfo = defaultPubOptions(article.id);
+        const pubOptions = pubOptionsMap.get(article.id);
+        if (!pubOptions) 
+            pubOptions = defaultPubOptions(article.id);
         html += `<div class="col-md-6">
             <div class="entry-card border rounded p-3 bg-white h-100" style="border-left: 3px solid brown;">
                 <div class="d-flex justify-content-between align-items-start gap-2">
@@ -268,13 +275,13 @@ function loadPubInfo() {
                     <div class="fw-bold">${article.id}</div>
                     <div class="mt-1 d-flex flex-wrap gap-1">
                     <span class="badge text-bg-brown">${article.category}</span>
-                    <span class="badge text-bg-brown-light">${articleInfo.reviewStatus}</span>
+                    <span class="badge text-bg-brown-light">${pubOptions.reviewStatus}</span>
                     </div>
                 </div>
                 <button type="button" class="btn btn-sm btn-brown loadBtn" data-id="${article.id}">Load</button>
                 </div>
                 <div class="mt-2 fw-semibold">${article.title}</div>
-                <div class="text-muted small mt-2">${articleInfo.editNotes}</div>
+                <div class="text-muted small mt-2">${pubOptions.editNotes}</div>
             </div>
         </div>`;
     }
@@ -285,7 +292,7 @@ function loadPubInfo() {
 
 function updateArticle(articleId, articleTitle, articleAccess) {
     // Find article with an identical id
-    let articles = getItems(articleCollectionName, []);
+    let articles = getItems("articles", []);
     let articlesWithId = articles.filter((article) => article.id == articleId);
     if (articlesWithId.length == 0) {
         throw Error(`Article with id ${articleId} not found`);
@@ -294,7 +301,7 @@ function updateArticle(articleId, articleTitle, articleAccess) {
     articlesWithId[0].title = articleTitle;
     articlesWithId[0].value = articleAccess;
     // Save to localStorage
-    localStorage.setItem(articleCollectionName, JSON.stringify(articles));
+    localStorage.setItem("articles", JSON.stringify(articles));
 }
 
 /**
@@ -308,11 +315,13 @@ function onSave(event) {
         return;
 
     updateArticle(pubOptions.id, pubOptions.title, pubOptions.access);
-    updateItem(pubOptionsCollectionName, pubOptions,
+    updateItem("pubOptions", pubOptions,
         (pubOptions) => (
-            "id" in pubOptions && "pubDate" in pubOptions && "distChannel" in pubOptions && "reviewStatus" in pubOptions
-            && "author" in pubOptions && "featured" in pubOptions && "editNotes" in pubOptions)
-    ); // Note: in local storage, pub options do not include the article's title or access type (which are stored in the "articles" collection)
+            "id" in pubOptions && "title" in pubOptions && "pubDate" in pubOptions && "distChannel" in pubOptions 
+            && "reviewStatus" in pubOptions && "author" in pubOptions && "featured" in pubOptions 
+            && "access" in pubOptions && "editNotes" in pubOptions)
+    ); // Note: id, title, and access (value) are also stored in "articles" collection in storage
+    $("#jsonPreview").text(JSON.stringify(pubOptions, null, 2));
     clearForm();
     loadPubInfo();
 }
@@ -326,8 +335,8 @@ function onLoad() {
     if (!id)
         return;
 
-    // Get article title from "articles" collection
-    const articlesWithId = getItems(articleCollectionName, []).filter((item) => item.id == id);
+    // Get article from "articles" collection
+    const articlesWithId = getItems("articles", []).filter((item) => item.id == id);
     if (articlesWithId.length == 0)
         return;
     const article = articlesWithId[0];
@@ -337,7 +346,7 @@ function onLoad() {
     clearForm();
 
     // Get publication options to edit
-    let pubOptionsWithId = getItems(pubOptionsCollectionName, []).filter((item) => item.id == id);
+    let pubOptionsWithId = getItems("pubOptions", []).filter((item) => item.id == id);
     const pubOptions = pubOptionsWithId.length > 0
         ? pubOptionsWithId[0]
         : defaultPubOptions(id);
@@ -359,12 +368,12 @@ function onLoad() {
 
 $(document).ready(function() {
     // TODO remove
-    if (!localStorage.getItem(articleCollectionName)) {
+    if (!localStorage.getItem("articles")) {
         const intialData = [
             {id: "A101", title: "Fix a leaky faucet", category: "DIY & Repairs", format: "Blog Post", value: "Free", notes: "Beginner friendly"},
             {id: "LS-FOOD-001", title: "30 Useful Life Hacks", category: "Food & Cooking", format: "Video", value: "Free", notes: "Quick tips"}
         ];
-        localStorage.setItem(articleCollectionName, JSON.stringify(intialData));
+        localStorage.setItem("articles", JSON.stringify(intialData));
     }
 
     $pubOptionsForm = $("#finalizationForm");
@@ -404,4 +413,5 @@ $(document).ready(function() {
     });
 
     loadPubInfo();
+    $("#jsonPreview").text("");
 });
