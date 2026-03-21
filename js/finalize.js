@@ -1,19 +1,18 @@
 // Global variables
 let $articleId, $articleTitle, $pubDate, $distChannel, $reviewStatus, $articleAuthor, $featured, $access, $editNotes;
 let $pubOptionsForm, $articleCards;
-let distChannels, reviewStatuses, featuredOptions, accessTypes;
+let distChannels, reviewStatuses, featuredOptions, accessTypes, defaultIdErrorMsg;
 let articleCollectionName = "articles";
 let pubOptionsCollectionName = "pubOptions";
 
-// -----------------------------------------------------------------------------------------------
-// Utility functions:                                                                            |
-// -----------------------------------------------------------------------------------------------
-
-function getError($widget) {
-    return $widget.hasClass("is-invalid");
-}
-
-function setError($widget, isError) {
+function setError($widget, isError, errorMessage=null) {
+    // Set error message
+    if (errorMessage) {
+        const $errorMessage = $widget.parent().find("div.invalid-feedback");
+        if ($errorMessage.length > 0)
+            $errorMessage.text(errorMessage);
+    }
+    // Display error
     if (isError) {
         $widget.addClass("is-invalid"); // .is-invalid
     } else {
@@ -33,25 +32,6 @@ function loadOptions($select) {
         }
     }
     return options; 
-}
-
-function checkEmpty($widget=$(this)) {
-    const value = $widget.val().trim();
-    const isError = (value == "");
-    const widgetId = $widget.attr("id");
-    setError($widget, isError);
-    return [value, isError];
-}
-
-function checkOption($widget, options) {
-    const value = $widget.val().trim();
-    const isError = !isValidOption(value, options);
-    setError($widget, isError);
-    return [value, isError];
-}
-
-function isValidOption(chosenOption, options) {
-    return chosenOption != "" && options.indexOf(chosenOption) != -1
 }
 
 /**
@@ -75,50 +55,22 @@ function getItems(collectionName, defaultValue=undefined) {
 }
 
 /**
- * Adds new item to local storage.
- * If an item with the same ID already exists, does NOT add item.
- * 
- * @param {string} collectionName - name of collection to store item in
- * @param {object} item - object with a unique "id" property
- * @returns true if item was added successfully, else false
- */
-function addItem(collectionName, item) {
-    let items = getItems(collectionName);
-    if (items == undefined)
-        items = [item];
-    else {
-        for (let i of items) {
-            if (i.id == item.id)
-                // Don't add item with duplicate ID
-                return false;
-        }
-        items.push(item);
-    }
-    localStorage.setItem(collectionName, JSON.stringify(items));
-    return true;
-}
-
-/**
  * Updates the item with the given ID in the given collection.
  * 
- * Note: If itemId and newItem.id differ, the existing item 
- * with id equal to itemId is removed and replaced with newItem,
- * UNLESS another item with newItem.id exists (in which case
- * nothing is updated).
+ * Note: Item must have property "id"
  * 
  * Example verifyItem function:
  *  (article) => ("id" in article && "title" in article && "category" in article 
             && "format" in article && "value" in article && "notes" in article)
  * 
  * @param {string} collectionName - name of collection to store item in
- * @param {string} itemId - id of object to update
  * @param {object} newItem - object with updated properties, including a unique "id" property
  * @param {function} verifyItem - function with one param that verifies the properties of newItem
  * @returns true if item was added successfully, else false
  */
-function updateItem(collectionName, itemId, newItem, verifyItem = (item) => true) {
+function updateItem(collectionName, newItem, verifyItem = (item) => true) {
     // Verify newItem parameter
-    if (!verifyItem(newItem))
+    if (!("id" in newItem) || !verifyItem(newItem))
         throw new Error("New item missing a required property");
     
     let items = getItems(collectionName);
@@ -126,26 +78,17 @@ function updateItem(collectionName, itemId, newItem, verifyItem = (item) => true
         // No saved items - create new item list
         items = [newItem];
     } else {
-        let idChanged = (itemId != newItem.id);
-        // Find an existing item with the given id (itemId parameter)
-        let itemIndex = null;
+        // Find an existing item with the given id
+        let itemExists = false;
         for (let i = 0; i < items.length; i++) {
-            // Case 1: idChanged false. Assumes only ONE item with given ID, returns first one.
-            // Case 2: idChanged true, no items with newItem.id. Update & return true.
-            // Case 3: idChanged true, item with newItem.id exists. Return false.
-            if (items[i].id == itemId) {
-                itemIndex = i;
-                if (!idChanged)
-                    break;
-            } if (idChanged && items[i].id == newItem.id) {
-                // Item with given ID already exists and we are not updating it
-                return false;
+            if (items[i].id == newItem.id) {
+                // If item exists, modify it
+                items[i] = newItem;
+                itemExists = true;
+                break;
             }
         }
-        if (itemIndex != null) {
-            // If item exists, modify it
-            items[itemIndex] = newItem;
-        } else {
+        if (!itemExists) {
             // If item doesn't exist, add it
             items.push(newItem);
         }
@@ -155,44 +98,20 @@ function updateItem(collectionName, itemId, newItem, verifyItem = (item) => true
     return true;
 }
 
-function deleteItem(collectionName, itemId) {
-    // Get items from the given collection
-    let items = getItems(collectionName);
-    if (items == undefined) {
-        // No saved collection
-        return;
-    }
-    
-    // Delete all items with the given id (itemId parameter)
-    let numItems = items.length;
-    items = items.filter(function (a) {
-        return a.id != itemId;
-    });
-    if (items.length < numItems) {
-        localStorage.setItem(collectionName, JSON.stringify(items));
-    }
+function checkEmpty($widget=$(this)) {
+    const value = $widget.val().trim();
+    const isError = (value == "");
+    const widgetId = $widget.attr("id");
+    setError($widget, isError);
+    return [value, isError];
 }
 
-function filterItems(collectionName, searchId, filterId, matchesSearchFunc) {
-    let allItems = getItems(collectionName);
-    if (!allItems)
-        return undefined;
-    let searchText = $(`#${searchId}`).val() ? $(`#${searchId}`).val().toLowerCase() : "";
-    let filterCat = $(`#${filterId}`).val() || "All";
-
-    let filteredItems = [];
-    for (let item of allItems) {
-        let matchesSearch = matchesSearchFunc(item, searchText);
-        let matchesCategory = (filterCat === "All" || item.category === filterCat);
-        if (matchesSearch && matchesCategory) {
-            filteredItems.push(item);
-        }
-    }
-
-    return filteredItems;
+function checkOption($widget, options) {
+    const value = $widget.val().trim();
+    const isError = (value == "" || options.indexOf(value) == -1);
+    setError($widget, isError);
+    return [value, isError];
 }
-
-// -----------------------------------------------------------------------------------------------
 
 function checkDate($widget) {
     // String formatted yyyy-mm-dd
@@ -206,12 +125,30 @@ function checkDate($widget) {
             && dateNums[2] >= 1 // Check month
             && dateNums[2] <= 12
             && dateNums[3] >= 1 // Check day
-            && dateNums[3] <= 30) {
+            && dateNums[3] <= 31) {
                 isError = false;
         }
     }
     setError($widget, isError);
     return [date, isError];
+}
+
+function checkArticleId($widget) {
+    const id = $widget.val().trim();
+    // ID cannot be empty
+    if (id == "") {
+        setError($widget, true, defaultIdErrorMsg);
+        return [id, true];
+    } 
+    // TODO - pulling from storage could increase latency if we check every time the ID field changes
+    const articlesWithId = getItems(articleCollectionName, []).filter((article) => article.id == id);
+    // Article with ID must be present in "articles" list in storage
+    if (articlesWithId.length == 0) {
+        setError($widget, true, "Article ID not found.");
+        return [id, true]; 
+    }
+    setError($widget, false, defaultIdErrorMsg);
+    return [id, false];
 }
 
 /**
@@ -223,7 +160,8 @@ function checkForm() {
     let isError, formIsValid = true;
 
     // Check article ID
-    [articleInfo.id, isError] = checkEmpty($articleId);
+    // An article with the given ID must be present in the "articles" list in storage
+    [articleInfo.id, isError] = checkArticleId($articleId);
     if (isError)
         formIsValid = false;
 
@@ -320,7 +258,9 @@ function loadPubInfo() {
 
     let html = "";
     for (article of articles) {
-        const articleInfo = pubOptionsMap.getOrInsert(article.id, defaultPubOptions(article.id));
+        const articleInfo = pubOptionsMap.get(article.id);
+        if (!articleInfo) 
+            articleInfo = defaultPubOptions(article.id);
         html += `<div class="col-md-6">
             <div class="entry-card border rounded p-3 bg-white h-100" style="border-left: 3px solid brown;">
                 <div class="d-flex justify-content-between align-items-start gap-2">
@@ -343,8 +283,18 @@ function loadPubInfo() {
     $articleCards.find(".loadBtn").on("click", onLoad);
 }
 
-function updateArticleTitle(articleId, articleTitle) {
-    // TODO - update in "articles" collection
+function updateArticle(articleId, articleTitle, articleAccess) {
+    // Find article with an identical id
+    let articles = getItems(articleCollectionName, []);
+    let articlesWithId = articles.filter((article) => article.id == articleId);
+    if (articlesWithId.length == 0) {
+        throw Error(`Article with id ${articleId} not found`);
+    }
+    // Update article title and access - works because Object is a reference type
+    articlesWithId[0].title = articleTitle;
+    articlesWithId[0].value = articleAccess;
+    // Save to localStorage
+    localStorage.setItem(articleCollectionName, JSON.stringify(articles));
 }
 
 /**
@@ -357,12 +307,12 @@ function onSave(event) {
     if (!pubOptions)
         return;
 
-    updateArticleTitle(pubOptions.id, pubOptions.title);
-    updateItem(pubOptionsCollectionName, pubOptions.id, pubOptions,
+    updateArticle(pubOptions.id, pubOptions.title, pubOptions.access);
+    updateItem(pubOptionsCollectionName, pubOptions,
         (pubOptions) => (
             "id" in pubOptions && "pubDate" in pubOptions && "distChannel" in pubOptions && "reviewStatus" in pubOptions
-            && "author" in pubOptions && "featured" in pubOptions && "access" in pubOptions && "editNotes" in pubOptions)
-    ); // Note: in local storage, pub options do not include the article's title (which is stored in the "articles" collection)
+            && "author" in pubOptions && "featured" in pubOptions && "editNotes" in pubOptions)
+    ); // Note: in local storage, pub options do not include the article's title or access type (which are stored in the "articles" collection)
     clearForm();
     loadPubInfo();
 }
@@ -376,16 +326,15 @@ function onLoad() {
     if (!id)
         return;
 
-    // Clear form
-    // TODO warning??
-    // TODO move
-    clearForm();
-
     // Get article title from "articles" collection
     const articlesWithId = getItems(articleCollectionName, []).filter((item) => item.id == id);
     if (articlesWithId.length == 0)
         return;
-    const title = articlesWithId[0].title;
+    const article = articlesWithId[0];
+
+    // Clear form
+    // TODO warning??
+    clearForm();
 
     // Get publication options to edit
     let pubOptionsWithId = getItems(pubOptionsCollectionName, []).filter((item) => item.id == id);
@@ -395,14 +344,14 @@ function onLoad() {
 
     // Update form to reflect the current article information
     $articleId.val(id);
-    $articleTitle.val(title);
     $pubDate.val(pubOptions.pubDate);
     $distChannel.val(pubOptions.distChannel);
     $reviewStatus.val(pubOptions.reviewStatus);
     $articleAuthor.val(pubOptions.author);
     $featured.val(pubOptions.featured);
-    $access.val(pubOptions.access);
     $editNotes.val(pubOptions.editNotes);
+    $articleTitle.val(article.title);
+    $access.val(article.value);
 
     // Disable id field
     $articleId.attr("disabled", true);
@@ -417,8 +366,6 @@ $(document).ready(function() {
         ];
         localStorage.setItem(articleCollectionName, JSON.stringify(intialData));
     }
-    // TODO remove
-    // localStorage.removeItem(pubOptionsCollectionName);
 
     $pubOptionsForm = $("#finalizationForm");
     $articleId = $($pubOptionsForm.find("#articleId")[0]);
@@ -437,10 +384,11 @@ $(document).ready(function() {
     reviewStatuses = loadOptions($reviewStatus);
     featuredOptions = loadOptions($featured);
     accessTypes = loadOptions($access);
+    defaultIdErrorMsg = $articleId.parent().find("div.invalid-feedback").text();
 
-    $articleId.on("keyup", () => checkEmpty($articleId));
+    $articleId.on("keyup", () => checkArticleId($articleId));
     $articleTitle.on("keyup", () => checkEmpty($articleTitle));
-    $pubDate.on("keyup", () => checkDate($(this)));
+    $pubDate.on("change", () => checkDate($pubDate));
     $distChannel.on("change", () => checkOption($distChannel, distChannels));
     $reviewStatus.on("change", () => checkOption($reviewStatus, reviewStatuses));
     $articleAuthor.on("keyup", () => checkEmpty($articleAuthor));
@@ -451,8 +399,6 @@ $(document).ready(function() {
     $pubOptionsForm.on("submit", onSave);
     $("#clearForm").on("click", clearForm);
    
-    // TODO #contentSearch -> #articleSearch
-    // TODO #filterCategory -> #statusFilter
     $("#articleSearch, #statusFilter").on("keyup change", function () {
         loadPubInfo();
     });
