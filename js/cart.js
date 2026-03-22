@@ -253,9 +253,10 @@ function onSave(event) {
     if (!product)
         return;
 
-    addItem("products", product);
+    updateItem("products", product.id, product);
     clearForm();
     loadProducts();
+    $("#jsonPreview").text(JSON.stringify(getItems("products"), null, 2));
 }
 
 function loadCart() {
@@ -273,15 +274,25 @@ function loadCart() {
     const cart = cartIds.map((id) => products.get(id)).filter(p => p !== undefined);
 
     // Add cart to HTML table
-    let html = "";
+    $cartTable.find("tr:not(#emptyCartRow)").remove();
     for (let c of cart) {
-        html += cartItemHtml(c);
+        $cartTable.append($(cartItemHtml(c)));
     }
-    $cartTable.html(html);
 
     setCartTotal(); 
-}
-        
+
+    $cartTable.find(".removeCartBtn").on("click", function() {
+        const $row = $(this).closest("tr");
+        // Get the index of the removed row (minus 1 due to the empty row)
+        const index = $row.index() - 1;
+        let cartIds = JSON.parse(localStorage.getItem("cart")) || [];
+        cartIds.splice(index, 1);
+
+        localStorage.setItem("cart", JSON.stringify(cartIds));
+
+        loadCart();
+    });
+}        
 
 
 function cartItemHtml(product) {
@@ -292,7 +303,7 @@ function cartItemHtml(product) {
             <td>${product.category}</td>
             <td>$${parseFloat(product.price).toFixed(2)}</td>
             <td class="text-end">
-            <button class="btn btn-sm btn-outline-danger" data-id="${product.id}">Remove</button>
+            <button class="btn btn-sm btn-outline-danger removeCartBtn" data-id="${product.id}">Remove</button>
             </td>
         </tr>`;
 }
@@ -320,9 +331,7 @@ function onAddToCart() {
         cart = [];
     cart.push(productId); // Only add ID
     localStorage.setItem("cart", JSON.stringify(cart));
-    loadCart();
-    // Add product to HTML table
-    
+    loadCart();    
 
     setCartTotal();
 }
@@ -346,7 +355,7 @@ function setCartTotal() {
     $("#totalProductsCount").text(productsArr.length);
     $("#productCountBadge").text(`${productsArr.length} products)`);
 
-    $(".stat-items-count, #cartItemsBadge").text(cartIds.length);
+    $(".stat-items-count").text(cartIds.length);
 
     const uniqueCartIds = [...new Set(productsArr.map(p => p.id).filter(id => cartIds.includes(id)))];
     $("#totalCategoriesCount").text(uniqueCartIds.length);
@@ -371,7 +380,10 @@ function loadProducts() {
                         <span class="badge text-bg-brown-light">${product.unit}</span>
                         </div>
                     </div>
-                    <button type="button" class="btn btn-sm btn-brown addToCartBtn" data-id="${product.id}">Add to Cart</button>
+                    <div class="d-flex gap-1">
+                        <button type="button" class="btn btn-sm btn-brown addToCartBtn" data-id="${product.id}">Add to Cart</button>
+                        <button type="button" class="btn btn-sm btn-outline-brown favBtn" data-id="${product.id}" data-title="${product.description}" data-price="$${parseFloat(product.price).toFixed(2)}" title="Add to Favorites"><i class="bi bi-heart"></i></button>
+                    </div>
                 </div>
                 <div class="mt-2 fw-semibold">${product.description}</div>
                 <div class="text-muted small mt-2">$${parseFloat(product.price).toFixed(2)}</div>
@@ -381,22 +393,19 @@ function loadProducts() {
     let $productCards = $("#productCards");
     $productCards.html(html);
 
-    }
+    $productCards.on("click", ".addToCartBtn", onAddToCart);
+}
 
 $(document).ready(function() {
     if (!localStorage.getItem("products")) {
         const initialData = [
-            {id: "HS101", description: "Kitchen Reset Guide", category: "Kitchen Resources", unit: "Download", price: 12.99, weight: "", color: "", notes: ""},
-            {id: "HS102", description: "Closet Refresh Bundle", category: "Home Organization", unit: "Bundle", price: 15.99, weight: "", color: "", notes: ""},
-            {id: "HS103", description: "Weekly Home Planner Pack", category: "Printable Planners", unit: "Pack", price: 8.99, weight: "", color: "", notes: ""}
+            {id: "HS101", description: "Kitchen Reset Guide", category: "Kitchen Resources", unit: "Download", price: 12.99, weight: "", color: "", details: ""},
+            {id: "HS102", description: "Closet Refresh Bundle", category: "Home Organization", unit: "Bundle", price: 15.99, weight: "", color: "", details: ""},
+            {id: "HS103", description: "Weekly Home Planner Pack", category: "Printable Planners", unit: "Pack", price: 8.99, weight: "", color: "", details: ""}
         ];
         localStorage.setItem("products", JSON.stringify(initialData));
     }
-    if (!localStorage.getItem("cart")) {
-        const cart = ["HS102", "HS103"];
-        localStorage.setItem("cart", JSON.stringify(cart));
-    }
-
+    
     $productForm = $("#productForm");
     $productId = $($productForm.find("#productId")[0]);
     $productDesc = $($productForm.find("#description")[0]);
@@ -424,64 +433,49 @@ $(document).ready(function() {
     $price.on("keyup", function() { checkEmpty($(this)); });
     // Not checking "Weight", "Color", or "Additional Details"
    
-    // $("#contentSearch, #filterCategory").on("keyup change", function () {
-    //     loadItems();
-    // });
-
     $productForm.on("submit", onSave);     
 
-$("#searchInput").on("keyup", function() {
-    const searchTerm = $(this).val().toLowerCase();
-    $("#productCards .col-md-6").filter(function() {
-        const cardText = $(this).text().toLowerCase();
-        $(this).toggle(cardText.indexOf(searchTerm) > -1);
-     });
-    });
-    
-$(document).on("click", ".addToCartBtn", onAddToCart);
-$(document).on("click", ".btn-outline-danger", function() {
-    const productId = $(this).attr("data-id");
-    let cartIds = JSON.parse(localStorage.getItem("cart")) || [];
-    cartIds = cartIds.filter(id => id !== productId);
-
-    localStorage.setItem("cart", JSON.stringify(cartIds));
-
-    loadCart();
-});
-
-$("#clearCartBtn").on("click", function() {
-    localStorage.removeItem("cart");
-    loadCart();
-});
-
-$("#checkoutBtn").on("click", function() {
-    const cartIds = JSON.parse(localStorage.getItem("cart")) || [];
-    const productsArr = getItems("products") || [];
-    const productsMap = new Map(productsArr.map((o) => [o.id, o]));
-    const fullCartData = cartIds.map(id => productsMap.get(id)).filter(p => p !== undefined);
-
-
-    const JsonData = JSON.stringify(fullCartData, null, 2);
-
-    $.ajax({
-        url: 'https://jsonplaceholder.typicode.com/posts',
-        type: 'POST',
-        contentType: 'application/json',
-        data: JsonData,
-        success: function(response) {
-            $("#ajaxStatus").html('<div class="alert alert-success">AJAX Success: JSON Data Collection Transported!</div>');
-            $("#jsonPreview").text(JsonData);
-            alert("Data sent to Restful API");
-        },
-        error: function(xhr) {
-            $("#ajaxStatus").html('<div class="alert alert-danger">AJAX Error: Status ' + xhr.status + '</div>');
-               
-        }
-              });   
-          });
-
-          $cartTable = $("#cartTableBody");
-          loadProducts();
-          loadCart();
-
+    $("#searchInput").on("keyup", function() {
+        const searchTerm = $(this).val().toLowerCase();
+        $("#productCards .col-md-6").filter(function() {
+            const cardText = $(this).text().toLowerCase();
+            $(this).toggle(cardText.indexOf(searchTerm) > -1);
         });
+    });
+
+    $("#clearCartBtn").on("click", function() {
+        localStorage.removeItem("cart");
+        loadCart();
+    });
+
+    $("#checkoutBtn").on("click", function() {
+        const cartIds = JSON.parse(localStorage.getItem("cart")) || [];
+        const productsArr = getItems("products") || [];
+        const productsMap = new Map(productsArr.map((o) => [o.id, o]));
+        const fullCartData = cartIds.map(id => productsMap.get(id)).filter(p => p !== undefined);
+
+
+        const JsonData = JSON.stringify(fullCartData, null, 2);
+
+        $.ajax({
+            url: 'https://jsonplaceholder.typicode.com/posts',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JsonData,
+            success: function(response) {
+                $("#ajaxStatus").html('<div class="alert alert-success">AJAX Success: JSON Data Collection Transported!</div>');
+                $("#jsonPreview").text(JsonData);
+                alert("Data sent to Restful API");
+            },
+            error: function(xhr) {
+                $("#ajaxStatus").html('<div class="alert alert-danger">AJAX Error: Status ' + xhr.status + '</div>');
+                
+            }
+        });   
+    });
+
+    $cartTable = $("#cartTableBody");
+    loadProducts();
+    loadCart();
+
+});

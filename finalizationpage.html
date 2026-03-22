@@ -504,10 +504,10 @@
     const statusSelect = document.getElementById('reviewStatus');
     const statusBadge  = document.getElementById('statusBadge');
     const statusColors = {
-      'Draft':        { cls: 'text-bg-brown-light', show: true },
-      'Under Review': { cls: 'bg-warning text-dark',  show: true },
-      'Approved':     { cls: 'bg-success text-white',  show: true },
-      'Scheduled':    { cls: 'bg-info text-dark',      show: true },
+      'Draft':        { cls: 'text-bg-brown-light' },
+      'Under Review': { cls: 'bg-warning text-dark' },
+      'Approved':     { cls: 'bg-success text-white' },
+      'Scheduled':    { cls: 'bg-info text-dark' },
     };
     function updateStatusBadge() {
       const val = statusSelect.value;
