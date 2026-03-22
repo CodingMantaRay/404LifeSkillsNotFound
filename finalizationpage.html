@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>404 Life Skills | Article Finalization</title>
@@ -25,7 +28,7 @@
   <script src="js/scroll.js" defer></script>
 
   <!-- Custom JS -->
-  <script defer src="js/finalize.js"></script>
+  <script type="text/babel" src="js/finalize.js"></script>
 </head>
 
 <body>
@@ -414,19 +417,17 @@
         </div>
 
         <!-- AJAX STATUS -->
-        <div class="card shadow-sm fade-in">
-          <div class="card-body">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-              <h2 class="h5 fw-bold mb-0">API Transport Status</h2>
-              <span class="badge text-bg-brown-light">AJAX</span>
+        <div class="card p-3 shadow-sm mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <h2 class="h5 fw-bold mb-0">API Transport Status</h2>
+            <span class="badge bg-warning text-dark">AJAX</span>
             </div>
             <p class="text-muted small mb-3">
               This section will later show whether the finalization JSON was successfully prepared and sent to a RESTful API.
             </p>
-            <div class="alert alert-secondary mb-0" id="apiStatus">
-              Waiting to send finalization data...
-            </div>
-          </div>
+            <div id="apiStatus"></div>
+            Waiting to send finalization data...
+           </div>
         </div>
 
       </div>

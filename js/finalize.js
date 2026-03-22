@@ -242,8 +242,8 @@ function defaultPubOptions(id) {
         "distChannel": "",
         "reviewStatus": "Draft",
         "author": "",
-        "featured": "",
-        "access": "Premium",
+        "featured": "No",
+        "access": "Free",
         "editNotes": ""
     };
 }
@@ -253,6 +253,10 @@ function loadPubInfo() {
     let articles = getItems("articles");
     if (articles == undefined)
         return;
+
+const searchTerm = $("#articleSearch").val().trim().toLowerCase();
+const statusFilter = $("#statusFilter").val();
+
     let pubOptionsMap = new Map(getItems("pubOptions", []).map(item => [item.id, item]));
 
     /**
@@ -264,10 +268,13 @@ function loadPubInfo() {
      */
 
     let html = "";
-    for (article of articles) {
-        const pubOptions = pubOptionsMap.get(article.id);
-        if (!pubOptions) 
-            pubOptions = defaultPubOptions(article.id);
+    for (let article of articles) {
+        let pubOptions = pubOptionsMap.get(article.id) || defaultPubOptions(article.id);
+
+        const matchesSearch = article.id.toLowerCase().includes(searchTerm) || article.title.toLowerCase().includes(searchTerm);
+        const matchesStatusFilter = (statusFilter === "All" || pubOptions.reviewStatus === statusFilter);
+        if (matchesSearch && matchesStatusFilter) {
+
         html += `<div class="col-md-6">
             <div class="entry-card border rounded p-3 bg-white h-100" style="border-left: 3px solid brown;">
                 <div class="d-flex justify-content-between align-items-start gap-2">
@@ -284,6 +291,8 @@ function loadPubInfo() {
                 <div class="text-muted small mt-2">${pubOptions.editNotes}</div>
             </div>
         </div>`;
+        }
+
     }
 
     $articleCards.html(html);
@@ -311,19 +320,23 @@ function onSave(event) {
     event.preventDefault();
 
     let pubOptions = checkForm();
-    if (!pubOptions)
-        return;
+    if (!pubOptions) return;
+    
+    const jsonString = JSON.stringify(pubOptions, null, 2);
+    $("#jsonPreview").text(jsonString);
+    transmitWithReact(pubOptions);
 
     updateArticle(pubOptions.id, pubOptions.title, pubOptions.access);
-    updateItem("pubOptions", pubOptions,
-        (pubOptions) => (
-            "id" in pubOptions && "title" in pubOptions && "pubDate" in pubOptions && "distChannel" in pubOptions 
-            && "reviewStatus" in pubOptions && "author" in pubOptions && "featured" in pubOptions 
-            && "access" in pubOptions && "editNotes" in pubOptions)
-    ); // Note: id, title, and access (value) are also stored in "articles" collection in storage
-    $("#jsonPreview").text(JSON.stringify(pubOptions, null, 2));
+    updateItem("pubOptions", pubOptions, (item) => (
+        
+            "id" in item && "title" in item && "pubDate" in item && "distChannel" in item 
+            && "reviewStatus" in item && "author" in item && "featured" in item 
+            && "access" in item && "editNotes" in item
+    )); // Note: id, title, and access (value) are also stored in "articles" collection in storage
+   setTimeout(() => {
     clearForm();
     loadPubInfo();
+   }, 3000);
 }
 
 /**
@@ -353,39 +366,63 @@ function onLoad() {
 
     // Update form to reflect the current article information
     $articleId.val(id);
+    $articleTitle.val(article.title);
     $pubDate.val(pubOptions.pubDate);
     $distChannel.val(pubOptions.distChannel);
     $reviewStatus.val(pubOptions.reviewStatus);
     $articleAuthor.val(pubOptions.author);
     $featured.val(pubOptions.featured);
     $editNotes.val(pubOptions.editNotes);
-    $articleTitle.val(article.title);
+    
     $access.val(article.value);
 
     // Disable id field
     $articleId.attr("disabled", true);
+
+    updatePreview();
 }
 
+
+const updatePreview = () => {
+        const formData = {
+            title: $articleId.val(),
+            pubDate: $pubDate.val(),
+            reviewStatus: $reviewStatus.val(),
+            access: $access.val()
+
+        };
+            const jsonString = JSON.stringify(formData, null, 2);
+            $("#jsonPreview").text(jsonString);
+
+            const $prviewValues = $(".col-lg-8 .border.bg-light .fw-bold");
+            $(".col-lg-8 .border.bg-light .fw-bold").eq(0).text(formData.title || "--");
+            $(".col-lg-8 .border.bg-light .fw-bold").eq(1).text(formData.pubDate || "--");
+            $(".col-lg-8 .border.bg-light .fw-bold").eq(2).text(formData.reviewStatus || "--");
+            $(".col-lg-8 .border.bg-light .fw-bold").eq(3).text(formData.access || "--");
+            };
+
+            
 $(document).ready(function() {
     // TODO remove
     if (!localStorage.getItem("articles")) {
         const intialData = [
-            {id: "A101", title: "Fix a leaky faucet", category: "DIY & Repairs", format: "Blog Post", value: "Free", notes: "Beginner friendly"},
-            {id: "LS-FOOD-001", title: "30 Useful Life Hacks", category: "Food & Cooking", format: "Video", value: "Free", notes: "Quick tips"}
+            {id: "HS201", title: "Spring Kitchen Reset", category: "Kitchen Resources", value: "Free"},
+            {id: "HS202", title: "Closet Cleanout Weekend Guide", category: "Home Organization", value: "Premium"},
+            {id: "HS203", title: "Weekly Cleaning Planner Pack", category: "Printable Planner", value: "Free"}
         ];
         localStorage.setItem("articles", JSON.stringify(intialData));
     }
 
     $pubOptionsForm = $("#finalizationForm");
-    $articleId = $($pubOptionsForm.find("#articleId")[0]);
-    $articleTitle = $($pubOptionsForm.find("#articleTitle")[0]);
-    $pubDate = $($pubOptionsForm.find("#publicationDate")[0]);
-    $distChannel = $($pubOptionsForm.find("#distributionChannel")[0]);
-    $reviewStatus = $($pubOptionsForm.find("#reviewStatus")[0]);
-    $articleAuthor = $($pubOptionsForm.find("#editorName")[0]);
-    $featured = $($pubOptionsForm.find("#featuredOption")[0]);
-    $access = $($pubOptionsForm.find("#subscriberAccess")[0]);
-    $editNotes = $($pubOptionsForm.find("#editorialNotes")[0]);
+    $articleId = $("#articleId");
+    $articleTitle = $("#articleTitle");
+    $pubDate = $("#publicationDate");
+    $distChannel = $("#distributionChannel");
+    $reviewStatus = $("#reviewStatus");
+    $articleAuthor = $("#editorName");
+    $featured = $("#featuredOption");
+    $access = $("#subscriberAccess");
+    $editNotes = $("#editorialNotes");
 
     $articleCards = $("#articleCards");
 
@@ -395,23 +432,68 @@ $(document).ready(function() {
     accessTypes = loadOptions($access);
     defaultIdErrorMsg = $articleId.parent().find("div.invalid-feedback").text();
 
-    $articleId.on("keyup", () => checkArticleId($articleId));
-    $articleTitle.on("keyup", () => checkEmpty($articleTitle));
-    $pubDate.on("change", () => checkDate($pubDate));
-    $distChannel.on("change", () => checkOption($distChannel, distChannels));
-    $reviewStatus.on("change", () => checkOption($reviewStatus, reviewStatuses));
-    $articleAuthor.on("keyup", () => checkEmpty($articleAuthor));
-    $featured.on("change", () => checkOption($featured, featuredOptions));
-    $access.on("change", () => checkOption($access, accessTypes));
+
+    $articleId.on("keyup", () => { checkArticleId($articleId); updatePreview(); });
+    $articleTitle.on("keyup", () => { checkEmpty($articleTitle); updatePreview(); });
+    $pubDate.on("change", () => { checkDate($pubDate); updatePreview(); });
+    $distChannel.on("change", () => { checkOption($distChannel, distChannels); updatePreview(); });
+    $reviewStatus.on("change", () => { checkOption($reviewStatus, reviewStatuses); updatePreview(); });
+    $articleAuthor.on("keyup", () => { checkEmpty($articleAuthor); updatePreview(); });
+    $featured.on("change", () => { checkOption($featured, featuredOptions); updatePreview(); });
+    $access.on("change", () => { checkOption($access, accessTypes); updatePreview(); });
+    $editNotes.on("keyup", updatePreview);
     // Not checking $editNotes
 
     $pubOptionsForm.on("submit", onSave);
-    $("#clearForm").on("click", clearForm);
+    $("#clearForm").on("click", function() {
+        clearForm();
+        $("#jsonPreview").text("");
+    });
+
    
     $("#articleSearch, #statusFilter").on("keyup change", function () {
         loadPubInfo();
+        updatePreview();
     });
 
     loadPubInfo();
     $("#jsonPreview").text("");
+
+
 });
+
+function transmitWithReact(pubOptions) {
+   const root = ReactDOM.createRoot(document.getElementById('apiStatus'));
+   
+   const DataTransport = () => {
+    const [status, setstatus] = React.useState("Preparing AJAX transport");
+
+    React.useEffect(() => {
+        const sendData = async () => {
+            try {
+                const response = await fetch('https://jsonplaceholder.typicode.com/posts', {
+                    method: 'POST',
+                    body: JSON.stringify(pubOptions),
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    setstatus(`Success! REST API assigned ID: ${data.id}`);
+                }
+            } catch (err) {
+                setstatus("AJAX Transport Failed.");
+            }
+        };
+        sendData();
+    }, []);
+    
+    return (
+    <div className="alert alert-success mb-0">
+    <i className="bi bi-check-circle-fill me-2"></i> 
+    <strong>React Status:</strong> {status}
+         </div>
+    );
+    };
+    root.render(<DataTransport />);
+                }
