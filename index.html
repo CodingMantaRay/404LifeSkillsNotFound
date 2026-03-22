@@ -301,13 +301,13 @@
     </div>
   </footer>
 
-  <!-- Scroll to top button -->
+  
   <button id="scrollTop" title="Back to top">&#8679;</button>
 
   <!-- Bootstrap JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script>
-    // --- Scroll to top ---
+    
     const scrollBtn = document.getElementById('scrollTop');
     window.addEventListener('scroll', () => {
       scrollBtn.style.display = window.scrollY > 300 ? 'block' : 'none';
@@ -316,7 +316,7 @@
       window.scrollTo({ top: 0, behavior: 'smooth' });
     });
 
-    // --- Typewriter effect on hero lead ---
+    
     const heroLead = document.getElementById('heroLead');
     const heroText = heroLead.textContent.trim().replace(/\s+/g, ' ');
     heroLead.textContent = '';
@@ -330,7 +330,7 @@
     }
     typeHero();
 
-    // --- Tip of the day rotation ---
+    
     const tips = [
       { title: 'Microwave reset', desc: ' Heat water + lemon for 4–5 min, then wipe clean.', tags: ['Cleaning', '5 minutes', 'Beginner'] },
       { title: 'Wobbly chair fix', desc: ' Tighten screws and add rubber pads to level it out.', tags: ['Repair', '10 minutes', 'Beginner'] },
@@ -350,7 +350,7 @@
       setTip(tips[tipIdx]);
     }, 5000);
 
-    // --- Animated stat counters ---
+    
     function animateCounter(el) {
       const target = parseInt(el.dataset.target);
       const suffix = el.dataset.suffix || '';
@@ -372,7 +372,7 @@
     }, { threshold: 0.5 });
     document.querySelectorAll('.stat-counter').forEach(el => counterObs.observe(el));
 
-    // --- Fade-in on scroll ---
+    
     const fadeObs = new IntersectionObserver((entries) => {
       entries.forEach(e => {
         if (e.isIntersecting) {
@@ -383,7 +383,7 @@
     }, { threshold: 0.1 });
     document.querySelectorAll('.fade-in').forEach(el => fadeObs.observe(el));
 
-    // --- Category tag filter ---
+    
     document.getElementById('tagFilter').addEventListener('input', function () {
       const filter = this.value.toLowerCase();
       document.querySelectorAll('#categories .badge').forEach(badge => {
