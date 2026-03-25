@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+   <meta charset="UTF-8" />
+   <meta name="viewport" content="width=device-width, initial-scale=1" />
+   <title>404 Life Skills | Returns</title>
+
+   <!-- Favicon -->
+   <link rel="icon"
+      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%23A52A2A' rx='5'/><text x='50%25' y='56%25' dominant-baseline='middle' text-anchor='middle' fill='white' font-size='10' font-family='Arial' font-weight='bold'>404</text></svg>">
+
+   <!-- Bootstrap CSS -->
+   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+   <!-- Bootstrap Icons -->
+   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+   <!-- Custom CSS -->
+   <link rel="stylesheet" href="style.css" />
+
+   <!-- jQuery -->
+   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+</head>
+
+<body>
+   <!-- Announcement Bar -->
+   <div class="announcement-bar">
+      Need help with an order? Start your return request here —
+      <a href="billing.html">View billing page →</a>
+   </div>
+
+   <!-- Navbar -->
+   <nav class="navbar navbar-expand-lg navbar-dark bg-dark-brown sticky-top">
+      <div class="container">
+         <a class="navbar-brand fw-bold" href="index.html">404 Life Skills</a>
+
+         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#topNav" aria-controls="topNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+         <div class="collapse navbar-collapse" id="topNav">
+            <ul class="navbar-nav ms-auto gap-lg-2">
+               <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
+               <li class="nav-item"><a class="nav-link" href="signup.html">Subscribers</a></li>
+               <li class="nav-item"><a class="nav-link" href="content.html">Content Manager</a></li>
+               <li class="nav-item"><a class="nav-link" href="cart.html">Shopping Cart</a></li>
+               <li class="nav-item"><a class="nav-link" href="finalize.html">Article Finalization</a></li>
+               <li class="nav-item"><a class="nav-link" href="submission.html">Article Submission</a></li>
+               <li class="nav-item"><a class="nav-link" href="approval.html">Approval Workflow</a></li>
+               <li class="nav-item"><a class="nav-link" href="billing.html">Billing Details</a></li>
+               <li class="nav-item"><a class="nav-link active" href="returns.html">Returns</a></li>
+               <li class="nav-item">
+                  <a class="btn btn-brown btn-sm ms-lg-2" href="signup.html">Subscribe</a>
+               </li>
+            </ul>
+         </div>
+      </div>
+   </nav>
+
+   <!-- Page Header -->
+   <header class="bg-warm border-bottom">
+      <div class="container py-4">
+         <h1 class="h3 fw-bold mb-1">Returns & Refund Requests</h1>
+         <p class="text-muted mb-0">
+            Search your purchased resources, select the item you want to return, and send a return request for review.
+         </p>
+      </div>
+   </header>
+
+   <!-- Callout Strip -->
+   <section class="py-3 bg-dark-brown text-white text-center">
+      <div class="container">
+         <p class="mb-0">We want every order to feel right.
+            <strong>Submit your return request clearly and quickly.</strong></p>
+      </div>
+   </section>
+
+   <!-- Stats Strip -->
+   <section class="py-3 bg-warm border-bottom">
+      <div class="container">
+         <div class="row text-center g-0">
+            <div class="col-4">
+               <div id="statOrders"
+                  style="font-size:1.5rem; font-family:'Playfair Display',serif; color:brown; font-weight:700;">3</div>
+               <p class="mb-0 small text-muted">Recent Orders</p>
+            </div>
+            <div class="col-4"
+               style="border-left:1px solid rgba(139,69,19,0.2);border-right:1px solid rgba(139,69,19,0.2);">
+               <div id="statReturns"
+                  style="font-size:1.5rem; font-family:'Playfair Display',serif; color:brown; font-weight:700;">1</div>
+               <p class="mb-0 small text-muted">Open Returns</p>
+            </div>
+            <div class="col-4">
+               <div id="statItems"
+                  style="font-size:1.5rem; font-family:'Playfair Display',serif; color:brown; font-weight:700;">4</div>
+               <p class="mb-0 small text-muted">Eligible Items</p>
+            </div>
+         </div>
+      </div>
+   </section>
+
+   <main class="container py-4">
+      <div class="row g-4">
+
+         <!-- LEFT COLUMN -->
+         <div class="col-lg-5">
+
+            <!-- RETURN FORM -->
+            <div class="card shadow-sm fade-in" style="border-top: 3px solid brown;">
+               <div class="card-body">
+                  <div class="d-flex justify-content-between align-items-start mb-2">
+                     <h2 class="h5 fw-bold mb-0">Return Request Form</h2>
+                     <span class="badge text-bg-brown-light">Form</span>
+                  </div>
+
+                  <form class="needs-validation" novalidate id="returnForm">
+
+                     <!-- Product Name -->
+                     <div class="mb-3">
+                        <label class="form-label" for="productName">
+                  <i class="bi bi-bag text-brown me-1"></i>Product Name *
+                </label>
+                        <input type="text" class="form-control" id="productName" placeholder="E.g., Weekly Home Planner Pack" required>
+                        <div class="invalid-feedback">Please enter or select a product name.</div>
+                     </div>
+
+                     <!-- Product Price -->
+                     <div class="mb-3">
+                        <label class="form-label" for="productPrice">
+                  <i class="bi bi-cash-stack text-brown me-1"></i>Product Price *
+                </label>
+                        <input type="text" class="form-control" id="productPrice" placeholder="E.g., 8.99" required>
+                        <div class="invalid-feedback">Please enter the product price.</div>
+                     </div>
+
+                     <!-- Reason for Return -->
+                     <div class="mb-3">
+                        <label class="form-label" for="returnReason">
+                  <i class="bi bi-arrow-counterclockwise text-brown me-1"></i>Reason for Return *
+                </label>
+                        <select class="form-select" id="returnReason" required>
+                  <option value="">Choose one…</option>
+                  <option>Wrong item purchased</option>
+                  <option>Duplicate purchase</option>
+                  <option>Download issue</option>
+                  <option>Item did not match expectations</option>
+                  <option>Other</option>
+                </select>
+                        <div class="invalid-feedback">Please choose a reason for return.</div>
+                     </div>
+
+                     <!-- Product Condition -->
+                     <div class="mb-3">
+                        <label class="form-label" for="productCondition">
+                  <i class="bi bi-check2-circle text-brown me-1"></i>Product Condition *
+                </label>
+                        <select class="form-select" id="productCondition" required>
+                  <option value="">Choose one…</option>
+                  <option>Unused</option>
+                  <option>Opened but not used</option>
+                  <option>Downloaded accidentally</option>
+                  <option>Access issue / incomplete delivery</option>
+                </select>
+                        <div class="invalid-feedback">Please select the product condition.</div>
+                     </div>
+
+                     <!-- Additional Notes -->
+                     <div class="mb-3">
+                        <label class="form-label" for="returnNotes">
+                  <i class="bi bi-chat-left-text text-brown me-1"></i>Additional Notes
+                </label>
+                        <textarea
+                  class="form-control"
+                  id="returnNotes"
+                  rows="3"
+                  placeholder="Add any extra details about the return request..."
+                ></textarea>
+                     </div>
+
+                     <!-- Buttons -->
+                     <div class="d-grid gap-2">
+                        <button class="btn btn-brown" type="submit">Submit Return Request</button>
+                        <button class="btn btn-outline-brown" type="reset">Clear Form</button>
+                     </div>
+                  </form>
+               </div>
+            </div>
+
+            <!-- JSON PREVIEW -->
+            <div class="card shadow-sm mt-4 fade-in">
+               <div class="card-body">
+                  <div class="d-flex justify-content-between align-items-center mb-2">
+                     <h3 class="h6 fw-bold mb-0">JSON Preview</h3>
+                     <span class="badge text-bg-brown-light">JSON</span>
+                  </div>
+                  <p class="text-muted small mb-3">
+                     This area will display the return request JSON document created from the form.
+                  </p>
+                  <pre id="returnJsonPreview" class="bg-light p-3 rounded border small mb-0" style="min-height: 220px;">
+{
+  "productName": "Weekly Home Planner Pack",
+  "price": 8.99,
+  "reason": "Wrong item purchased",
+  "condition": "Unused",
+  "notes": "Requested within 24 hours of purchase."
+}
+            </pre>
+               </div>
+            </div>
+         </div>
+
+         <!-- RIGHT COLUMN -->
+         <div class="col-lg-7">
+
+            <!-- SEARCH AREA -->
+            <div class="card shadow-sm mb-4 fade-in">
+               <div class="card-body">
+                  <div class="row g-2">
+                     <div class="col-md-8">
+                        <label for="returnSearch" class="form-label fw-semibold">Search Purchased Products</label>
+                        <div class="input-group">
+                           <span class="input-group-text"><i class="bi bi-search text-brown"></i></span>
+                           <input
+                    type="text"
+                    id="returnSearch"
+                    class="form-control"
+                    placeholder="Search by product name"
+                  >
+                        </div>
+                     </div>
+                     <div class="col-md-4">
+                        <label for="returnFilter" class="form-label fw-semibold">Filter Type</label>
+                        <select id="returnFilter" class="form-select">
+                  <option value="All">All Products</option>
+                  <option>Guides</option>
+                  <option>Bundles</option>
+                  <option>Planners</option>
+                  <option>Downloads</option>
+                </select>
+                     </div>
+                  </div>
+               </div>
+            </div>
+
+            <!-- PURCHASED PRODUCTS -->
+            <div class="card shadow-sm mb-4 fade-in">
+               <div class="card-body">
+                  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                     <h2 class="h5 fw-bold mb-0">Purchased Products</h2>
+                     <span class="badge text-bg-brown-light" id="returnCountBadge">4 items</span>
+                  </div>
+
+                  <div class="row g-3" id="returnProductCards">
+
+                     <div class="col-md-6">
+                        <div class="entry-card border rounded p-3 bg-white h-100" style="border-left: 3px solid brown;">
+                           <div class="d-flex justify-content-between align-items-start gap-2">
+                              <div>
+                                 <div class="fw-bold">Kitchen Reset Guide</div>
+                                 <div class="mt-1 d-flex flex-wrap gap-1">
+                                    <span class="badge text-bg-brown">Guides</span>
+                                    <span class="badge text-bg-brown-light">Digital Download</span>
+                                 </div>
+                              </div>
+                              <button type="button" class="btn btn-sm btn-brown">Select</button>
+                           </div>
+                           <div class="text-muted small mt-2">$12.99</div>
+                        </div>
+                     </div>
+
+                     <div class="col-md-6">
+                        <div class="entry-card border rounded p-3 bg-white h-100" style="border-left: 3px solid brown;">
+                           <div class="d-flex justify-content-between align-items-start gap-2">
+                              <div>
+                                 <div class="fw-bold">Closet Refresh Bundle</div>
+                                 <div class="mt-1 d-flex flex-wrap gap-1">
+                                    <span class="badge text-bg-brown">Bundles</span>
+                                    <span class="badge text-bg-brown-light">Bundle</span>
+                                 </div>
+                              </div>
+                              <button type="button" class="btn btn-sm btn-brown">Select</button>
+                           </div>
+                           <div class="text-muted small mt-2">$15.99</div>
+                        </div>
+                     </div>
+
+                     <div class="col-md-6">
+                        <div class="entry-card border rounded p-3 bg-white h-100" style="border-left: 3px solid brown;">
+                           <div class="d-flex justify-content-between align-items-start gap-2">
+                              <div>
+                                 <div class="fw-bold">Weekly Home Planner Pack</div>
+                                 <div class="mt-1 d-flex flex-wrap gap-1">
+                                    <span class="badge text-bg-brown">Planners</span>
+                                    <span class="badge text-bg-brown-light">Printable Pack</span>
+                                 </div>
+                              </div>
+                              <button type="button" class="btn btn-sm btn-brown">Select</button>
+                           </div>
+                           <div class="text-muted small mt-2">$8.99</div>
+                        </div>
+                     </div>
+
+                     <div class="col-md-6">
+                        <div class="entry-card border rounded p-3 bg-white h-100" style="border-left: 3px solid brown;">
+                           <div class="d-flex justify-content-between align-items-start gap-2">
+                              <div>
+                                 <div class="fw-bold">Pantry Labels Download</div>
+                                 <div class="mt-1 d-flex flex-wrap gap-1">
+                                    <span class="badge text-bg-brown">Downloads</span>
+                                    <span class="badge text-bg-brown-light">Digital File</span>
+                                 </div>
+                              </div>
+                              <button type="button" class="btn btn-sm btn-brown">Select</button>
+                           </div>
+                           <div class="text-muted small mt-2">$5.99</div>
+                        </div>
+                     </div>
+
+                     <div id="emptyState" class="col-12 text-center py-4 d-none">
+                        <i class="bi bi-bag-x" style="font-size: 2.5rem; color: #c97a3a;"></i>
+                        <p class="mt-2 text-muted mb-0">No matching products found.</p>
+                     </div>
+                  </div>
+               </div>
+            </div>
+
+            <!-- SELECTED PRODUCT / RETURN SUMMARY -->
+            <div class="card shadow-sm mb-4 fade-in">
+               <div class="card-body">
+                  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                     <h2 class="h5 fw-bold mb-0">Return Summary</h2>
+                     <span class="badge text-bg-brown-light">Preview</span>
+                  </div>
+
+                  <div class="row g-3">
+                     <div class="col-md-6">
+                        <div class="border rounded p-3 h-100 bg-light">
+                           <p class="small text-muted mb-1">Selected Product</p>
+                           <div class="fw-bold">Weekly Home Planner Pack</div>
+                           <div class="text-muted small">$8.99</div>
+                        </div>
+                     </div>
+                     <div class="col-md-6">
+                        <div class="border rounded p-3 h-100 bg-light">
+                           <p class="small text-muted mb-1">Reason</p>
+                           <div class="fw-bold">Wrong item purchased</div>
+                           <div class="text-muted small">Customer-submitted request</div>
+                        </div>
+                     </div>
+                     <div class="col-md-6">
+                        <div class="border rounded p-3 h-100 bg-light">
+                           <p class="small text-muted mb-1">Condition</p>
+                           <div class="fw-bold">Unused</div>
+                           <div class="text-muted small">Eligible for review</div>
+                        </div>
+                     </div>
+                     <div class="col-md-6">
+                        <div class="border rounded p-3 h-100 bg-light">
+                           <p class="small text-muted mb-1">Status</p>
+                           <div class="fw-bold">Pending Return Request</div>
+                           <div class="text-muted small">Waiting for backend processing</div>
+                        </div>
+                     </div>
+                  </div>
+               </div>
+            </div>
+
+            <!-- API STATUS -->
+            <div class="card shadow-sm fade-in">
+               <div class="card-body">
+                  <div class="d-flex justify-content-between align-items-center mb-2">
+                     <h2 class="h5 fw-bold mb-0">Return Status</h2>
+                     <span class="badge text-bg-brown-light">AJAX / API</span>
+                  </div>
+                  <p class="text-muted small mb-3">
+                     This section will later show whether the return request was successfully sent to the backend.
+                  </p>
+                  <div class="alert alert-secondary mb-0" id="returnStatus">
+                     Waiting to process return request...
+                  </div>
+               </div>
+            </div>
+
+         </div>
+      </div>
+   </main>
+
+   <!-- Footer -->
+   <footer class="bg-dark-brown text-white py-4 mt-4">
+      <div class="container d-flex flex-wrap justify-content-between align-items-center gap-2">
+         <div>
+            <p class="mb-0">&copy; 2026 404 Life Skills</p>
+            <p class="mb-0 small fst-italic" style="opacity: 0.6;">Small fixes. Big wins.</p>
+         </div>
+         <div class="d-flex gap-3 flex-wrap">
+            <a class="link-light text-decoration-none" href="index.html">Home</a>
+            <a class="link-light text-decoration-none" href="signup.html">Subscribers</a>
+            <a class="link-light text-decoration-none" href="content.html">Content Manager</a>
+            <a class="link-light text-decoration-none" href="cart.html">Shopping Cart</a>
+            <a class="link-light text-decoration-none" href="finalize.html">Article Finalization</a>
+            <a class="link-light text-decoration-none" href="submission.html">Article Submission</a>
+            <a class="link-light text-decoration-none" href="approval.html">Approval Workflow</a>
+            <a class="link-light text-decoration-none" href="billing.html">Billing Details</a>
+            <a class="link-light text-decoration-none" href="returns.html">Returns</a>
+         </div>
+      </div>
+   </footer>
+
+   <!-- Scroll to top button -->
+   <button id="scrollTop" title="Back to top">&#8679;</button>
+
+   <!-- Bootstrap JS -->
+   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+   <script>
+      const scrollBtn = document.getElementById('scrollTop');
+
+    window.addEventListener('scroll', () => {
+      scrollBtn.style.display = window.scrollY > 300 ? 'block' : 'none';
+    });
+
+    scrollBtn.addEventListener('click', () => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+   </script>
+</body>
+
+</html>
