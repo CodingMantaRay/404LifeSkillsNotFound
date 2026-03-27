@@ -21,6 +21,11 @@
 
    <!-- jQuery -->
    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+
+   <!-- Bootstrap JS -->
+   <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+   <script defer src="js/scroll.js"></script>
 </head>
 
 <body>
@@ -402,21 +407,6 @@
 
    <!-- Scroll to top button -->
    <button id="scrollTop" title="Back to top">&#8679;</button>
-
-   <!-- Bootstrap JS -->
-   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
-   <script>
-      const scrollBtn = document.getElementById('scrollTop');
-
-    window.addEventListener('scroll', () => {
-      scrollBtn.style.display = window.scrollY > 300 ? 'block' : 'none';
-    });
-
-    scrollBtn.addEventListener('click', () => {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    });
-   </script>
 </body>
 
 </html>
