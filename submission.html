@@ -25,7 +25,11 @@
    <!-- Bootstrap JS -->
    <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
+   <!-- Scrolling functionality -->
    <script defer src="js/scroll.js"></script>
+
+   <!-- Custom JS -->
+   <script src="js/submit.js"></script>
 </head>
 
 <body>
@@ -49,7 +53,7 @@
                <li class="nav-item"><a class="nav-link" href="signup.html">Subscribers</a></li>
                <li class="nav-item"><a class="nav-link" href="content.html">Content Manager</a></li>
                <li class="nav-item"><a class="nav-link" href="cart.html">Shopping Cart</a></li>
-               <li class="nav-item"><a class="nav-link" href="finalize.html">Article Finalization</a></li>
+               <li class="nav-item"><a class="nav-link" href="finalizationpage.html">Article Finalization</a></li>
                <li class="nav-item"><a class="nav-link active" href="submission.html">Article Submission</a></li>
                <li class="nav-item"><a class="nav-link" href="approval.html">Approval Workflow</a></li>
                <li class="nav-item">
@@ -283,7 +287,7 @@
                                     <span class="badge text-bg-brown-light">Draft Idea</span>
                                  </div>
                               </div>
-                              <button type="button" class="btn btn-sm btn-brown">Use Idea</button>
+                              <button type="button" class="btn btn-sm btn-brown useIdeaBtn">Use Idea</button>
                            </div>
                            <div class="mt-2 fw-semibold">Sunday Reset Routine</div>
                            <div class="text-muted small mt-2">A simple routine to prepare the home for the week ahead.
@@ -301,7 +305,7 @@
                                     <span class="badge text-bg-brown-light">Draft Idea</span>
                                  </div>
                               </div>
-                              <button type="button" class="btn btn-sm btn-brown">Use Idea</button>
+                              <button type="button" class="btn btn-sm btn-brown useIdeaBtn">Use Idea</button>
                            </div>
                            <div class="mt-2 fw-semibold">5-Minute Kitchen Reset</div>
                            <div class="text-muted small mt-2">Quick habits that help keep the kitchen clean and calm.
@@ -319,7 +323,7 @@
                                     <span class="badge text-bg-brown-light">Draft Idea</span>
                                  </div>
                               </div>
-                              <button type="button" class="btn btn-sm btn-brown">Use Idea</button>
+                              <button type="button" class="btn btn-sm btn-brown useIdeaBtn">Use Idea</button>
                            </div>
                            <div class="mt-2 fw-semibold">Weekly Cleaning Checklist</div>
                            <div class="text-muted small mt-2">A printable guide readers can use to stay on track all
@@ -347,29 +351,29 @@
                      <div class="col-md-6">
                         <div class="border rounded p-3 h-100 bg-light">
                            <p class="small text-muted mb-1">Article</p>
-                           <div class="fw-bold">Sunday Reset Routine</div>
-                           <div class="text-muted small">HS301</div>
+                           <div class="fw-bold" id="previewTitle">Sunday Reset Routine</div>
+                           <div class="text-muted small" id="previewId">HS301</div>
                         </div>
                      </div>
                      <div class="col-md-6">
                         <div class="border rounded p-3 h-100 bg-light">
                            <p class="small text-muted mb-1">Author</p>
-                           <div class="fw-bold">Lauren</div>
-                           <div class="text-muted small">Home Organization</div>
+                           <div class="fw-bold" id="previewAuthor">Lauren</div>
+                           <div class="text-muted small" id="previewCategory">Home Organization</div>
                         </div>
                      </div>
                      <div class="col-md-6">
                         <div class="border rounded p-3 h-100 bg-light">
                            <p class="small text-muted mb-1">Distribution Preference</p>
-                           <div class="fw-bold">Website Feature</div>
+                           <div class="fw-bold" id="previewPrefDistChannel">Website Feature</div>
                            <div class="text-muted small">Editorial review required</div>
                         </div>
                      </div>
                      <div class="col-md-6">
                         <div class="border rounded p-3 h-100 bg-light">
                            <p class="small text-muted mb-1">Status</p>
-                           <div class="fw-bold">Pending Submission</div>
-                           <div class="text-muted small">Awaiting backend processing</div>
+                           <div class="fw-bold" id="previewStatus">Pending Submission</div>
+                           <div class="text-muted small" id="previewStatusInfo">Awaiting backend processing</div>
                         </div>
                      </div>
                   </div>
