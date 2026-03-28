@@ -1,7 +1,11 @@
 // Global variables
 let $articleId, $articleTitle, $articleAuthor, $category, $contentSnippet, $prefDistChannel, $notes;
 let $submissionForm, $articleIdeaCards;
-let distChannels, categories, defaultIdErrorMsg;
+let distChannels, categories;
+
+//-----------------------------------------------------
+// Utility Functions                                  |
+// ----------------------------------------------------
 
 function setError($widget, isError, errorMessage = null) {
     // Set error message
@@ -111,63 +115,29 @@ function checkOption($widget, options) {
     return [value, isError];
 }
 
-function checkIdExists($widget, collectionName, defaultErrorMsg="Please enter an ID.", idNotFoundMsg="ID not found.") {
-    const id = $widget.val().trim();
-    // ID cannot be empty
-    if (id == "") {
-        setError($widget, true, defaultErrorMsg);
-        return [id, true];
-    }
-    // TODO - pulling from storage could increase latency if we check every time the ID field changes
-    const itemsWithId = getItems(collectionName, []).filter((item) => item.id == id);
-    // Article with ID must be present in "articles" list in storage
-    if (itemsWithId.length == 0) {
-        setError($widget, true, idNotFoundMsg);
-        return [id, true];
-    }
-    setError($widget, false, defaultErrorMsg);
-    return [id, false];
-}
-
-function checkIdUnique($widget, collectionName, defaultErrorMsg="Please enter an ID.", idExistsMsg="ID already exists.") {
-    const id = $widget.val().trim();
-    // ID cannot be empty
-    if (id == "") {
-        setError($widget, true, defaultErrorMsg);
-        return [id, true];
-    }
-    // TODO - pulling from storage could increase latency if we check every time the ID field changes
-    const itemsWithId = getItems(collectionName, []).filter((item) => item.id == id);
-    // Article with ID cannot be present in "articles" list in storage
-    if (itemsWithId.length > 0) {
-        setError($widget, true, idExistsMsg);
-        return [id, true];
-    }
-    setError($widget, false, defaultErrorMsg);
-    return [id, false];
-}
+// --------------------------------------------------------------------------
 
 /**
  * Checks form inputs for validity, and updates UI with any errors.
  * @returns "ArticleInfo" object
  */
 function checkForm() {
-    let article = {};
+    let articleIdea = {};
     let isError, formIsValid = true;
 
     // Check article ID
-    // Cannot have a duplicate ID in the "articles" list in storage
-    [article.id, isError] = checkIdUnique($articleId, "articles", defaultIdErrorMsg, "Article ID already exists.");
+    // Cannot have a duplicate ID in the "articleIdeas" list in storage
+    [articleIdea.id, isError] = checkEmpty($articleId);
     if (isError)
         formIsValid = false;
 
     // Check article title
-    [article.title, isError] = checkEmpty($articleTitle);
+    [articleIdea.title, isError] = checkEmpty($articleTitle);
     if (isError)
         formIsValid = false;
 
     // Check article author
-    [article.author, isError] = checkEmpty($articleAuthor);
+    [articleIdea.author, isError] = checkEmpty($articleAuthor);
     if (isError)
         formIsValid = false;
 
@@ -187,30 +157,29 @@ function checkForm() {
     */
 
     // Check article category
-    [article.category, isError] = checkOption($category, categories);
+    [articleIdea.category, isError] = checkOption($category, categories);
     if (isError)
         formIsValid = false;
 
     // Check content snippet
-    [article.contentSnippet, isError] = checkEmpty($contentSnippet);
+    [articleIdea.contentSnippet, isError] = checkEmpty($contentSnippet);
     if (isError)
         formIsValid = false;
 
     // Add distribution preference (no checking)
-    article.preferredDistChannel = $prefDistChannel.val().trim();
+    articleIdea.preferredDistChannel = $prefDistChannel.val().trim();
 
     // Add article notes (no checking)
-    article.notes = $notes.val().trim();
+    articleIdea.notes = $notes.val().trim();
 
     if (formIsValid) {
-        return article;
+        return articleIdea;
     }
     return null;
 }
 
 /**
  * Clears the form.
- * If form is in "edit" mode, then doesn't clear the article ID.
  */
 function clearForm() {
     setError($articleId, false);
@@ -232,9 +201,6 @@ function clearForm() {
 
     // Enable id field
     $articleId.attr("disabled", false);
-
-    // Clear JSON preview
-    $("#jsonPreview").text("");
 }
 
 function loadArticleIdeas() {
@@ -288,32 +254,29 @@ function onSubmit(event) {
         $("#channelError").addClass("d-none");
     } */
 
-    let article = checkForm();
-    if (!article) return;
+    let articleIdea = checkForm();
+    if (!articleIdea) return;
 
-    const jsonString = JSON.stringify(article, null, 2);
+    const jsonString = JSON.stringify(articleIdea, null, 2);
     $("#jsonPreview").text(jsonString);
     // TODO - React transmission
     //transmitWithReact(article);
 
-    // Fields in form: id, title, author, category, contentSnippet, preferredDistChannel, notes
-    // Fields in article made in Content Manager: id, title, category, format, value, notes
+    // Fields in article idea: id, title, author, category, contentSnippet, preferredDistChannel, notes
 
-    // Add fields from content.js so that article is backwards-compatible
-    article.format = "";
-    article.value = "";
+    // Add status to idea - will be used on approval page
+    // Possible statuses: Pending, Approved, Rejected, Revisions Requested
+    articleIdea.status = "Pending";
 
     // Update storage
-    updateItem("articles", article, (item) => (
+    updateItem("articleIdeas", articleIdea, (item) => (
         "id" in item && "title" in item && "author" in item && "category" in item
-        && "contentSnippet" in item && "preferredDistChannel" in item && "notes" in item
-        && "format" in item && "value" in item
+        && "contentSnippet" in item && "preferredDistChannel" in item 
+        && "notes" in item && "status" in item
     ));
-    // TODO - delete article idea?
-    setTimeout(() => {
-        clearForm();
-        loadArticleIdeas();
-    }, 3000);
+
+    clearForm();
+    loadArticleIdeas();
 }
 
 /**
@@ -331,14 +294,17 @@ function onUseIdea() {
 
     // Get article idea
     const articleIdeasWithId = getItems("articleIdeas", []).filter((item) => item.id == id);
-    // TODO no default article
     const articleIdea = articleIdeasWithId.length > 0 ? articleIdeasWithId[0] : null;
     if (!articleIdea)
         return;
 
-    // Update form to reflect the current article information
+    // Update form to reflect the current article submission
     $articleId.val(id);
     $articleTitle.val(articleIdea.title);
+    $articleAuthor.val(articleIdea.author);
+    $category.val(articleIdea.category);
+    $contentSnippet.val(articleIdea.contentSnippet);
+    $prefDistChannel.val(articleIdea.preferredDistChannel);
     /* // Code from "finalize.js" - for checkboxes only
     $(".channel-check").prop("checked", false);
     if (Array.isArray(articleIdea.preferredDistChannel)) {
@@ -349,8 +315,8 @@ function onUseIdea() {
         $(`.channel-check[value="${articleIdea.preferredDistChannel}"]`).prop("checked", true);
     }
     */
-    $category.val(articleIdea.category);
     $notes.val(articleIdea.notes);
+    
 
     // Disable id field
     $articleId.attr("disabled", true);
@@ -358,13 +324,16 @@ function onUseIdea() {
     updatePreview();
 }
 
-function updatePreview(status=null) {
+function updatePreview(status="Pending") {
     const formData = {
-        id: $articleId.val(),
-        title: $articleTitle.val(),
-        category: $category.val(),
-        author: $articleAuthor.val(),
-        preferredDistChannel: $prefDistChannel.val()
+        id: $articleId.val().trim(),
+        title: $articleTitle.val().trim(),
+        author: $articleAuthor.val().trim(),
+        category: $category.val().trim(),
+        contentSnippet: $contentSnippet.val().trim(),
+        preferredDistChannel: $prefDistChannel.val().trim(),
+        notes: $notes.val().trim(),
+        "status": status
     };
     // TODO
     /*const jsonString = JSON.stringify(formData, null, 2);
@@ -375,27 +344,33 @@ function updatePreview(status=null) {
     $("#previewCategory").text(formData.category || "--");
     $("#previewAuthor").text(formData.author || "--");
     $("#previewPrefDistChannel").text(formData.preferredDistChannel || "--");
-    // TODO status param
-    $("#previewStatus").text(status || "--");
-    $("#previewStatusInfo").text(status || "--");
+
+    // Possible statuses: Pending, Approved, Rejected, Revisions Requested
+    const statusText = {
+        "Pending": "Pending Submission",
+        "Approved": "Submission Approved",
+        "Rejected": "Submission Rejected",
+        "Revisions Requested": "Revisions Requested"
+    }
+    const statusInfo = {
+        "Pending": "Awaiting backend processing",
+        "Approved": "Reviewed by editor and approved",
+        "Rejected": "Reviewed by editor and rejected",
+        "Revisions Requested": "Editor has requested revisions"
+    }
+
+    $("#previewStatus").text(statusText[status] || "--");
+    $("#previewStatusInfo").text(statusInfo[status] || "--");
 };
 
 
 $(document).ready(function () {
     // TODO remove
-    if (!localStorage.getItem("articles")) {
-        const initialData = [
-            { id: "HS201", title: "Spring Kitchen Reset", category: "Kitchen Resources", value: "Free" },
-            { id: "HS202", title: "Closet Cleanout Weekend Guide", category: "Home Organization", value: "Premium" },
-            { id: "HS203", title: "Weekly Cleaning Planner Pack", category: "Printable Planner", value: "Free" }
-        ];
-        localStorage.setItem("articles", JSON.stringify(initialData));
-    }
     if (!localStorage.getItem("articleIdeas")) {
         const initialData = [
-            { id: "HS301", title: "Sunday Reset Routine", author: "Lauren", category: "Home Organization", notes: "A simple routine to prepare the home for the week ahead." },
-            { id: "HS302", title: "5-Minute Kitchen Reset", author: "Lauren", category: "Kitchen Resources", notes: "Quick habits that help keep the kitchen clean and calm." },
-            { id: "HS303", title: "Weekly Cleaning Checklist", author: "Lauren", category: "Printable Planners", notes: "A printable guide readers can use to stay on track all week." }
+            { id: "HS301", title: "Sunday Reset Routine", author: "Lauren", category: "Home Organization", contentSnippet: "A simple routine to prepare the home for the week ahead.", preferredDistChannel: "", notes: "", status: "Pending" },
+            { id: "HS302", title: "5-Minute Kitchen Reset", author: "Lauren", category: "Kitchen Resources", contentSnippet: "Quick habits that help keep the kitchen clean and calm.", preferredDistChannel: "", notes: "", status: "Pending" },
+            { id: "HS303", title: "Weekly Cleaning Checklist", author: "Lauren", category: "Printable Planners", contentSnippet: "A printable guide readers can use to stay on track all week.", preferredDistChannel: "", notes: "", status: "Pending" }
         ];
         localStorage.setItem("articleIdeas", JSON.stringify(initialData));
     }
@@ -413,11 +388,8 @@ $(document).ready(function () {
 
     categories = loadOptions($category);
     distChannels = loadOptions($prefDistChannel);
-    defaultIdErrorMsg = $articleId.parent().find("div.invalid-feedback").text();
 
-    $articleId.on("keyup", () => { 
-        checkIdExists($articleId, "articles", defaultIdErrorMsg, "Article ID not found."); 
-        updatePreview(); });
+    $articleId.on("keyup", () => { checkEmpty($articleId); updatePreview(); });
     $articleTitle.on("keyup", () => { checkEmpty($articleTitle); updatePreview(); });
     $articleAuthor.on("keyup", () => { checkEmpty($articleAuthor); updatePreview(); });
     $category.on("change", () => { checkOption($category, categories); updatePreview(); });
@@ -439,7 +411,7 @@ $(document).ready(function () {
 
     loadArticleIdeas();
     updatePreview();
-    $("#jsonPreview").val("");
+    $("#jsonPreview").text("");
 });
 
 /*

@@ -27,13 +27,16 @@
 
    <!-- Scrolling functionality -->
    <script defer src="js/scroll.js"></script>
+
+   <!-- Custom JS -->
+   <script src="js/billing.js"></script>
 </head>
 
 <body>
    <!-- Announcement Bar -->
    <div class="announcement-bar">
       Secure your order and get your home resources delivered digitally —
-      <a href="cart.html">Return to cart →</a>
+      <a href="shoppingcart.html">Return to cart →</a>
    </div>
 
    <!-- Navbar -->
@@ -50,7 +53,7 @@
                <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
                <li class="nav-item"><a class="nav-link" href="signup.html">Subscribers</a></li>
                <li class="nav-item"><a class="nav-link" href="content.html">Content Manager</a></li>
-               <li class="nav-item"><a class="nav-link" href="cart.html">Shopping Cart</a></li>
+               <li class="nav-item"><a class="nav-link" href="shoppingcart.html">Shopping Cart</a></li>
                <li class="nav-item"><a class="nav-link" href="finalizationpage.html">Article Finalization</a></li>
                <li class="nav-item"><a class="nav-link" href="submission.html">Article Submission</a></li>
                <li class="nav-item"><a class="nav-link" href="approval.html">Approval Workflow</a></li>
@@ -261,7 +264,7 @@
                      <span class="badge text-bg-brown-light">Cart Review</span>
                   </div>
 
-                  <div class="border rounded p-3 mb-3 bg-light">
+                  <div class="border rounded p-3 mb-3 bg-light" id="cartItems">
                      <div class="d-flex justify-content-between align-items-start mb-2">
                         <div>
                            <div class="fw-semibold">Kitchen Reset Guide</div>
@@ -290,7 +293,7 @@
                   <div class="border-top pt-3">
                      <div class="d-flex justify-content-between mb-2">
                         <span class="text-muted">Subtotal</span>
-                        <span>$37.97</span>
+                        <span id="subtotal">$37.97</span>
                      </div>
                      <div class="d-flex justify-content-between mb-2">
                         <span class="text-muted">Shipping</span>
@@ -298,7 +301,7 @@
                      </div>
                      <div class="d-flex justify-content-between fw-bold">
                         <span>Total</span>
-                        <span>$37.97</span>
+                        <span id="total">$37.97</span>
                      </div>
                   </div>
                </div>
@@ -362,8 +365,8 @@
             <a class="link-light text-decoration-none" href="index.html">Home</a>
             <a class="link-light text-decoration-none" href="signup.html">Subscribers</a>
             <a class="link-light text-decoration-none" href="content.html">Content Manager</a>
-            <a class="link-light text-decoration-none" href="cart.html">Shopping Cart</a>
-            <a class="link-light text-decoration-none" href="finalize.html">Article Finalization</a>
+            <a class="link-light text-decoration-none" href="shoppingcart.html">Shopping Cart</a>
+            <a class="link-light text-decoration-none" href="finalizationpage.html">Article Finalization</a>
             <a class="link-light text-decoration-none" href="submission.html">Article Submission</a>
             <a class="link-light text-decoration-none" href="approval.html">Approval Workflow</a>
             <a class="link-light text-decoration-none" href="billing.html">Billing Details</a>

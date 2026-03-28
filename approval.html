@@ -27,6 +27,9 @@
 
    <!-- Scrolling functionality -->
    <script defer src="js/scroll.js"></script>
+
+   <!-- Custom JS -->
+   <script src="js/approval.js"></script>
 </head>
 
 <body>
@@ -50,7 +53,7 @@
                <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
                <li class="nav-item"><a class="nav-link" href="signup.html">Subscribers</a></li>
                <li class="nav-item"><a class="nav-link" href="content.html">Content Manager</a></li>
-               <li class="nav-item"><a class="nav-link" href="cart.html">Shopping Cart</a></li>
+               <li class="nav-item"><a class="nav-link" href="shoppingcart.html">Shopping Cart</a></li>
                <li class="nav-item"><a class="nav-link" href="finalizationpage.html">Article Finalization</a></li>
                <li class="nav-item"><a class="nav-link" href="submission.html">Article Submission</a></li>
                <li class="nav-item"><a class="nav-link active" href="approval.html">Approval Workflow</a></li>
@@ -163,8 +166,8 @@
                   </div>
 
                   <div class="d-grid gap-2">
-                     <button class="btn btn-brown" type="button">Refresh Submission List</button>
-                     <button class="btn btn-outline-brown" type="button">Clear Filters</button>
+                     <button class="btn btn-brown" type="button" id="refreshBtn">Refresh Submission List</button>
+                     <button class="btn btn-outline-brown" type="button" id="clearFiltersBtn">Clear Filters</button>
                   </div>
                </div>
             </div>
@@ -313,29 +316,29 @@
                      <div class="col-md-6">
                         <div class="border rounded p-3 h-100 bg-light">
                            <p class="small text-muted mb-1">Selected Article</p>
-                           <div class="fw-bold">Sunday Reset Routine</div>
-                           <div class="text-muted small">HS301</div>
+                           <div class="fw-bold" id="previewTitle">Sunday Reset Routine</div>
+                           <div class="text-muted small" id="previewId">HS301</div>
                         </div>
                      </div>
                      <div class="col-md-6">
                         <div class="border rounded p-3 h-100 bg-light">
                            <p class="small text-muted mb-1">Author</p>
-                           <div class="fw-bold">Lauren</div>
-                           <div class="text-muted small">Home Organization</div>
+                           <div class="fw-bold" id="previewAuthor">Lauren</div>
+                           <div class="text-muted small" id="previewCategory">Home Organization</div>
                         </div>
                      </div>
                      <div class="col-md-6">
                         <div class="border rounded p-3 h-100 bg-light">
                            <p class="small text-muted mb-1">Current Status</p>
-                           <div class="fw-bold">Pending</div>
-                           <div class="text-muted small">Waiting for editorial decision</div>
+                           <div class="fw-bold" id="previewStatus">Pending</div>
+                           <div class="text-muted small" id="previewStatusInfo">Waiting for editorial decision</div>
                         </div>
                      </div>
                      <div class="col-md-6">
                         <div class="border rounded p-3 h-100 bg-light">
                            <p class="small text-muted mb-1">Planned Action</p>
-                           <div class="fw-bold">Approve</div>
-                           <div class="text-muted small">Ready to move into publication workflow</div>
+                           <div class="fw-bold" id="previewPlannedStatus">Approve</div>
+                           <div class="text-muted small" id="previewPlannedStatusInfo">Ready to move into publication workflow</div>
                         </div>
                      </div>
                   </div>
@@ -398,8 +401,8 @@
             <a class="link-light text-decoration-none" href="index.html">Home</a>
             <a class="link-light text-decoration-none" href="signup.html">Subscribers</a>
             <a class="link-light text-decoration-none" href="content.html">Content Manager</a>
-            <a class="link-light text-decoration-none" href="cart.html">Shopping Cart</a>
-            <a class="link-light text-decoration-none" href="finalize.html">Article Finalization</a>
+            <a class="link-light text-decoration-none" href="shoppingcart.html">Shopping Cart</a>
+            <a class="link-light text-decoration-none" href="finalizationpage.html">Article Finalization</a>
             <a class="link-light text-decoration-none" href="submission.html">Article Submission</a>
             <a class="link-light text-decoration-none" href="approval.html">Approval Workflow</a>
          </div>
