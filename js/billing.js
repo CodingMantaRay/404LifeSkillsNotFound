@@ -187,10 +187,9 @@ function checkForm() {
  * Clears the form.
  */
 function clearForm() {
-    for ($widget of form) {
-        if ($widget != form.$shippingDetails) {
-            setError($widget, false);
-        }
+    for (let widgetName in form) {
+        const $widget = form[widgetName];
+        setError($widget, false);
         $widget.val("");
     }
 
@@ -198,9 +197,14 @@ function clearForm() {
     $("#billingJsonPreview").text("");
 }
 
-function loadCart() {
+function getCart() {
     const products = new Map(getItems("products", []).map((o)=> [o.id, o]));
     const cart = getItems("cart", []).map((o)=>products.get(o));
+    return cart;
+}
+
+function loadCart() {
+    const cart = getCart();
 
     const $cart = $("#cartItems");
     let html = "";
@@ -237,6 +241,17 @@ function onCompletePayment(event) {
     // TODO - React transmission
     //transmitWithReact(billingInfo);
 
+    // Add to purchases
+    const cart = getCart();
+    let purchases = getItems("purchases", []);
+    cart.forEach((item)=>purchases.push(item));
+    localStorage.setItem("purchases", JSON.stringify(purchases));
+
+    // Clear cart
+    localStorage.removeItem("cart");
+    loadCart();
+
+    // Clear form
     clearForm();
 }
 
