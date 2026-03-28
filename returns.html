@@ -27,6 +27,9 @@
 
    <!-- Scrolling functionality -->
    <script defer src="js/scroll.js"></script>
+
+   <!-- Custom JS -->
+   <script src="js/returns.js"></script>
 </head>
 
 <body>
@@ -343,21 +346,21 @@
                      <div class="col-md-6">
                         <div class="border rounded p-3 h-100 bg-light">
                            <p class="small text-muted mb-1">Selected Product</p>
-                           <div class="fw-bold">Weekly Home Planner Pack</div>
-                           <div class="text-muted small">$8.99</div>
+                           <div class="fw-bold" id="previewName">Weekly Home Planner Pack</div>
+                           <div class="text-muted small" id="previewPrice">$8.99</div>
                         </div>
                      </div>
                      <div class="col-md-6">
                         <div class="border rounded p-3 h-100 bg-light">
                            <p class="small text-muted mb-1">Reason</p>
-                           <div class="fw-bold">Wrong item purchased</div>
+                           <div class="fw-bold" id="previewReason">Wrong item purchased</div>
                            <div class="text-muted small">Customer-submitted request</div>
                         </div>
                      </div>
                      <div class="col-md-6">
                         <div class="border rounded p-3 h-100 bg-light">
                            <p class="small text-muted mb-1">Condition</p>
-                           <div class="fw-bold">Unused</div>
+                           <div class="fw-bold" id="previewCondition">Unused</div>
                            <div class="text-muted small">Eligible for review</div>
                         </div>
                      </div>
