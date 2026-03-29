@@ -538,17 +538,7 @@
     const form         = document.getElementById('finalizationForm');
     const channelError = document.getElementById('channelError');
     if (form) {
-      form.addEventListener('submit', function (e) {
-        const checked = document.querySelectorAll('.channel-check:checked');
-        if (checked.length === 0) {
-          e.preventDefault();
-          e.stopPropagation();
-          channelError.classList.remove('d-none');
-        } else {
-          channelError.classList.add('d-none');
-        }
-        form.classList.add('was-validated');
-      });
+     
     }
     document.querySelectorAll('.channel-check').forEach(cb => {
       cb.addEventListener('change', function () {

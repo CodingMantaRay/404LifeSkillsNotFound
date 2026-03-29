@@ -174,9 +174,16 @@ function checkForm() {
         formIsValid = false;
 
     // Check article distribution channel
-    [articleInfo.distChannel, isError] = checkOption($distChannel, distChannels);
-    if (isError)
+    const selectedChannels = $(".channel-check:checked").map(function() {
+        return $(this).val();
+    }).get();
+    articleInfo.distChannel = selectedChannels;
+    if (selectedChannels.length == 0) {
+        $("#channelError").removeClass("d-none");
         formIsValid = false;
+    } else {
+        $("#channelError").addClass("d-none");
+    }
 
     // Check article review status
     [articleInfo.reviewStatus, isError] = checkOption($reviewStatus, reviewStatuses);
@@ -218,8 +225,8 @@ function clearForm() {
     $articleTitle.val("");
     setError($pubDate, false);
     $pubDate.val("");
-    setError($distChannel, false);
-    $distChannel.val("");
+   $(".channel-check").prop("checked", false);
+   $("#channelError").addClass("d-none");
     setError($reviewStatus, false);
     $reviewStatus.val("");
     setError($articleAuthor, false);
@@ -318,6 +325,13 @@ function updateArticle(articleId, articleTitle, articleAccess) {
  */
 function onSave(event) {
     event.preventDefault();
+    const checked = $(".channel-check:checked");
+    if (checked.length == 0) {
+        $("#channelError").removeClass("d-none");
+        return;
+    } else {
+        $("#channelError").addClass("d-none");
+    }
 
     let pubOptions = checkForm();
     if (!pubOptions) return;
@@ -368,7 +382,14 @@ function onLoad() {
     $articleId.val(id);
     $articleTitle.val(article.title);
     $pubDate.val(pubOptions.pubDate);
-    $distChannel.val(pubOptions.distChannel);
+    $(".channel-check").prop("checked", false);
+    if (Array.isArray(pubOptions.distChannel)) {
+        pubOptions.distChannel.forEach(channel => {
+            $(`.channel-check[value="${channel}"]`).prop("checked", true);
+        });
+    } else if (pubOptions.distChannel) {
+        $(`.channel-check[value="${pubOptions.distChannel}"]`).prop("checked", true);
+    }
     $reviewStatus.val(pubOptions.reviewStatus);
     $articleAuthor.val(pubOptions.author);
     $featured.val(pubOptions.featured);
@@ -401,7 +422,7 @@ const updatePreview = () => {
             $(".col-lg-8 .border.bg-light .fw-bold").eq(3).text(formData.access || "--");
             };
 
-            
+
 $(document).ready(function() {
     // TODO remove
     if (!localStorage.getItem("articles")) {
@@ -436,7 +457,9 @@ $(document).ready(function() {
     $articleId.on("keyup", () => { checkArticleId($articleId); updatePreview(); });
     $articleTitle.on("keyup", () => { checkEmpty($articleTitle); updatePreview(); });
     $pubDate.on("change", () => { checkDate($pubDate); updatePreview(); });
-    $distChannel.on("change", () => { checkOption($distChannel, distChannels); updatePreview(); });
+    $(".channel-check").on("change", () => {
+        updatePreview();
+    });
     $reviewStatus.on("change", () => { checkOption($reviewStatus, reviewStatuses); updatePreview(); });
     $articleAuthor.on("keyup", () => { checkEmpty($articleAuthor); updatePreview(); });
     $featured.on("change", () => { checkOption($featured, featuredOptions); updatePreview(); });
