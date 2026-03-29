@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+   <meta charset="UTF-8" />
+   <meta name="viewport" content="width=device-width, initial-scale=1" />
+   <title>404 Life Skills | Article Submission</title>
+
+   <!-- Favicon -->
+   <link rel="icon"
+      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%23A52A2A' rx='5'/><text x='50%25' y='56%25' dominant-baseline='middle' text-anchor='middle' fill='white' font-size='10' font-family='Arial' font-weight='bold'>404</text></svg>">
+
+   <!-- Bootstrap CSS -->
+   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+   <!-- Bootstrap Icons -->
+   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+   <!-- Custom CSS -->
+   <link rel="stylesheet" href="style.css" />
+
+   <!-- jQuery -->
+   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+
+   <!-- Bootstrap JS -->
+   <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+   <!-- Scrolling functionality -->
+   <script defer src="js/scroll.js"></script>
+
+   <!-- Custom JS -->
+   <script src="js/submit.js"></script>
+</head>
+
+<body>
+   <!-- Announcement Bar -->
+   <div class="announcement-bar">
+      Share your best home tips and lifestyle ideas — <a href="signup.html">Join our magazine community →</a>
+   </div>
+
+   <!-- Navbar -->
+   <nav class="navbar navbar-expand-lg navbar-dark bg-dark-brown sticky-top">
+      <div class="container">
+         <a class="navbar-brand fw-bold" href="index.html">404 Life Skills</a>
+
+         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#topNav" aria-controls="topNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+         <div class="collapse navbar-collapse" id="topNav">
+            <ul class="navbar-nav ms-auto gap-lg-2">
+               <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
+               <li class="nav-item"><a class="nav-link" href="signup.html">Subscribers</a></li>
+               <li class="nav-item"><a class="nav-link" href="content.html">Content Manager</a></li>
+               <li class="nav-item"><a class="nav-link" href="shoppingcart.html">Shopping Cart</a></li>
+               <li class="nav-item"><a class="nav-link" href="finalizationpage.html">Article Finalization</a></li>
+               <li class="nav-item"><a class="nav-link active" href="submission.html">Article Submission</a></li>
+               <li class="nav-item"><a class="nav-link" href="approval.html">Approval Workflow</a></li>
+               <li class="nav-item"><a class="nav-link" href="billing.html">Billing Details</a></li>
+               <li class="nav-item"><a class="nav-link" href="returns.html">Returns</a></li>
+               <li class="nav-item">
+                  <a class="btn btn-brown btn-sm ms-lg-2" href="signup.html">Subscribe</a>
+               </li>
+            </ul>
+         </div>
+      </div>
+   </nav>
+
+   <!-- Page Header -->
+   <header class="bg-warm border-bottom">
+      <div class="container py-4">
+         <h1 class="h3 fw-bold mb-1">Article Submission</h1>
+         <p class="text-muted mb-0">
+            Submit home tips, organization ideas, and lifestyle content for editorial review and approval.
+         </p>
+      </div>
+   </header>
+
+   <!-- Callout Strip -->
+   <section class="py-3 bg-dark-brown text-white text-center">
+      <div class="container">
+         <p class="mb-0">Every great issue starts with one strong idea. <strong>Submit your article today.</strong></p>
+      </div>
+   </section>
+
+   <!-- Stats Strip -->
+   <section class="py-3 bg-warm border-bottom">
+      <div class="container">
+         <div class="row text-center g-0">
+            <div class="col-4">
+               <div id="statSubmissions"
+                  style="font-size:1.5rem; font-family:'Playfair Display',serif; color:brown; font-weight:700;">5</div>
+               <p class="mb-0 small text-muted">Submissions</p>
+            </div>
+            <div class="col-4"
+               style="border-left:1px solid rgba(139,69,19,0.2);border-right:1px solid rgba(139,69,19,0.2);">
+               <div id="statPending"
+                  style="font-size:1.5rem; font-family:'Playfair Display',serif; color:brown; font-weight:700;">3</div>
+               <p class="mb-0 small text-muted">Pending Review</p>
+            </div>
+            <div class="col-4">
+               <div id="statCategories"
+                  style="font-size:1.5rem; font-family:'Playfair Display',serif; color:brown; font-weight:700;">4</div>
+               <p class="mb-0 small text-muted">Categories</p>
+            </div>
+         </div>
+      </div>
+   </section>
+
+   <main class="container py-4">
+      <div class="row g-4">
+
+         <!-- LEFT COLUMN -->
+         <div class="col-lg-4">
+
+            <!-- SUBMISSION FORM -->
+            <div class="card shadow-sm fade-in" style="border-top: 3px solid brown;">
+               <div class="card-body">
+                  <div class="d-flex justify-content-between align-items-start mb-2">
+                     <h2 class="h5 fw-bold mb-0">Submit New Article</h2>
+                     <span class="badge text-bg-brown-light">Form</span>
+                  </div>
+
+                  <form class="needs-validation" novalidate id="submissionForm">
+
+                     <!-- Article ID -->
+                     <div class="mb-3">
+                        <label class="form-label" for="articleId">
+                  <i class="bi bi-hash text-brown me-1"></i>Article ID *
+                </label>
+                        <input type="text" class="form-control" id="articleId" placeholder="E.g., HS301" required>
+                        <div class="invalid-feedback">Please enter an Article ID.</div>
+                     </div>
+
+                     <!-- Article Title -->
+                     <div class="mb-3">
+                        <label class="form-label" for="articleTitle">
+                  <i class="bi bi-pencil text-brown me-1"></i>Article Title *
+                </label>
+                        <input type="text" class="form-control" id="articleTitle" placeholder="E.g., Sunday Reset Routine" required>
+                        <div class="invalid-feedback">Please enter an article title.</div>
+                     </div>
+
+                     <!-- Author Name -->
+                     <div class="mb-3">
+                        <label class="form-label" for="authorName">
+                  <i class="bi bi-person text-brown me-1"></i>Author Name *
+                </label>
+                        <input type="text" class="form-control" id="authorName" placeholder="E.g., Lauren" required>
+                        <div class="invalid-feedback">Please enter the author name.</div>
+                     </div>
+
+                     <!-- Category -->
+                     <div class="mb-3">
+                        <label class="form-label" for="category">
+                  <i class="bi bi-tag text-brown me-1"></i>Category *
+                </label>
+                        <select class="form-select" id="category" required>
+                  <option value="">Choose one…</option>
+                  <option>Home Organization</option>
+                  <option>Kitchen Resources</option>
+                  <option>Cleaning Guides</option>
+                  <option>Printable Planners</option>
+                  <option>Wellness at Home</option>
+                  <option>DIY Home Tips</option>
+                </select>
+                        <div class="invalid-feedback">Please select a category.</div>
+                     </div>
+
+                     <!-- Content Snippet -->
+                     <div class="mb-3">
+                        <label class="form-label" for="contentSnippet">
+                  <i class="bi bi-card-text text-brown me-1"></i>Content Snippet *
+                </label>
+                        <textarea
+                  class="form-control"
+                  id="contentSnippet"
+                  rows="4"
+                  placeholder="Write a short preview of the article..."
+                  required
+                ></textarea>
+                        <div class="invalid-feedback">Please enter a content snippet.</div>
+                     </div>
+
+                     <!-- Distribution Preference -->
+                     <div class="mb-3">
+                        <label class="form-label" for="distributionPreference">
+                  <i class="bi bi-send text-brown me-1"></i>Distribution Preference
+                </label>
+                        <select class="form-select" id="distributionPreference">
+                  <option value="">Choose one…</option>
+                  <option>Website Feature</option>
+                  <option>Email Newsletter</option>
+                  <option>Subscriber Portal</option>
+                  <option>Blog Feature</option>
+                </select>
+                     </div>
+
+                     <!-- Optional Notes -->
+                     <div class="mb-3">
+                        <label class="form-label" for="submissionNotes">
+                  <i class="bi bi-chat-left-text text-brown me-1"></i>Optional Notes
+                </label>
+                        <textarea
+                  class="form-control"
+                  id="submissionNotes"
+                  rows="3"
+                  placeholder="Any extra details for the editorial team..."
+                ></textarea>
+                     </div>
+
+                     <!-- Buttons -->
+                     <div class="d-grid gap-2">
+                        <button class="btn btn-brown" type="submit">Submit Article</button>
+                        <button class="btn btn-outline-brown" type="reset">Clear Form</button>
+                     </div>
+                  </form>
+               </div>
+            </div>
+
+            <!-- FEATURED IMAGE -->
+            <div class="card shadow-sm mt-4 fade-in">
+               <div class="card-body">
+                  <h3 class="h6 fw-bold mb-2">Editorial Inspiration</h3>
+                  <p class="text-muted small mb-3">
+                     Thoughtful home content starts with practical ideas readers can actually use.
+                  </p>
+                  <img
+              src="https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=900&q=80"
+              alt="Cozy home workspace with lifestyle magazine inspiration"
+              class="img-fluid rounded"
+            >
+               </div>
+            </div>
+         </div>
+
+         <!-- RIGHT COLUMN -->
+         <div class="col-lg-8">
+
+            <!-- SEARCH / LOOKUP AREA -->
+            <div class="card shadow-sm mb-4 fade-in">
+               <div class="card-body">
+                  <div class="row g-2">
+                     <div class="col-md-8">
+                        <label for="submissionSearch" class="form-label fw-semibold">Search Draft Ideas</label>
+                        <div class="input-group">
+                           <span class="input-group-text"><i class="bi bi-search text-brown"></i></span>
+                           <input
+                    type="text"
+                    id="submissionSearch"
+                    class="form-control"
+                    placeholder="Search by title or category"
+                  >
+                        </div>
+                     </div>
+                     <div class="col-md-4">
+                        <label for="submissionFilter" class="form-label fw-semibold">Filter Category</label>
+                        <select id="submissionFilter" class="form-select">
+                  <option value="All">All Categories</option>
+                  <option>Home Organization</option>
+                  <option>Kitchen Resources</option>
+                  <option>Cleaning Guides</option>
+                  <option>Printable Planners</option>
+                  <option>Wellness at Home</option>
+                  <option>DIY Home Tips</option>
+                </select>
+                     </div>
+                  </div>
+               </div>
+            </div>
+
+            <!-- ARTICLE IDEA CARDS -->
+            <div class="card shadow-sm mb-4 fade-in">
+               <div class="card-body">
+                  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                     <h2 class="h5 fw-bold mb-0">Suggested Article Ideas</h2>
+                     <span class="badge text-bg-brown-light" id="ideaCountBadge">3 ideas</span>
+                  </div>
+
+                  <div class="row g-3" id="ideaCards">
+
+                     <div class="col-md-6">
+                        <div class="entry-card border rounded p-3 bg-white h-100" style="border-left: 3px solid brown;">
+                           <div class="d-flex justify-content-between align-items-start gap-2">
+                              <div>
+                                 <div class="fw-bold">HS301</div>
+                                 <div class="mt-1 d-flex flex-wrap gap-1">
+                                    <span class="badge text-bg-brown">Home Organization</span>
+                                    <span class="badge text-bg-brown-light">Draft Idea</span>
+                                 </div>
+                              </div>
+                              <button type="button" class="btn btn-sm btn-brown useIdeaBtn">Use Idea</button>
+                           </div>
+                           <div class="mt-2 fw-semibold">Sunday Reset Routine</div>
+                           <div class="text-muted small mt-2">A simple routine to prepare the home for the week ahead.
+                           </div>
+                        </div>
+                     </div>
+
+                     <div class="col-md-6">
+                        <div class="entry-card border rounded p-3 bg-white h-100" style="border-left: 3px solid brown;">
+                           <div class="d-flex justify-content-between align-items-start gap-2">
+                              <div>
+                                 <div class="fw-bold">HS302</div>
+                                 <div class="mt-1 d-flex flex-wrap gap-1">
+                                    <span class="badge text-bg-brown">Kitchen Resources</span>
+                                    <span class="badge text-bg-brown-light">Draft Idea</span>
+                                 </div>
+                              </div>
+                              <button type="button" class="btn btn-sm btn-brown useIdeaBtn">Use Idea</button>
+                           </div>
+                           <div class="mt-2 fw-semibold">5-Minute Kitchen Reset</div>
+                           <div class="text-muted small mt-2">Quick habits that help keep the kitchen clean and calm.
+                           </div>
+                        </div>
+                     </div>
+
+                     <div class="col-md-6">
+                        <div class="entry-card border rounded p-3 bg-white h-100" style="border-left: 3px solid brown;">
+                           <div class="d-flex justify-content-between align-items-start gap-2">
+                              <div>
+                                 <div class="fw-bold">HS303</div>
+                                 <div class="mt-1 d-flex flex-wrap gap-1">
+                                    <span class="badge text-bg-brown">Printable Planners</span>
+                                    <span class="badge text-bg-brown-light">Draft Idea</span>
+                                 </div>
+                              </div>
+                              <button type="button" class="btn btn-sm btn-brown useIdeaBtn">Use Idea</button>
+                           </div>
+                           <div class="mt-2 fw-semibold">Weekly Cleaning Checklist</div>
+                           <div class="text-muted small mt-2">A printable guide readers can use to stay on track all
+                              week.</div>
+                        </div>
+                     </div>
+
+                     <div id="emptyState" class="col-12 text-center py-4 d-none">
+                        <i class="bi bi-journal-x" style="font-size: 2.5rem; color: #c97a3a;"></i>
+                        <p class="mt-2 text-muted mb-0">No article ideas available right now.</p>
+                     </div>
+                  </div>
+               </div>
+            </div>
+
+            <!-- SUBMISSION PREVIEW -->
+            <div class="card shadow-sm mb-4 fade-in">
+               <div class="card-body">
+                  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                     <h2 class="h5 fw-bold mb-0">Submission Preview</h2>
+                     <span class="badge text-bg-brown-light">Preview</span>
+                  </div>
+
+                  <div class="row g-3">
+                     <div class="col-md-6">
+                        <div class="border rounded p-3 h-100 bg-light">
+                           <p class="small text-muted mb-1">Article</p>
+                           <div class="fw-bold" id="previewTitle">Sunday Reset Routine</div>
+                           <div class="text-muted small" id="previewId">HS301</div>
+                        </div>
+                     </div>
+                     <div class="col-md-6">
+                        <div class="border rounded p-3 h-100 bg-light">
+                           <p class="small text-muted mb-1">Author</p>
+                           <div class="fw-bold" id="previewAuthor">Lauren</div>
+                           <div class="text-muted small" id="previewCategory">Home Organization</div>
+                        </div>
+                     </div>
+                     <div class="col-md-6">
+                        <div class="border rounded p-3 h-100 bg-light">
+                           <p class="small text-muted mb-1">Distribution Preference</p>
+                           <div class="fw-bold" id="previewPrefDistChannel">Website Feature</div>
+                           <div class="text-muted small">Editorial review required</div>
+                        </div>
+                     </div>
+                     <div class="col-md-6">
+                        <div class="border rounded p-3 h-100 bg-light">
+                           <p class="small text-muted mb-1">Status</p>
+                           <div class="fw-bold" id="previewStatus">Pending Submission</div>
+                           <div class="text-muted small" id="previewStatusInfo">Awaiting backend processing</div>
+                        </div>
+                     </div>
+                  </div>
+               </div>
+            </div>
+
+            <!-- JSON PREVIEW -->
+            <div class="card shadow-sm mb-4 fade-in">
+               <div class="card-body">
+                  <div class="d-flex justify-content-between align-items-center mb-2">
+                     <h2 class="h5 fw-bold mb-0">JSON Preview</h2>
+                     <span class="badge text-bg-brown-light">JSON</span>
+                  </div>
+                  <p class="text-muted small mb-3">
+                     This area will display the JSON document created from the article submission form.
+                  </p>
+                  <pre id="jsonPreview" class="bg-light p-3 rounded border small mb-0" style="min-height: 220px;">
+{
+  "articleId": "HS301",
+  "title": "Sunday Reset Routine",
+  "author": "Lauren",
+  "category": "Home Organization",
+  "snippet": "A quick routine to reset your home before the week begins.",
+  "distributionPreference": "Website Feature",
+  "notes": "Great fit for the Sunday newsletter edition.",
+  "status": "Pending"
+}
+            </pre>
+               </div>
+            </div>
+
+            <!-- API STATUS -->
+            <div class="card shadow-sm fade-in">
+               <div class="card-body">
+                  <div class="d-flex justify-content-between align-items-center mb-2">
+                     <h2 class="h5 fw-bold mb-0">Submission Status</h2>
+                     <span class="badge text-bg-brown-light">AJAX / API</span>
+                  </div>
+                  <p class="text-muted small mb-3">
+                     This section will later show whether the article submission was successfully sent to the Node.js
+                     backend.
+                  </p>
+                  <div class="alert alert-brown mb-0" id="submissionStatus">
+                     Waiting to submit article data...
+                  </div>
+               </div>
+            </div>
+
+         </div>
+      </div>
+   </main>
+
+   <!-- Footer -->
+   <footer class="bg-dark-brown text-white py-4 mt-4">
+      <div class="container d-flex flex-wrap justify-content-between align-items-center gap-2">
+         <div>
+            <p class="mb-0">&copy; 2026 404 Life Skills</p>
+            <p class="mb-0 small fst-italic" style="opacity: 0.6;">Small fixes. Big wins.</p>
+         </div>
+         <div class="d-flex gap-3 flex-wrap">
+            <a class="link-light text-decoration-none" href="index.html">Home</a>
+            <a class="link-light text-decoration-none" href="signup.html">Subscribers</a>
+            <a class="link-light text-decoration-none" href="content.html">Content Manager</a>
+            <a class="link-light text-decoration-none" href="shoppingcart.html">Shopping Cart</a>
+            <a class="link-light text-decoration-none" href="finalizationpage.html">Article Finalization</a>
+            <a class="link-light text-decoration-none" href="submission.html">Article Submission</a>
+            <a class="link-light text-decoration-none" href="approval.html">Approval Workflow</a>
+            <a class="link-light text-decoration-none" href="billing.html">Billing Details</a>
+            <a class="link-light text-decoration-none" href="returns.html">Returns</a>
+         </div>
+      </div>
+   </footer>
+
+   <!-- Scroll to top button -->
+   <button id="scrollTop" title="Back to top">&#8679;</button>
+</body>
+
+</html>
