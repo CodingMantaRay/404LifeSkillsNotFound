@@ -14,6 +14,8 @@
   <!-- Bootstrap Icons -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
+  <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular.min.js"></script>
+
   <!-- Custom CSS -->
   <link rel="stylesheet" href="style.css" />
 </head>
@@ -218,7 +220,7 @@
   </section>
 
   <!-- Categories -->
-  <section id="categories" class="py-5">
+  <section id="categories" class="py-5" ng-app="skillsApp" ng-controller="CategoryController">
     <div class="container fade-in">
       <h2 class="fw-bold mb-2">Categories &amp; Tags</h2>
       <p class="text-muted mb-3">Browse by the kind of "fix" you need.</p>
@@ -232,13 +234,9 @@
 
       <div class="d-flex flex-wrap gap-2">
         <span class="badge text-bg-brown p-2">Cleaning</span>
-        <span class="badge text-bg-brown p-2">Repairs</span>
-        <span class="badge text-bg-brown p-2">Recipes</span>
-        <span class="badge text-bg-brown p-2">Organization</span>
-        <span class="badge text-bg-brown p-2">Laundry</span>
-        <span class="badge text-bg-brown p-2">Budget</span>
-        <span class="badge text-bg-brown p-2">DIY</span>
-        <span class="badge text-bg-brown p-2">Time-Savers</span>
+        ng-repeat="tag in tags | filter:tagFilter">
+        {{tag}}
+         </span>
       </div>
     </div>
   </section>
@@ -384,12 +382,17 @@
     document.querySelectorAll('.fade-in').forEach(el => fadeObs.observe(el));
 
     
-    document.getElementById('tagFilter').addEventListener('input', function () {
-      const filter = this.value.toLowerCase();
-      document.querySelectorAll('#categories .badge').forEach(badge => {
-        badge.style.display = badge.textContent.toLowerCase().includes(filter) ? '' : 'none';
-      });
-    });
+    
   </script>
+
+<script>
+  var app = angular.module('skillsApp', []);
+  app.controller('CategoryController', function($scope) {
+    $scope.tags = [
+      'Cleaning', 'Repairs', 'Recipes', 'Organization', 'Laundry', 'Budget', 'DIY', 'Time-Savers', 'Gardening', 'Mental Health'
+    ];
+  });
+</script>
+
 </body>
 </html>

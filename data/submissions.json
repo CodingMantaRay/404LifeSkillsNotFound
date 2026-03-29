@@ -1,0 +1,42 @@
+[
+  {
+    "id": "HS304",
+    "title": "Bathroom Refresh",
+    "author": "Lauren",
+    "category": "DIY Home Tips",
+    "contentSnippet": "Goes through bathroom cleaning tips and fixes",
+    "preferredDistChannel": "Blog Feature",
+    "notes": "Contains general and specific fixes",
+    "status": "Pending"
+  },
+  {
+    "id": "HS304",
+    "title": "Bathroom Refresh",
+    "author": "Lauren",
+    "category": "DIY Home Tips",
+    "contentSnippet": "Goes through bathroom cleaning tips and fixes",
+    "preferredDistChannel": "Blog Feature",
+    "notes": "Contains general and specific fixes",
+    "status": "Pending"
+  },
+  {
+    "id": "HS304",
+    "title": "Bathroom Refresh",
+    "author": "Lauren",
+    "category": "Cleaning Guides",
+    "contentSnippet": "Simple fixes and tips that help revive your bathroom",
+    "preferredDistChannel": "Blog Feature",
+    "notes": "Both Specific and simple fixes",
+    "status": "Pending"
+  },
+  {
+    "id": "HS304",
+    "title": "Bathroom Refresh",
+    "author": "Lauren",
+    "category": "Cleaning Guides",
+    "contentSnippet": "Simple fixes and tips that help revive your bathroom",
+    "preferredDistChannel": "Blog Feature",
+    "notes": "Both Specific and simple fixes",
+    "status": "Pending"
+  }
+]

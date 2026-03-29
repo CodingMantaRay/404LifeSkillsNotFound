@@ -245,38 +245,36 @@ function loadArticleIdeas() {
  */
 function onSubmit(event) {
     event.preventDefault();
-    /* // Code from "finalize.js" - for checkboxes only
-    const checked = $(".channel-check:checked");
-    if (checked.length == 0) {
-        $("#channelError").removeClass("d-none");
-        return;
-    } else {
-        $("#channelError").addClass("d-none");
-    } */
+    
 
     let articleIdea = checkForm();
     if (!articleIdea) return;
 
-    const jsonString = JSON.stringify(articleIdea, null, 2);
-    $("#jsonPreview").text(jsonString);
-    // TODO - React transmission
-    //transmitWithReact(article);
 
-    // Fields in article idea: id, title, author, category, contentSnippet, preferredDistChannel, notes
 
-    // Add status to idea - will be used on approval page
-    // Possible statuses: Pending, Approved, Rejected, Revisions Requested
     articleIdea.status = "Pending";
-
-    // Update storage
-    updateItem("articleIdeas", articleIdea, (item) => (
-        "id" in item && "title" in item && "author" in item && "category" in item
-        && "contentSnippet" in item && "preferredDistChannel" in item 
-        && "notes" in item && "status" in item
-    ));
-
-    clearForm();
+    updateItem("articleIdeas", articleIdea);
     loadArticleIdeas();
+
+    $("#submissionStatus").removeClass("alert-secondary alert-danger").addClass("alert-info").html(`<i class="bi bi-cloud-arrow-up-fill"></i>Sending to Node.js...`);
+
+    $.ajax({
+        url: "http://localhost:3000/api/submit",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify(articleIdea),
+        success: function (response) {
+            $("#submissionStatus").removeClass("alert-info").addClass("alert-success").html(`<i class="bi bi-check-circle-fill me-2"></i>Success: ${response.message}`);
+    
+            $("#jsonPreview").text(JSON.stringify(articleIdea, null, 2));
+
+           
+        },
+
+        error: function (xhr) {
+            $("#submissionStatus").removeClass("alert-info").addClass("alert-danger").html(`<i class="bi bi-wifi-off"></i> Server Offline: Save to Local Stroage.`);
+        }
+});
 }
 
 /**
@@ -326,24 +324,23 @@ function onUseIdea() {
 
 function updatePreview(status="Pending") {
     const formData = {
-        id: $articleId.val().trim(),
+        articleId: $articleId.val().trim(),
         title: $articleTitle.val().trim(),
         author: $articleAuthor.val().trim(),
         category: $category.val().trim(),
         contentSnippet: $contentSnippet.val().trim(),
         preferredDistChannel: $prefDistChannel.val().trim(),
         notes: $notes.val().trim(),
-        "status": status
+        status: status
     };
     // TODO
-    /*const jsonString = JSON.stringify(formData, null, 2);
-    $("#jsonPreview").text(jsonString);*/
+   $("#jsonPreview").text(JSON.stringify(formData, null, 2));
 
-    $("#previewTitle").text(formData.title || "--");
-    $("#previewId").text(formData.id || "--");
-    $("#previewCategory").text(formData.category || "--");
-    $("#previewAuthor").text(formData.author || "--");
-    $("#previewPrefDistChannel").text(formData.preferredDistChannel || "--");
+    $("#previewTitle").text(formData.title || "---");
+    $("#previewId").text(formData.articleId || "---");
+    $("#previewCategory").text(formData.category || "---");
+    $("#previewAuthor").text(formData.author || "---");
+    $("#previewPrefDistChannel").text(formData.preferredDistChannel || "---");
 
     // Possible statuses: Pending, Approved, Rejected, Revisions Requested
     const statusText = {
