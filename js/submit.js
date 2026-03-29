@@ -203,10 +203,21 @@ function clearForm() {
     $articleId.attr("disabled", false);
 }
 
+function updateSubmissionHeaderStatus(articles) {
+    const totalSubmissions = articles.length;
+    const pendingReview = articles.filter(a => a.status === "Pending").length;
+
+    $("#totalSubCount").text(totalSubmissions);
+    $("#pendingCount").text(pendingReview);
+    $("#categoryCount").text(categories);
+}
+
 function loadArticleIdeas() {
     let articleIdeas = getItems("articleIdeas");
     if (articleIdeas == undefined)
         return;
+
+    updateSubmissionHeaderStatus(articleIdeas);
 
     const searchTerm = $("#submissionSearch").val().trim().toLowerCase();
     const categoryFilter = $("#submissionFilter").val();

@@ -71,10 +71,40 @@ function updateItem(collectionName, newItem, verifyItem = (item) => true) {
 
 // --------------------------------------------------------------------------
 
+function updateApprovalHeaderStats(articles) {
+    const counts = {
+        Pending: 0,
+        Approved: 0,
+        Rejected: 0,
+        Revisions: 0
+    };
+
+    articles.forEach(article => {
+        if (article.status === "Approved") {
+            counts.Approved++;
+        } else if (article.status === "Rejected") {
+            counts.Rejected++;
+        } else if (article.status === "Revisions") {
+            counts.Revisions++;
+        } else {
+            counts.Pending++;
+        }
+    });
+
+    $("statPending").text(counts.Pending);
+    $("#statApproved").text(counts.Approved);
+    $("#statRejected").text(counts.Rejected);
+    $("#statRevisions").text(counts.Revisions);
+
+    $("#submissionCountBadge").text(`${counts.Pending} pending items`);
+
+}
+
 function loadArticleIdeas() {
     let articleIdeas = getItems("articleIdeas");
     if (articleIdeas == undefined)
         return;
+updateApprovalHeaderStats(articleIdeas);
 
     const searchTerm = $("#approvalSearch").val().trim().toLowerCase();
     const statusFilter = $("#statusFilter").val();
@@ -155,16 +185,52 @@ function clearFilters() {
  * Changes the status of a given article idea in storage
  */
 function updateStatus(articleId, status) {
-    let articleIdea = getItems("articleIdeas", []).filter((item)=>item.id==articleId);
-    if (articleIdea.length == 0)
+    let articles = getItems("articleIdeas");
+   let articleIdea = articles.find((item) => item.id === articleId);
+    if (!articleIdea) {
+        console.error("Article not found: " + articleId);
         return;
-    articleIdea = articleIdea[0];
+
+    }
+
     updatePreview(articleIdea, status);
+
     articleIdea["status"] = status;
     $("#jsonPreview").text(JSON.stringify(articleIdea, null, 2));
     updateItem("articleIdeas", articleIdea);
-    loadArticleIdeas();
+
+    $.ajax({
+        url: "/api/approve",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify({
+            id: articleId,
+            status: status
+        }),
+        success: function(response) {
+            $("#apiStatus").html(`
+                <div class="alert alert-success mb-0">
+                    <i class="bi bi-check-circle-fill me-2"></i>
+                    <strong>Server Status:</strong> Succesfully updated ${articleId} to ${status}
+                    </div>
+            `);
+            
+
+        
+},
+error: function(xhr, status, error) {
+$("#apiStatus").html(`
+    <div class="alert alert-danger mb-0">
+        <i class="bi bi-x-circle-fill me-2"></i>
+        <strong>Server Status:</strong> Failed to update </div>
+        `);
 }
+});
+
+loadArticleIdeas();
+
+}
+        
 
 /**
  * Handler for "Approve" button.
