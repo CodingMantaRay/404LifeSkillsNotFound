@@ -207,49 +207,61 @@ function updateSubmissionHeaderStatus(articles) {
     const totalSubmissions = articles.length;
     const pendingReview = articles.filter(a => a.status === "Pending").length;
 
-    $("#totalSubCount").text(totalSubmissions);
-    $("#pendingCount").text(pendingReview);
-    $("#categoryCount").text(categories);
+    $("#statTotalSubmissions").text(totalSubmissions);
+    $("#statPending").text(pendingReview);
+    $("#statCategories").text(categories.length);
 }
 
-function loadArticleIdeas() {
-    let articleIdeas = getItems("articleIdeas");
-    if (articleIdeas == undefined)
-        return;
+async function loadArticleIdeas() {
+   try {
+    const response = await fetch("http://localhost:3000/api/submissions");
+    const articleIdeas = await response.json();
+
+    if (!articleIdeas) return;
 
     updateSubmissionHeaderStatus(articleIdeas);
+    $("#submissionCountBadge").text(`${articleIdeas.length} ideas`);
 
     const searchTerm = $("#submissionSearch").val().trim().toLowerCase();
-    const categoryFilter = $("#submissionFilter").val();
+    const filterCategory = $("#submissionFilter").val();
 
     let html = "";
-    for (let idea of articleIdeas) {
-        const matchesSearch = idea.id.toLowerCase().includes(searchTerm) || idea.title.toLowerCase().includes(searchTerm);
-        const matchesCategoryFilter = (categoryFilter === "All" || idea.category === categoryFilter);
-        if (matchesSearch && matchesCategoryFilter) {
-            html += `<div class="col-md-6">
-                        <div class="entry-card border rounded p-3 bg-white h-100" style="border-left: 3px solid brown;">
-                           <div class="d-flex justify-content-between align-items-start gap-2">
-                              <div>
-                                 <div class="fw-bold">${idea.id}</div>
-                                 <div class="mt-1 d-flex flex-wrap gap-1">
-                                    <span class="badge text-bg-brown">${idea.category}</span>
-                                    <span class="badge text-bg-brown-light">Draft Idea</span>
-                                 </div>
-                              </div>
-                              <button type="button" class="btn btn-sm btn-brown useIdeaBtn" data-id=${idea.id}>Use Idea</button>
-                           </div>
-                           <div class="mt-2 fw-semibold">${idea.title}</div>
-                           <div class="text-muted small mt-2">${idea.notes}
-                           </div>
-                        </div>
-                     </div>`;
-        }
-    }
 
-    $articleIdeaCards.html(html);
-    $articleIdeaCards.find(".useIdeaBtn").on("click", onUseIdea);
+    for (let idea of articleIdeas) {
+     const matchesSearch = idea.id.toLowerCase().includes(searchTerm) || idea.title.toLowerCase().includes(searchTerm);
+     const matchesCategory = (filterCategory === "All" || idea.category === filterCategory);
+
+     if (matchesSearch && matchesCategory) {
+        let statusClass = "text-bg-brown-light";
+        if (idea.status === "Approved") statusClass = "text-bg-success";
+        if (idea.status === "Rejected") statusClass = "text-bg-danger";
+
+        html += `<div class="col-md-6">
+    <div class="entry-card border rounded p-3 bg-white h-100" style="border-left: 3px solid brown;">
+    <div class="d-flex justify-content-between align-items-start gap-2">
+    <div>
+    <div class="fw-bold">${idea.id}</div>
+    <div class="mt-1 d-flex flex-wrap gap-1">
+    <span class="badge text-bg-brown">${idea.category}</span>
+    <span class="badge ${statusClass}">${idea.status || 'Draft'}</span>
+    </div>
+    </div>
+    <button class="btn btn-sm btn-brown useIdeaBtn" data-id="${idea.id}">Use Idea</button>
+    </div>
+    <div class="mt-2 fw-semibold">${idea.title}</div>
+    <div class="text-muted small mt-2">${idea.notes || ""}</div>
+    </div>
+    </div>`;
+   }
 }
+
+$articleIdeaCards.html(html);
+$articleIdeaCards.find(".useIdeaBtn").on("click", onUseIdea);
+    } catch (err) {
+        console.error("Error loading article ideas:", err);
+    }
+}
+           
 
 /**
  * Handler for submitting the form
@@ -392,7 +404,7 @@ $(document).ready(function () {
     $prefDistChannel = $($submissionForm.find("#distributionPreference")[0]); // Optional
     $notes = $($submissionForm.find("#submissionNotes")[0]); // Optional
 
-    $articleIdeaCards = $("#ideaCards");
+    $articleIdeaCards = $("#submissionCards");
 
     categories = loadOptions($category);
     distChannels = loadOptions($prefDistChannel);

@@ -88,19 +88,19 @@
       <div class="container">
          <div class="row text-center g-0">
             <div class="col-4">
-               <div id="statSubmissions"
-                  style="font-size:1.5rem; font-family:'Playfair Display',serif; color:brown; font-weight:700;">5</div>
+               <div id="statTotalSubmissions"
+                  style="font-size:1.5rem; font-family:'Playfair Display',serif; color:brown; font-weight:700;">0</div>
                <p class="mb-0 small text-muted">Submissions</p>
             </div>
             <div class="col-4"
                style="border-left:1px solid rgba(139,69,19,0.2);border-right:1px solid rgba(139,69,19,0.2);">
                <div id="statPending"
-                  style="font-size:1.5rem; font-family:'Playfair Display',serif; color:brown; font-weight:700;">3</div>
+                  style="font-size:1.5rem; font-family:'Playfair Display',serif; color:brown; font-weight:700;">0</div>
                <p class="mb-0 small text-muted">Pending Review</p>
             </div>
             <div class="col-4">
                <div id="statCategories"
-                  style="font-size:1.5rem; font-family:'Playfair Display',serif; color:brown; font-weight:700;">4</div>
+                  style="font-size:1.5rem; font-family:'Playfair Display',serif; color:brown; font-weight:700;">0</div>
                <p class="mb-0 small text-muted">Categories</p>
             </div>
          </div>
@@ -274,64 +274,11 @@
                <div class="card-body">
                   <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
                      <h2 class="h5 fw-bold mb-0">Suggested Article Ideas</h2>
-                     <span class="badge text-bg-brown-light" id="ideaCountBadge">3 ideas</span>
+
+                     <span class="badge text-bg-brown-light" id="submissionCountBadge">0 ideas</span>
                   </div>
-
-                  <div class="row g-3" id="ideaCards">
-
-                     <div class="col-md-6">
-                        <div class="entry-card border rounded p-3 bg-white h-100" style="border-left: 3px solid brown;">
-                           <div class="d-flex justify-content-between align-items-start gap-2">
-                              <div>
-                                 <div class="fw-bold">HS301</div>
-                                 <div class="mt-1 d-flex flex-wrap gap-1">
-                                    <span class="badge text-bg-brown">Home Organization</span>
-                                    <span class="badge text-bg-brown-light">Draft Idea</span>
-                                 </div>
-                              </div>
-                              <button type="button" class="btn btn-sm btn-brown useIdeaBtn">Use Idea</button>
-                           </div>
-                           <div class="mt-2 fw-semibold">Sunday Reset Routine</div>
-                           <div class="text-muted small mt-2">A simple routine to prepare the home for the week ahead.
-                           </div>
-                        </div>
-                     </div>
-
-                     <div class="col-md-6">
-                        <div class="entry-card border rounded p-3 bg-white h-100" style="border-left: 3px solid brown;">
-                           <div class="d-flex justify-content-between align-items-start gap-2">
-                              <div>
-                                 <div class="fw-bold">HS302</div>
-                                 <div class="mt-1 d-flex flex-wrap gap-1">
-                                    <span class="badge text-bg-brown">Kitchen Resources</span>
-                                    <span class="badge text-bg-brown-light">Draft Idea</span>
-                                 </div>
-                              </div>
-                              <button type="button" class="btn btn-sm btn-brown useIdeaBtn">Use Idea</button>
-                           </div>
-                           <div class="mt-2 fw-semibold">5-Minute Kitchen Reset</div>
-                           <div class="text-muted small mt-2">Quick habits that help keep the kitchen clean and calm.
-                           </div>
-                        </div>
-                     </div>
-
-                     <div class="col-md-6">
-                        <div class="entry-card border rounded p-3 bg-white h-100" style="border-left: 3px solid brown;">
-                           <div class="d-flex justify-content-between align-items-start gap-2">
-                              <div>
-                                 <div class="fw-bold">HS303</div>
-                                 <div class="mt-1 d-flex flex-wrap gap-1">
-                                    <span class="badge text-bg-brown">Printable Planners</span>
-                                    <span class="badge text-bg-brown-light">Draft Idea</span>
-                                 </div>
-                              </div>
-                              <button type="button" class="btn btn-sm btn-brown useIdeaBtn">Use Idea</button>
-                           </div>
-                           <div class="mt-2 fw-semibold">Weekly Cleaning Checklist</div>
-                           <div class="text-muted small mt-2">A printable guide readers can use to stay on track all
-                              week.</div>
-                        </div>
-                     </div>
+                  <div class="row g-3" id="submissionCards"></div>
+                                     
 
                      <div id="emptyState" class="col-12 text-center py-4 d-none">
                         <i class="bi bi-journal-x" style="font-size: 2.5rem; color: #c97a3a;"></i>
@@ -339,8 +286,7 @@
                      </div>
                   </div>
                </div>
-            </div>
-
+            
             <!-- SUBMISSION PREVIEW -->
             <div class="card shadow-sm mb-4 fade-in">
                <div class="card-body">
