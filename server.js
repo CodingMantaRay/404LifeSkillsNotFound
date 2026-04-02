@@ -5,16 +5,16 @@ const cors = require('cors');
 const app = express();
 
 app.use(cors());
-app.use(express.static(path.join(__dirname, '../'))); // Serve static files from the root directory
+app.use(express.static("public")); // Serve static files from the "public" directory
 app.use(express.json());
 
 const PORT = 3000;
-const DATABASE_FILE = './data/submissions.json';
+const DATABASE_FILE = 'data/submissions.json';
 
 // Load existing submissions from file
 
-if (!fs.existsSync(path.join(__dirname, '../data'))) {
-    fs.mkdirSync(path.join(__dirname, '../data'));
+if (!fs.existsSync("data")) {
+    fs.mkdirSync("data");
 }
 if (!fs.existsSync(DATABASE_FILE)) {
     fs.writeFileSync(DATABASE_FILE, JSON.stringify([]));
