@@ -25,3 +25,23 @@ CREATE TABLE submissions (
   status VARCHAR(50),
   PRIMARY KEY (id)
 );
+
+CREATE TABLE articles (
+  id VARCHAR(30) PRIMARY KEY,
+  title VARCHAR(100),
+  category VARCHAR(30),
+  format VARCHAR(30),
+  value VARCHAR(30),
+  notes VARCHAR(300)
+);
+
+CREATE TABLE products (
+  id VARCHAR(30) PRIMARY KEY, 
+  description VARCHAR(300),
+  category VARCHAR(30),
+  unit VARCHAR(100),
+  price FLOAT,
+  weight VARCHAR(100),
+  color VARCHAR(100),
+  details VARCHAR(1000)
+);

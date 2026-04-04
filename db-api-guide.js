@@ -93,3 +93,90 @@ $.ajax({
     success: function (response) { /* do something */ },
     error: function (xhr) { /* do something */ }
 }); 
+
+// ----------------------------
+// Articles - content.js      |
+// ----------------------------
+
+// Get list of all articles
+$.ajax({
+    url: '/api/articles',
+    type: 'GET',
+    contentType: 'application/json',
+    success: function (response) { /* do something */ },
+    error: function (xhr) { /* do something */ }
+});
+
+// Create or update article
+const article = {
+    "id": "A101",
+    "title": "Fix a leaky faucet",
+    "category": "DIY & Repairs",
+    "format": "Blog Post",
+    "value": "Free",
+    "notes": "Beginner friendly"
+};
+$.ajax({
+    url: '/api/articles',
+    type: 'POST',
+    contentType: 'application/json',
+    data: JSON.stringify(article),
+    success: function (response) { /* do something */ },
+    error: function (xhr) { /* do something */ }
+});
+
+// Delete article
+const articleId = "A101";
+$.ajax({
+    url: '/api/articles',
+    type: 'DELETE',
+    contentType: 'application/json',
+    data: JSON.stringify({
+        "id": articleId,
+    }),
+    success: function (response) { /* do something */ },
+    error: function (xhr) { /* do something */ }
+}); 
+
+// -------------------------------------
+// Products - cart.js, billing.js      |
+// -------------------------------------
+
+// Get list of all products
+$.ajax({
+    url: '/api/products',
+    type: 'GET',
+    success: function (response) { /* do something */ },
+    error: function (xhr) { /* do something */ }
+});
+
+// Add or edit product
+const product = {
+    "id": "HS101",
+    "description": "Desc",
+    "category": "Wellness at Home",
+    "unit": "Bundle",
+    "price": "12.12",
+    "weight": "light download",
+    "color": "blue",
+    "details": ""
+};
+$.ajax({
+    url: '/api/products',
+    type: 'POST',
+    contentType: 'application/json',
+    data: JSON.stringify(product),
+    success: function (response) { /* do something */ },
+    error: function (xhr) { /* do something */ }
+});
+
+// Delete product
+const productId = "HS101";
+$.ajax({
+    url: '/api/products',
+    type: 'DELETE',
+    contentType: 'application/json',
+    data: JSON.stringify({ id: productId }),
+    success: function (response) { /* do something */ },
+    error: function (xhr) { /* do something */ }
+});

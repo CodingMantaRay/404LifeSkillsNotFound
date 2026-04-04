@@ -17,12 +17,10 @@ app.use(express.json());
 
 const PORT = 3000;
 
-
-
-// Post - Create
-// Get - Retrieve
-// Put - Update
-// Delete - Delete
+// POST - Create
+// GET - Retrieve
+// PUT - Update
+// DELETE - Delete
 
 function verifyFields(item, fields, exclude=[]) {
     for (let field of fields) {
@@ -127,8 +125,8 @@ app.delete("/api/subscribers", async (req, res) => {
 // Submissions
 
 const submissionFields = ["id", "title", "author", "category", "contentSnippet", "preferredDistChannel", "notes", "status"];
-const statusOptions = ["Pending", "Approved", "Rejected", "Revisions Requested"];
-const distOptions = ["Website Feature", "Email Newsletter", "Subscriber Portal", "Blog Feature"];
+// const statusOptions = ["Pending", "Approved", "Rejected", "Revisions Requested"];
+// const distOptions = ["Website Feature", "Email Newsletter", "Subscriber Portal", "Blog Feature"];
 
 app.get('/api/submissions', (req, res) => {
     pool.query("SELECT * FROM submissions", (err, rows) => {
@@ -234,6 +232,160 @@ function putApprove(req, res) {
     }
 }
 
+// ----------------------------------------------------------------
+
+// Articles
+
+const articleFields = ["id", "title", "category", "format", "value", "notes"];
+
+app.get('/api/articles', (req, res) => {
+    pool.query("SELECT * FROM articles", (err, rows) => {
+        if (err) {
+            console.log(err)
+            res.status(500).json({ message: 'Error reading articles' });
+        } else {
+            res.json(rows);
+        }
+    });
+});
+
+app.post("/api/articles", (req, res) => {
+    if (req.body && verifyFields(req.body, articleFields)) {
+        pool.query('SELECT (id) FROM articles WHERE id = ?', [req.body.id], (err, result) => {
+            if (err) {
+                console.log(err);
+            } else {
+                const idFound = (result.length > 0);
+
+                let query, values;
+                if (!idFound) {
+                    query = 'INSERT INTO articles VALUES (?, ?, ?, ?, ?, ?)';
+                    values = [req.body.id, req.body.title, req.body.category, req.body.format, req.body.value,
+                        req.body.notes];
+                } else {
+                    query = `UPDATE articles SET title=?, category=?, format=?, value=?, notes=? WHERE id=?`;
+                    values = [req.body.title, req.body.category, req.body.format, req.body.value,
+                        req.body.notes, req.body.id];
+                }
+
+                pool.query(query, values, (err, result) => {
+                    if (err) {
+                        console.log(err);
+                        res.status(500).json({ message: 'Error saving article' });
+                    } else {
+                        res.json({
+                            message: 'Article received successfully',
+                            success: result.affectedRows > 0
+                        });
+                    }
+                });
+            }
+        });
+    } else {
+        res.status(400).json({
+            message: 'Message body is missing properties'
+        });
+    }
+});
+
+app.delete("/api/articles", async (req, res) => {   
+    if (req.body && "id" in req.body) {
+        pool.query(`DELETE FROM articles WHERE id=?`, 
+            [req.body.id],
+            (err, result) => {
+                if (err) {
+                    console.log(err);
+                    res.status(500).json("Server Error");
+                } else {
+                    res.json({
+                        success: result.affectedRows > 0
+                    });
+                }
+            });
+    } else {
+        res.status(400).json({
+            message: 'Message body is missing an "id" property'
+        });
+    }
+});
+
+// ----------------------------------------------------------------
+
+// Products
+
+const productFields = ["id", "description", "category", "unit", "price", "weight", "color", "details"];
+
+app.get('/api/products', (req, res) => {
+    pool.query("SELECT * FROM products", (err, rows) => {
+        if (err) {
+            console.log(err)
+            res.status(500).json({ message: 'Error reading products' });
+        } else {
+            res.json(rows);
+        }
+    });
+});
+
+app.post("/api/products", (req, res) => {
+    if (req.body && verifyFields(req.body, productFields)) {
+        pool.query('SELECT (id) FROM products WHERE id = ?', [req.body.id], (err, result) => {
+            if (err) {
+                console.log(err);
+            } else {
+                const idFound = (result.length > 0);
+
+                let query, values;
+                if (!idFound) {
+                    query = 'INSERT INTO products VALUES (?, ?, ?, ?, ?, ?, ?, ?)';
+                    values = [req.body.id, req.body.description, req.body.category, req.body.unit, req.body.price,
+                        req.body.weight, req.body.color, req.body.details];
+                } else {
+                    query = `UPDATE products SET description=?, category=?, unit=?, price=?, 
+                        weight=?, color=?, details=? WHERE id=?`;
+                    values = [req.body.description, req.body.category, req.body.unit, req.body.price,
+                        req.body.weight, req.body.color, req.body.details, req.body.id];
+                }
+
+                pool.query(query, values, (err, result) => {
+                    if (err) {
+                        console.log(err);
+                        res.status(500).json({ message: 'Error saving product' });
+                    } else {
+                        res.json({
+                            message: 'Product received successfully',
+                            success: result.affectedRows > 0
+                        });
+                    }
+                });
+            }
+        });
+    } else {
+        res.status(400).json({
+            message: 'Message body is missing properties'
+        });
+    }
+});
+
+app.delete("/api/products", async (req, res) => {   
+    if (req.body && "id" in req.body) {
+        pool.query(`DELETE FROM products WHERE id=?`, 
+            [req.body.id],
+            (err, result) => {
+                if (err) {
+                    console.log(err);
+                    res.status(500).json("Server Error");
+                } else {
+                    res.json({
+                        success: result.affectedRows > 0
+                    });
+                }
+            });
+    } else {
+        res.status(400).json({
+            message: 'Message body is missing an "id" property'
+        });
+    }
+});
 
 
 // ----------------------------------------------------------------
