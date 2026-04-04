@@ -45,3 +45,25 @@ CREATE TABLE products (
   color VARCHAR(100),
   details VARCHAR(1000)
 );
+
+/*
+carts -> cartItems
+One to many
+
+cartItems -> products
+One to one
+*/
+
+CREATE TABLE carts (
+  cartId VARCHAR(50) PRIMARY KEY, -- Ties customer to their cart items
+  sessionId VARCHAR(50) -- Represents customer (or their browser)
+);
+
+CREATE TABLE cartItems (
+  cartId VARCHAR(50), 
+  productId VARCHAR(30),
+  quantity INTEGER,
+  PRIMARY KEY (cartId, productId),
+  FOREIGN KEY (cartId) REFERENCES carts(cartId) ON DELETE CASCADE ON UPDATE CASCADE,
+  FOREIGN KEY (productId) REFERENCES products(id) ON DELETE CASCADE ON UPDATE CASCADE
+);

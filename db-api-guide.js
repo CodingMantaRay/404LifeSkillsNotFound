@@ -94,9 +94,9 @@ $.ajax({
     error: function (xhr) { /* do something */ }
 }); 
 
-// ----------------------------
-// Articles - content.js      |
-// ----------------------------
+// -----------------------------------------
+// Articles - content.js, finalize.js      |
+// -----------------------------------------
 
 // Get list of all articles
 $.ajax({
@@ -179,4 +179,83 @@ $.ajax({
     data: JSON.stringify({ id: productId }),
     success: function (response) { /* do something */ },
     error: function (xhr) { /* do something */ }
+});
+
+// ----------------------------------
+// Cart - cart.js, billing.js       |
+// ----------------------------------
+
+// Notes:
+// - Will need to generate a session ID for the current user
+// - Probably store the session ID in local storage (since we have no user authentication)
+const sessionId = "session1";
+
+// Example of how to generate a random session ID:
+const crypto = require("crypto");
+let sessionId2 = Date.now().toString(16);
+sessionId2 += crypto.randomBytes(4).toString('hex');
+
+// Get cart
+$.ajax({
+    url: '/api/cart?' + $.param({ sessionId: sessionId }),
+    type: 'GET',
+    contentType: 'application/json',
+    success: function (response) { /* do something */ },
+    error: function (xhr) { /* do something */ }
+});
+
+// Add product to cart (If product exists, adds 1 to quantity)
+$.ajax({
+    url: '/api/cart?' + $.param({
+        sessionId: sessionId,
+        productId: "prod1"
+    }),
+    type: 'POST',
+    contentType: 'application/json',
+    success: function (response) { /* do something */ },
+    error: function (xhr) { /* do something */ }
+});
+
+// Update product quantity
+$.ajax({
+    url: '/api/cart?' + $.param({
+        sessionId: sessionId,
+        productId: "prod1",
+        quantity: 3
+    }),
+    type: 'POST',
+    contentType: 'application/json',
+    success: function (response) { /* do something */ },
+    error: function (xhr) { /* do something */ }
+});
+
+// Delete product from cart
+$.ajax({
+    url: '/api/cart?' + $.param({
+        sessionId: sessionId,
+        productId: "prod1"
+    }),
+    type: 'DELETE',
+    contentType: 'application/json',
+    success: function (response) {
+        $pre.text(JSON.stringify(response, null, 2));
+    },
+    error: function (xhr) {
+        $pre.text('AJAX Error: Status ' + xhr.status);
+    }
+});
+
+// Clear cart
+$.ajax({
+    url: '/api/cart?' + $.param({
+        sessionId: sessionId
+    }),
+    type: 'DELETE',
+    contentType: 'application/json',
+    success: function (response) {
+        $pre.text(JSON.stringify(response, null, 2));
+    },
+    error: function (xhr) {
+        $pre.text('AJAX Error: Status ' + xhr.status);
+    }
 });
