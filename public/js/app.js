@@ -163,10 +163,16 @@ document.getElementById('submitBtn').textContent = "Update Subscriber";
  }   
 
  function deleteSub(index) {
+    const sub = subscribers[index];
+    // DELETE from database if we have a DB id
+    if (sub && sub.id) {
+        fetch(`/api/subscribers/${sub.id}`, { method: 'DELETE' })
+            .catch(err => console.error('Failed to delete subscriber:', err));
+    }
     subscribers.splice(index, 1);
     localStorage.setItem('subscribersData', JSON.stringify(subscribers));
     renderTable();
- }   
+ }
 
 /**
  * Checks if the submitted signup form is valid
@@ -190,11 +196,35 @@ function checkForm(event) {
         const editIndex = document.getElementById('editIndex').value
 
         if (editIndex !== "") {
+            const dbId = subscribers[editIndex] && subscribers[editIndex].id;
             subscribers[editIndex] = newUser;
             document.getElementById('editIndex').value = "";
             document.getElementById('submitBtn').textContent = "Add Subscriber";
-        } else {   
-        
+            // PUT to update subscriber in database
+            if (dbId) {
+                fetch(`/api/subscribers/${dbId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(newUser)
+                }).catch(err => console.error('Failed to update subscriber:', err));
+            }
+        } else {
+            // POST to create subscriber in database
+            fetch('/api/subscribers', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(newUser)
+            })
+            .then(res => res.json())
+            .then(data => {
+                // Store the database-assigned id on the subscriber object
+                if (data.id) {
+                    newUser.id = data.id;
+                    localStorage.setItem('subscribersData', JSON.stringify(subscribers));
+                }
+            })
+            .catch(err => console.error('Failed to save subscriber:', err));
+
 // adds to the array
 subscribers.push(newUser);
 
@@ -249,5 +279,16 @@ document.getElementById("showJsonBtn").addEventListener("click", () => {
 });
 
 document.addEventListener('DOMContentLoaded', () => {
-    renderTable();
+    // Load subscribers from the database via API, then render
+    fetch('/api/subscribers')
+        .then(res => res.json())
+        .then(data => {
+            subscribers = data;
+            localStorage.setItem('subscribersData', JSON.stringify(subscribers));
+            renderTable();
+        })
+        .catch(() => {
+            // Fall back to localStorage if server is unreachable
+            renderTable();
+        });
 });

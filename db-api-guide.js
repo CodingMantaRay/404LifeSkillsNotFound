@@ -69,7 +69,8 @@ const submission = {
     "author": "John Doe",
     "category": "DIY Home Tips",
     "contentSnippet": "Content is here.",
-     "preferredDistChannel": "Website Feature", "notes": "N/A"
+    "preferredDistChannel": "Website Feature",
+    "notes": "N/A"
 };
 $.ajax({
     url: '/api/submissions',

@@ -301,26 +301,32 @@ function updatePreview(articleIdea, plannedStatus) {
 
 
 $(document).ready(function () {
-    // TODO remove
-    if (!localStorage.getItem("articleIdeas")) {
-        const initialData = [
-            { id: "HS301", title: "Sunday Reset Routine", author: "Lauren", category: "Home Organization", contentSnippet: "A simple routine to prepare the home for the week ahead.", preferredDistChannel: "", notes: "", status: "Pending" },
-            { id: "HS302", title: "5-Minute Kitchen Reset", author: "Lauren", category: "Kitchen Resources", contentSnippet: "Quick habits that help keep the kitchen clean and calm.", preferredDistChannel: "", notes: "", status: "Pending" },
-            { id: "HS303", title: "Weekly Cleaning Checklist", author: "Lauren", category: "Printable Planners", contentSnippet: "A printable guide readers can use to stay on track all week.", preferredDistChannel: "", notes: "", status: "Pending" }
-        ];
-        localStorage.setItem("articleIdeas", JSON.stringify(initialData));
-    }
-
     $articleIdeaCards = $("#submissionCards");
 
-    $("#refreshBtn").on("click", loadArticleIdeas);
+    // Load articles from the database via API, then render
+    function fetchAndLoad() {
+        $.ajax({
+            url: '/api/articles',
+            type: 'GET',
+            success: function (data) {
+                localStorage.setItem("articleIdeas", JSON.stringify(data));
+                loadArticleIdeas();
+            },
+            error: function () {
+                // Fall back to localStorage if server is unreachable
+                loadArticleIdeas();
+            }
+        });
+    }
+
+    $("#refreshBtn").on("click", fetchAndLoad);
     $("#clearFiltersBtn").on("click", clearFilters);
 
     $("#approvalSearch, #statusFilter, #categoryFilter").on("keyup change", function () {
         loadArticleIdeas();
     });
 
-    loadArticleIdeas();
+    fetchAndLoad();
     $("#jsonPreview").text("");
 });
 
