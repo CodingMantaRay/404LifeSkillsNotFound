@@ -7,6 +7,8 @@ let reasons, categories;
 // Utility Functions                                  |
 // ----------------------------------------------------
 
+
+
 function setError($widget, isError, errorMessage = null) {
     // Set error message
     if (errorMessage) {
@@ -131,7 +133,7 @@ function checkForm() {
     let returnReq = {};
     let isError, formIsValid = true;
 
-    [returnReq.productName, isError] = checkEmpty($productName);
+    [returnReq.productDesc, isError] = checkEmpty($productName);
     if (isError)
         formIsValid = false;
 
@@ -143,7 +145,7 @@ function checkForm() {
     if (isError)
         formIsValid = false;
 
-    [returnReq.condition, isError] = checkOption($condition, conditions);
+    [returnReq.itemCondition, isError] = checkOption($condition, conditions);
     if (isError)
         formIsValid = false;
 
@@ -172,40 +174,48 @@ function clearForm() {
 }
 
 function loadPurchases() {
-    let purchases = getItems("purchases");
-    if (purchases == undefined)
-        return;
+    $.ajax({
+        url: '/api/purchases',
+        type: 'GET',
+        success: function(purchases) {
+            const $container = $("#returnProductCards")
+            let html = "";
+            if (!purchases || purchases.length == 0) {
+                $container.html(`<p class="text-muted">No purchases found.</p>`);
+                return;
+            }
+           
 
     const searchTerm = $("#returnSearch").val().trim().toLowerCase();
     const typeFilter = $("#returnFilter").val();
     // TODO fix return filter
 
-    let html = "";
+    
     for (let product of purchases) {
         const matchesSearch = product.description.toLowerCase().includes(searchTerm);
-        const matchesFilter = (typeFilter === "All" || product.unit.includes(typeFilter.splice(typeFilter.length - 2)));
+        const matchesFilter = (typeFilter === "All" || product.unit.toLowerCase() === typeFilter.toLowerCase());
         if (matchesSearch && matchesFilter) {
             // TODO change "Guides" to actual category
             html += `<div class="col-md-6">
-                        <div class="entry-card border rounded p-3 bg-white h-100" style="border-left: 3px solid brown;">
-                           <div class="d-flex justify-content-between align-items-start gap-2">
-                              <div>
-                                 <div class="fw-bold">${product.description}</div>
-                                 <div class="mt-1 d-flex flex-wrap gap-1">
-                                    <span class="badge text-bg-brown">Guides</span>
-                                    <span class="badge text-bg-brown-light">${product.unit}</span>
-                                 </div>
-                              </div>
-                              <button type="button" class="btn btn-sm btn-brown selectBtn" data-id="${product.id}">Select</button>
-                           </div>
-                           <div class="text-muted small mt-2">$${parseInt(product.price).toFixed(2)}</div>
+                        <div class="card h-100 border-start border-brown-3">
+                        <div class="card-body d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1 fw-bold">${product.description}</h6>
+                                <span class="badge bg-light text-brown border">${product.category}</span>
+                            </div>
+                            <button class="btn btn-sm btn-brown selectBtn" data-id="${product.id}">Use Product</button>
                         </div>
-                     </div>`;
+                    </div>`;
         }
     }
+        $container.html(html || `<p class="text-muted">No purchases found.</p>`);
+        $container.find(".selectBtn").on("click", onSelect);
 
-    $purchaseCards.html(html);
-    $purchaseCards.find(".selectBtn").on("click", onSelect);
+    },
+error: function() {
+    $("#returnProductCards").html(`<p class="text-danger">Error loading purchases. Please try again later.</p>`);
+}
+    });
 }
 
 /**
@@ -217,18 +227,33 @@ function onSubmit(event) {
     let returnReq = checkForm();
     if (!returnReq) return;
 
+    returnReq.id = "RET-" + Date.now();
     returnReq.status = "Pending";
+    returnReq.sessionId = "STUB-SESSION-123";
 
-    const jsonString = JSON.stringify(returnReq, null, 2);
+
+   
     $("#returnJsonPreview").text(jsonString);
-    // TODO - React transmission
-    //transmitWithReact(returnReq);
+    $.ajax({
+        url: '/api/returns',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify(returnReq),
+        success: function(response) {
+            $("#returnStatus")
+            .removeClass("alert-brown alert-danger")
+            .addClass("alert-success")
+            .html(`<i class="bi bi-db-check"></i> Request Saved to Database (ID: ${response.id})`)
 
-    // TODO - add returnReq to database
-
-    clearForm();
-    loadPurchases();
-}
+            clearForm();
+            loadPurchases();
+        },
+        error: function(xhr) {
+           console.error("Error submitting return request:", xhr.responseText);
+            $("#returnStatus").addClass("alert-danger").text("Error submitting return request. Please try again.");
+        }
+    });          
+        }
 
 /**
  * Handler for "Use Idea" button.

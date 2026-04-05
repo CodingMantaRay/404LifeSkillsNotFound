@@ -1,3 +1,5 @@
+const e = require("cors");
+
 // Global variables
 const form = {
     $fullName: null,
@@ -204,27 +206,35 @@ function getCart() {
 }
 
 function loadCart() {
-    const cart = getCart();
+    const sessionId = localStorage.getItem("sessionId") || "ses1";
 
-    const $cart = $("#cartItems");
-    let html = "";
-    let subtotal = 0;
-    for (item of cart) {
-        const price = parseFloat(item.price);
-        subtotal += price;
-        html += `<div class="d-flex justify-content-between align-items-start mb-2">
-                        <div>
-                           <div class="fw-semibold">${item.description}</div>
-                           <div class="small text-muted">${item.unit}</div>
-                        </div>
-                        <div class="fw-semibold">$${price.toFixed(2)}</div>
-                     </div>`;
-    }
-    let total = subtotal;
+    $.get("/api/cart", {sessionId: sessionId}, function(cart) {
+        const $cart = $("#cartItems");
+        let html = "";
+        let subtotal = 0;
 
-    $cart.html(html);
-    $("#subtotal").text("$" + subtotal.toFixed(2));
-    $("#total").text("$" + total.toFixed(2));
+        cart.forEach(item => {
+            const price = parseFloat(item.price);
+            const quantity = item.quantity || 1; // Assuming quantity is 1 for each item in cart
+            const lineTotal = price * quantity;
+            subtotal += lineTotal;
+
+            html += `
+            <div class="d-flex justify-content-between align-items-start mb-2">
+                <div>
+                    <div class="fw-semibold">${item.description} (x${quantity})</div>
+                    <div class="small text-muted">${item.unit}</div>
+                </div>
+                <div class="fw-semibold">$${lineTotal.toFixed(2)}</div>
+            </div>`;
+        });
+
+        $cart.html(html);
+        $("#subtotal").text("$" + subtotal.toFixed(2));
+        $("#total").text("$" + subtotal.toFixed(2));
+        $("#statItems").text(cart.length);
+        $("#statTotal").text("$" + subtotal.toFixed(2));
+    });
 }
 
 /**
@@ -236,24 +246,42 @@ function onCompletePayment(event) {
     let billingInfo = checkForm();
     if (!billingInfo) return;
 
+    billingInfo.purchaseId = "PUR-" + Math.random().toString(36).substr(2, 9).toUpperCase();
+    billingInfo.sessionId = localStorage.getItem("sessionId") || "ses1";
+    billingInfo.email = "student.example@university.edu";
+    billingInfo.totalAmount = parseFloat($("#total").text().replace("$", ""));
+
     const jsonString = JSON.stringify(billingInfo, null, 2);
     $("#billingJsonPreview").text(jsonString);
-    // TODO - React transmission
-    //transmitWithReact(billingInfo);
+    
+    
+    $.ajax({
+        url: '/api/billing',
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify(billingInfo),
+        success: function(response) {
+            $("#paymentStatus")
+            .removeClass("alert-brown")
+            .addClass("alert-success")
+            .html(`<i class="bi bi-check-circle"></i> Success! Order ID: ${response.billingId}`);
 
-    // Add to purchases
-    const cart = getCart();
-    let purchases = getItems("purchases", []);
-    cart.forEach((item)=>purchases.push(item));
-    localStorage.setItem("purchases", JSON.stringify(purchases));
+            localStorage.removeItem("cart");
+            loadCart();
 
-    // Clear cart
-    localStorage.removeItem("cart");
-    loadCart();
+            setTimeout(() => {
+                window.location.href = "finalizationpage.html";
+            }, 3000);
+        },
+        error: function(xhr) {
+            $("#paymentStatus")
+            .removeClass("alert-brown")
+            .addClass("alert-danger")
+            .text("Payment failed. Please try again.");
+        }
+    });
+        }
 
-    // Clear form
-    clearForm();
-}
 
 $(document).ready(function () {
     // TODO remove

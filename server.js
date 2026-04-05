@@ -135,25 +135,6 @@ app.get('/api/submissions', (req, res) => {
             console.log(err)
             res.status(500).json({ message: 'Error reading submissions' });
         } else {
-            for (let row of rows) {
-                row.preferredDistChannel = [];
-                if (row.webFeaturePreferred) {
-                    row.preferredDistChannel.push("Website Feature");
-                }
-                if (row.emailNewsletterPreferred) {
-                    row.preferredDistChannel.push("Email Newsletter");
-                }
-                if (row.subPortalPreferred) {
-                    row.preferredDistChannel.push("Subscriber Portal");
-                }
-                if (row.blogFeaturePreferred) {
-                    row.preferredDistChannel.push("Blog Feature");
-                }
-                delete row.webFeaturePreferred;
-                delete row.emailNewsletterPreferred;
-                delete row.subPortalPreferred;
-                delete row.blogFeaturePreferred;
-            }
             res.json(rows);
         }
     });
@@ -164,11 +145,6 @@ app.post('/api/submit', postSubmission);
 
 function postSubmission(req, res) {
     if (req.body && verifyFields(req.body, submissionFields, ["status"])) {
-        const webFeaturePreferred = req.body.preferredDistChannel.includes("Website Feature") ? 1 : 0;
-        const emailNewsletterPreferred = req.body.preferredDistChannel.includes("Email Newsletter") ? 1 : 0;
-        const subPortalPreferred = req.body.preferredDistChannel.includes("Subscriber Portal") ? 1 : 0;
-        const blogFeaturePreferred = req.body.preferredDistChannel.includes("Blog Feature") ? 1 : 0;
-
         pool.query('SELECT (id) FROM submissions WHERE id = ?', [req.body.id], (err, result) => {
             if (err) {
                 console.log(err);
@@ -177,16 +153,13 @@ function postSubmission(req, res) {
 
                 let query, values;
                 if (!idFound) {
-                    query = 'INSERT INTO submissions VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
+                    query = 'INSERT INTO submissions VALUES (?, ?, ?, ?, ?, ?, ?, ?)';
                     values = [req.body.id, req.body.title, req.body.author, req.body.category, req.body.contentSnippet,
-                        webFeaturePreferred, emailNewsletterPreferred, subPortalPreferred, blogFeaturePreferred,
-                    req.body.notes, "Pending"];
+                        req.body.preferredDistChannel, req.body.notes, "Pending"];
                 } else {
-                    query = `UPDATE submissions SET title=?, author=?, category=?, contentSnippet=?, webFeaturePreferred=?, 
-                        emailNewsletterPreferred=?, subPortalPreferred=?, blogFeaturePreferred=?, notes=? WHERE id=?`;
+                    query = `UPDATE submissions SET title=?, author=?, category=?, contentSnippet=?, preferredDistChannel=?, notes=? WHERE id=?`;
                     values = [req.body.title, req.body.author, req.body.category, req.body.contentSnippet,
-                        webFeaturePreferred, emailNewsletterPreferred, subPortalPreferred, blogFeaturePreferred,
-                    req.body.notes, req.body.id];
+                        req.body.preferredDistChannel, req.body.notes, req.body.id];
                 }
 
                 pool.query(query, values, (err, result) => {
@@ -311,6 +284,92 @@ app.delete("/api/articles", async (req, res) => {
     } else {
         res.status(400).json({
             message: 'Message body is missing an "id" property'
+        });
+    }
+});
+
+// ----------------------------------------------------------------
+
+// Publication Options
+
+const pubOptionFields = ["id", "title", "pubDate", "distChannel", "reviewStatus", "author", "featured", "access", "editNotes"];
+const pubOptionCols = ["id", "title", "pubDate", "webFeaturePreferred", "emailNewsletterPreferred", "subPortalPreferred", 
+    "blogFeaturePreferred", "reviewStatus", "author", "featured", "access", "editNotes"];
+
+app.get('/api/pubOptions', (req, res) => {
+    pool.query("SELECT * FROM publicationOptions", (err, rows) => {
+        if (err) {
+            console.log(err)
+            res.status(500).json({ message: 'Error reading publication options' });
+        } else {
+            for (let row of rows) {
+                row.distChannel = [];
+                if (row.webFeaturePreferred) {
+                    row.distChannel.push("Website");
+                }
+                if (row.emailNewsletterPreferred) {
+                    row.distChannel.push("Email Newsletter");
+                }
+                if (row.subPortalPreferred) {
+                    row.distChannel.push("Subscriber Portal");
+                }
+                if (row.blogFeaturePreferred) {
+                    row.distChannel.push("Blog Feature");
+                }
+                delete row.webFeaturePreferred;
+                delete row.emailNewsletterPreferred;
+                delete row.subPortalPreferred;
+                delete row.blogFeaturePreferred;
+            }
+            res.json(rows);
+        }
+    });
+});
+
+app.post("/api/pubOptions", (req, res) => {
+    if (req.body && verifyFields(req.body, pubOptionFields, ["status"])) {
+        const webFeaturePreferred = req.body.distChannel.includes("Website") ? 1 : 0;
+        const emailNewsletterPreferred = req.body.distChannel.includes("Email Newsletter") ? 1 : 0;
+        const subPortalPreferred = req.body.distChannel.includes("Subscriber Portal") ? 1 : 0;
+        const blogFeaturePreferred = req.body.distChannel.includes("Blog Feature") ? 1 : 0;
+
+        pool.query('SELECT (id) FROM publicationOptions WHERE id = ?', [req.body.id], (err, result) => {
+            if (err) {
+                console.log(err);
+            } else {
+                const idFound = (result.length > 0);
+
+                let query, values;
+                if (!idFound) {
+                    query = 'INSERT INTO publicationOptions VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
+                    values = [req.body.id, req.body.title, req.body.pubDate, webFeaturePreferred, 
+                        emailNewsletterPreferred, subPortalPreferred, blogFeaturePreferred, req.body.reviewStatus, 
+                        req.body.author, req.body.featured, req.body.access, req.body.editNotes];
+                } else {
+                    query = `UPDATE publicationOptions SET title=?, pubDate=?, webFeaturePreferred=?, 
+                        emailNewsletterPreferred=?, subPortalPreferred=?, blogFeaturePreferred=?, reviewStatus=?,
+                        author=?, featured=?, access=?, editNotes=? WHERE id=?`;
+                    values = [req.body.title, req.body.pubDate, webFeaturePreferred, 
+                        emailNewsletterPreferred, subPortalPreferred, blogFeaturePreferred, req.body.reviewStatus, 
+                        req.body.author, req.body.featured, req.body.access, req.body.editNotes, req.body.id];
+                }
+
+                pool.query(query, values, (err, result) => {
+                    if (err) {
+                        console.log(err);
+                        res.status(500).json({ message: 'Error saving submission' });
+                    } else {
+                        res.json({
+                            message: 'Submission received successfully',
+                            success: result.affectedRows > 0
+                        });
+                    }
+                });
+            }
+        });
+    } else {
+        res.status(400).json({
+            message: 'Message body is missing properties'
         });
     }
 });
@@ -582,6 +641,148 @@ function updateProductQuantity(cartId, productId, newQuantity, callback) {
 
 }
 
+// ----------------------------------------------------------------
+
+// Purchases
+
+// const purchaseCols = ["purchaseId", "productId", "quantity", "description",
+//     "category", "unit", "price", "weight", "color", "details"];
+const cartItemCols = ["id", "description", "category", "unit", "price", "weight", "color", "details", "quantity"];
+
+app.get("/api/purchase/items", (req, finalRes) => {
+    if (req.query && "sessionId" in req.query) {
+        // Get list of purchased items
+        const query = `SELECT productId, quantity, description, category, unit, price, weight, color, details 
+            FROM purchases AS p INNER JOIN purchasedItems AS i
+            ON p.purchaseId = i.purchaseId
+            WHERE sessionId = ?`;
+        const values = [req.query.sessionId];
+        pool.query(query, values, (err, result) => {
+            if (err) {
+                console.log(err);
+                res.status(500).json("Server Error");
+            } else {
+                finalRes.json(result);
+            }
+        });
+    }
+});
+
+// Post purchase - get purchaseId back
+app.post("/api/purchase", async (req, finalRes) => {
+    if (req.body && "sessionId" in req.body) {
+        let purchaseId = Date.now().toString(16);
+        purchaseId += crypto.randomBytes(8).toString('hex');
+
+        const query = `SELECT id, description, category, unit, price, weight, color, details, quantity
+            FROM carts AS c LEFT JOIN cartItems AS i
+            ON  c.cartId = i.cartId
+            INNER JOIN products AS p
+            ON i.productId = p.id
+            WHERE c.sessionId = ?`;
+        const values = [req.body.sessionId];
+        pool.query(query, values, (err, cart) => {
+            if (err) {
+                console.log(err);
+                finalRes.status(500).json("Server Error");
+            } else {
+                if (cart.length == 0) {
+                    finalRes.status(400).json("No items in cart");
+                } else {
+                    pool.query('INSERT INTO purchases VALUES (?, ?)', [purchaseId, req.body.sessionId],
+                        (err, res) => {
+                            if (err) {
+                                console.log(err);
+                                finalRes.status(500).json("Server Error");
+                            } else {
+                                for (let item of cart) {
+                                    if (!verifyFields(item, cartItemCols)) {
+                                        continue;
+                                    }
+                                    pool.query(`INSERT INTO purchasedItems VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                                        [purchaseId, item.id, item.quantity, item.description, item.category, item.unit, item.price, item.weight, item.color, item.details],
+                                        (err, res) => {
+                                            if (err) {
+                                                console.log(err);
+                                            }
+                                        });
+                                }
+                                finalRes.json({
+                                    purchaseId: purchaseId, 
+                                    success: res.affectedRows > 0
+                                });
+                            }
+                        }
+                    );
+                }
+            }
+        });
+    } else {
+        finalRes.status(400).json({
+            message: 'Message body is missing properties'
+        });
+    }
+});
+
+// ----------------------------------------------------------------
+
+// Billing Info
+
+const billingFields = ["purchaseId", "fullName", "address", "city", "state", "zip", "creditCardNum", "expDate",
+    "secCode", "shippingDetails"];
+// const billingCols = [billingId, purchaseId, name, address, city, state,
+//     zipCode, creditCardNum, expirationDate, securityCode, shippingDetails];
+
+app.post("/api/billing", async (req, res) => {
+    if (req.body && verifyFields(req.body, billingFields)) {
+        const billingId = Date.now().toString(16) + crypto.randomBytes(4).toString('hex');
+        const query = `INSERT INTO billingInfo (billingId, purchaseId, name, address, city, state, zipCode, creditCardNum, expirationDate, securityCode, shippingDetails) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+        pool.query(query,
+            [billingId, req.body.purchaseId, req.body.fullName, req.body.address, req.body.city, req.body.state, req.body.zip, req.body.creditCardNum, req.body.expDate, req.body.secCode, req.body.shippingDetails],
+
+            
+            (err, result) => {
+                if (err) {
+                    console.log(err);
+                    res.status(500).json("Server Error");
+                }
+
+    
+
+            if (req.body.sessionId) {
+                pool.query(`DELETE i FROM carts AS c INNER JOIN cartItems AS i ON c.cartId = i.cartId WHERE sessionId = ?`, [req.body.sessionId]);
+
+            }
+                res.json({ billingId, success: true });
+            }
+        );
+    } else {
+        res.status(400).json({
+            message: 'Message body is missing properties'
+        });
+    }
+});
+
+// ----------------------------------------------------------------
+
+// Returns
+
+const returnFields = ["sessionId", "productDesc", "price", "reason", "condition", "notes"];
+// const returnCols = ["id", "sessionId", "productDesc", "price", "reason", "itemCondition", "notes", "status"];
+
+app.post("/api/returns", (req, res) => {
+    if (req.body && verifyFields(req.body, returnFields)) {
+        const returnId = Date.now().toString(16) + crypto.randomBytes(4).toString('hex');
+        const query = `INSERT INTO returnRequests (id, sessionId, productDesc, price, reason, itemCondition, notes, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
+        pool.query(query,
+            [returnId, req.body.sessionId, req.body.productDesc, req.body.price, req.body.reason, req.body.condition, req.body.notes, "Pending"],
+            (err, result) => {
+                if (err) return res.status(500).send(err);
+                res.json({ returnId, success: true });
+            }
+        );
+    }
+});
 
 // ----------------------------------------------------------------
 

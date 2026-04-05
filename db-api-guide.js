@@ -69,8 +69,7 @@ const submission = {
     "author": "John Doe",
     "category": "DIY Home Tips",
     "contentSnippet": "Content is here.",
-    "preferredDistChannel": ["Website Feature", "Blog Feature"],
-    "notes": "N/A"
+     "preferredDistChannel": "Website Feature", "notes": "N/A"
 };
 $.ajax({
     url: '/api/submissions',
@@ -137,6 +136,39 @@ $.ajax({
     success: function (response) { /* do something */ },
     error: function (xhr) { /* do something */ }
 }); 
+
+// -----------------------------------------
+// Publication Options - finalize.js       |
+// -----------------------------------------
+
+// Get list of publication options
+$.ajax({
+    url: '/api/pubOptions',
+    type: 'GET',
+    success: function (response) { /* do something */ },
+    error: function (xhr) { /* do something */ }
+});
+
+// Add or update publication options
+const pubOptions = {
+    "id": "A101",
+    "title": "Fix a Leaky Faucet",
+    "pubDate": "2026-11-11",
+    "distChannel": ["Website", "Subscriber Portal"],
+    "reviewStatus": "Draft",
+    "author": "Jane Doe",
+    "featured": "Yes",
+    "access": "Free",
+    "editNotes": ""
+};
+$.ajax({
+    url: '/api/pubOptions',
+    type: 'POST',
+    contentType: 'application/json',
+    data: JSON.stringify(pubOptions),
+    success: function (response) { /* do something */ },
+    error: function (xhr) { /* do something */ }
+});
 
 // -------------------------------------
 // Products - cart.js, billing.js      |
@@ -258,4 +290,76 @@ $.ajax({
     error: function (xhr) {
         $pre.text('AJAX Error: Status ' + xhr.status);
     }
+});// -----------------------------------------
+// Purchases - billing.js, returns.js      |
+// -----------------------------------------
+
+// Make purchase
+// - Need session ID, see "Cart" section for more info
+let purchaseId = null;
+$.ajax({
+    url: '/api/purchase',
+    type: 'POST',
+    contentType: 'application/json',
+    data: JSON.stringify({ sessionId: 'ses1' }),
+    success: function (response) {
+        // Save purchaseId for sending billing info
+        purchaseId = response.purchaseId;
+        // do something
+    },
+    error: function (xhr) { /* do something */ }
+});
+
+// Add billing info
+// - Need purchaseId from making the purchase
+$.ajax({
+    url: '/api/billing',
+    type: 'POST',
+    contentType: 'application/json',
+    data: JSON.stringify({
+        "purchaseId": purchaseId,
+        "fullName": "John Doe",
+        "address": "123 Main St",
+        "city": "NYC",
+        "state": "NY",
+        "zip": "11208",
+        "creditCardNum": "1111111111111111",
+        "expDate": "11/11",
+        "secCode": "333",
+        "shippingDetails": ""
+    }),
+    success: function (response) { /* do something */ },
+    error: function (xhr) { /* do something */ }
+});
+
+// Get all purchased items
+// - Need session ID, see "Cart" section for more info
+$.ajax({
+    url: '/api/purchase/items?' + $.param({ sessionId: 'ses1' }),
+    type: 'GET',
+    contentType: 'application/json',
+    success: function (response) { /* do something */ },
+    error: function (xhr) { /* do something */ }
+});
+
+// ---------------------------
+// Returns - returns.js      |
+// ---------------------------
+
+// Submit return request
+// - Need session ID, see "Cart" section for more info
+$.ajax({
+    url: '/api/returns',
+    type: 'POST',
+    contentType: 'application/json',
+    data: JSON.stringify({
+        "sessionId": "ses1",
+        "productName": "Kitchen Reset Guide",
+        "price": 12,
+        "reason": "Download issue",
+        "condition": "Downloaded accidentally",
+        "notes": ""
+    }),
+    success: function (response) { /* do something */ },
+    error: function (xhr) { /* do something */ }
 });
