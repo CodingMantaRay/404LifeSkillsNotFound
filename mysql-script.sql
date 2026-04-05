@@ -67,3 +67,44 @@ CREATE TABLE cartItems (
   FOREIGN KEY (cartId) REFERENCES carts(cartId) ON DELETE CASCADE ON UPDATE CASCADE,
   FOREIGN KEY (productId) REFERENCES products(id) ON DELETE CASCADE ON UPDATE CASCADE
 );
+
+/*
+purchases -> purchaseItems
+One to many
+*/
+
+CREATE TABLE purchases (
+  purchaseId VARCHAR(50) PRIMARY KEY, -- Ties customer to their purchased items
+  sessionId VARCHAR(30) -- Represents customer (or their browser)
+);
+
+CREATE TABLE purchasedItems (
+  purchaseId VARCHAR(50), 
+  productId VARCHAR(30),
+  quantity INTEGER,
+  description VARCHAR(300),
+  category VARCHAR(30),
+  unit VARCHAR(100),
+  price FLOAT,
+  weight VARCHAR(100),
+  color VARCHAR(100),
+  details VARCHAR(1000),
+  PRIMARY KEY (purchaseId, productId)
+  -- productId is NOT a foreign key since the productId could change after purchase
+);
+
+CREATE TABLE billingInfo (
+  billingId VARCHAR(50),
+  purchaseId VARCHAR(50),
+  name VARCHAR(50),
+  address VARCHAR(100),
+  city VARCHAR(50),
+  state VARCHAR(20),
+  zipCode VARCHAR(10),
+  creditCardNum VARCHAR(16),
+  expirationDate VARCHAR(5),
+  securityCode VARCHAR(3),
+  shippingDetails VARCHAR(30),
+  PRIMARY KEY (billingId),
+  FOREIGN KEY (purchaseId) REFERENCES purchases(purchaseId)
+);

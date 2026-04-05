@@ -258,4 +258,43 @@ $.ajax({
     error: function (xhr) {
         $pre.text('AJAX Error: Status ' + xhr.status);
     }
+});// -----------------------------------------
+// Purchases - billing.js, returns.js      |
+// -----------------------------------------
+
+// Make purchase
+let purchaseId = null;
+$.ajax({
+    url: '/api/purchase',
+    type: 'POST',
+    contentType: 'application/json',
+    data: JSON.stringify({ sessionId: 'ses1' }),
+    success: function (response) {
+        // Save purchaseId for sending billing info
+        purchaseId = response.purchaseId;
+        // do something
+    },
+    error: function (xhr) { /* do something */ }
+});
+
+// Add billing info
+// - Need purchaseId from making the purchase
+$.ajax({
+    url: '/api/billing',
+    type: 'POST',
+    contentType: 'application/json',
+    data: JSON.stringify({
+        "purchaseId": purchaseId,
+        "fullName": "John Doe",
+        "address": "123 Main St",
+        "city": "NYC",
+        "state": "NY",
+        "zip": "11208",
+        "creditCardNum": "1111111111111111",
+        "expDate": "11/11",
+        "secCode": "333",
+        "shippingDetails": ""
+    }),
+    success: function (response) { /* do something */ },
+    error: function (xhr) { /* do something */ }
 });

@@ -582,6 +582,104 @@ function updateProductQuantity(cartId, productId, newQuantity, callback) {
 
 }
 
+// ----------------------------------------------------------------
+
+// Purchases
+
+// const purchaseCols = ["purchaseId", "productId", "quantity", "description",
+//     "category", "unit", "price", "weight", "color", "details"];
+const cartItemCols = ["id", "description", "category", "unit", "price", "weight", "color", "details", "quantity"];
+
+// Post purchase - get purchaseId back
+app.post("/api/purchase", async (req, finalRes) => {
+    if (req.body && "sessionId" in req.body) {
+        let purchaseId = Date.now().toString(16);
+        purchaseId += crypto.randomBytes(8).toString('hex');
+
+        const query = `SELECT id, description, category, unit, price, weight, color, details, quantity
+            FROM carts AS c LEFT JOIN cartItems AS i
+            ON  c.cartId = i.cartId
+            INNER JOIN products AS p
+            ON i.productId = p.id
+            WHERE c.sessionId = ?`;
+        const values = [req.body.sessionId];
+        pool.query(query, values, (err, cart) => {
+            if (err) {
+                console.log(err);
+                finalRes.status(500).json("Server Error");
+            } else {
+                if (cart.length == 0) {
+                    finalRes.status(400).json("No items in cart");
+                } else {
+                    pool.query('INSERT INTO purchases VALUES (?, ?)', [purchaseId, req.body.sessionId],
+                        (err, res) => {
+                            if (err) {
+                                console.log(err);
+                                finalRes.status(500).json("Server Error");
+                            } else {
+                                for (let item of cart) {
+                                    if (!verifyFields(item, cartItemCols)) {
+                                        continue;
+                                    }
+                                    pool.query(`INSERT INTO purchasedItems VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                                        [purchaseId, item.id, item.quantity, item.description, item.category, item.unit, item.price, item.weight, item.color, item.details],
+                                        (err, res) => {
+                                            if (err) {
+                                                console.log(err);
+                                            }
+                                        });
+                                }
+                                finalRes.json({
+                                    purchaseId: purchaseId, 
+                                    success: res.affectedRows > 0
+                                });
+                            }
+                        }
+                    );
+                }
+            }
+        });
+    } else {
+        finalRes.status(400).json({
+            message: 'Message body is missing properties'
+        });
+    }
+});
+
+// ----------------------------------------------------------------
+
+// Billing Info
+
+const billingFields = ["purchaseId", "fullName", "address", "city", "state", "zip", "creditCardNum", "expDate",
+    "secCode", "shippingDetails"];
+// const billingCols = [billingId, purchaseId, name, address, city, state,
+//     zipCode, creditCardNum, expirationDate, securityCode, shippingDetails];
+
+app.post("/api/billing", async (req, res) => {
+    if (req.body && verifyFields(req.body, billingFields)) {
+        let billingId = Date.now().toString(16);
+        billingId += crypto.randomBytes(8).toString('hex');
+        pool.query(`INSERT INTO billingInfo VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [billingId, req.body.purchaseId, req.body.fullName, req.body.address,
+                req.body.city, req.body.state, req.body.zip, req.body.creditCardNum,
+                req.body.expDate, req.body.secCode, req.body.shippingDetails],
+            (err, result) => {
+                if (err) {
+                    console.log(err);
+                    res.status(500).json("Server Error");
+                } else {
+                    res.json({
+                        billingId: billingId,
+                        success: result.affectedRows > 0
+                    });
+                }
+            });
+    } else {
+        res.status(400).json({
+            message: 'Message body is missing properties'
+        });
+    }
+});
 
 // ----------------------------------------------------------------
 
