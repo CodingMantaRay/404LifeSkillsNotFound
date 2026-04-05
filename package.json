@@ -1,9 +1,10 @@
 {
-  "name": "404-life-skills-server",
+  "name": "js",
   "version": "1.0.0",
   "description": "",
-  "main": "server.js",
+  "main": "app.js",
   "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js"
   },
   "keywords": [],
@@ -13,6 +14,10 @@
   "dependencies": {
     "cors": "^2.8.6",
     "express": "^5.2.1",
+<<<<<<< HEAD:js/package.json
     "sql.js": "^1.12.0"
+=======
+    "mysql": "^2.18.1"
+>>>>>>> a9884720551529b597f1d31570c371459f1b0143:package.json
   }
 }
