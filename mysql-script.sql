@@ -23,6 +23,11 @@ CREATE TABLE submissions (
   PRIMARY KEY (id)
 );
 
+/*
+articles -> publicationOptions
+One to one
+*/
+
 CREATE TABLE articles (
   id VARCHAR(30) PRIMARY KEY,
   title VARCHAR(100),
@@ -44,7 +49,8 @@ CREATE TABLE publicationOptions (
   author VARCHAR(100),
   featured VARCHAR(5),
   access VARCHAR(10),
-  editNotes VARCHAR(1000)
+  editNotes VARCHAR(1000),
+  FOREIGN KEY id REFERENCES articles(id)
 );
 
 CREATE TABLE products (
@@ -83,6 +89,9 @@ CREATE TABLE cartItems (
 /*
 purchases -> purchaseItems
 One to many
+
+purchases -> billingInfo
+One to one
 */
 
 CREATE TABLE purchases (
