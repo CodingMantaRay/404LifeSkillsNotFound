@@ -17,7 +17,7 @@ const db = new sqlite3.Database('./magazine.db', (err) => {
     db.run("PRAGMA foreign_keys = ON");
 
     db.serialize(() => {
-        db.run(`CREATE TABLE IF NOT EXISTS articles (id TEXT PRIMARY KEY, title TEXT NOT NULL, category TEXT NOT NULL, contentSnippet TEXT NOT NULL, preferredDistChannel TEXT NOT NULL, notes TEXT, status TEXT DEFAULT 'Pending')`);
+        db.run(`CREATE TABLE IF NOT EXISTS articles (id TEXT PRIMARY KEY, title TEXT NOT NULL, author TEXT NOT NULL, category TEXT NOT NULL, contentSnippet TEXT NOT NULL, preferredDistChannel TEXT NOT NULL, notes TEXT, status TEXT DEFAULT 'Pending')`);
         
         db.run(`CREATE TABLE IF NOT EXISTS subscribers (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, email TEXT NOT NULL, phone TEXT, age INTEGER, address TEXT)`);
 
@@ -28,6 +28,10 @@ const db = new sqlite3.Database('./magazine.db', (err) => {
         db.run (`CREATE TABLE IF NOT EXISTS carts (cartId TEXT PRIMARY KEY, sessionId TEXT UNIQUE)`);
 
         db.run (`CREATE TABLE IF NOT EXISTS cartItems (cartId TEXT, productId TEXT, quantity INTEGER, PRIMARY KEY (cartId, productId), FOREIGN KEY (cartId) REFERENCES carts(cartId) ON DELETE CASCADE)`);
+
+        db.run (`CREATE TABLE IF NOT EXISTS submissions (id TEXT PRIMARY KEY, title TEXT NOT NULL, author TEXT NOT NULL, category TEXT NOT NULL, contentSnippet TEXT DEFAULT '', preferredDistChannel TEXT DEFAULT '', notes TEXT DEFAULT '', status TEXT DEFAULT 'Pending')`);
+
+        db.run (`CREATE TABLE IF NOT EXISTS products (id TEXT PRIMARY KEY, description TEXT NOT NULL, category TEXT NOT NULL, unit TEXT NOT NULL, price REAL NOT NULL, weight REAL, color TEXT, details TEXT)`);
 
         console.log("Database tables initialized.");
     });
@@ -260,7 +264,7 @@ app.post("/api/articles", (req, res) => {
                 console.error(err.message);
                 return res.status(500).json({ message: 'Error saving article' });
             } 
-                const idFound = (result.length > 0);
+                const idFound = !!result
 
                 let query, values;
                 if (!idFound) {
