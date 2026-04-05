@@ -1,5 +1,3 @@
-const e = require("cors");
-
 // Global variables
 const form = {
     $fullName: null,
@@ -246,8 +244,12 @@ function onCompletePayment(event) {
     let billingInfo = checkForm();
     if (!billingInfo) return;
 
-    billingInfo.purchaseId = "PUR-" + Math.random().toString(36).substr(2, 9).toUpperCase();
-    billingInfo.sessionId = localStorage.getItem("sessionId") || "ses1";
+    billingInfo.purchaseId = sessionStorage.getItem("lastPurchaseId");
+    if (!billingInfo.purchaseId) {
+        alert("Error: No purchase ID found. Please try again.");
+        return;
+    }
+    billingInfo.sessionId = localStorage.getItem("cart_session");
     billingInfo.email = "student.example@university.edu";
     billingInfo.totalAmount = parseFloat($("#total").text().replace("$", ""));
 

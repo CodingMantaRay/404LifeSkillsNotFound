@@ -28,7 +28,7 @@ function loadOptions($select) {
 }
 
 function isValidOption(chosenOption, options) {
-    return chosenOption == "" || options.indexOf(chosenOption) == -1
+    return options.includes(chosenOption);
 }
 
 /**
@@ -79,8 +79,18 @@ function checkForm() {
     article.notes = $notes.val().trim();
 
     if (formIsValid) {
-        return article;
+        return {
+            id: article.id,
+            title: article.title,
+            author: "User",
+            category: article.category,
+            contentSnippet: article.format,
+            preferredDistChannel: article.value,
+            notes: article.notes,
+            status: "Pending"
+        };
     }
+
     return null;
 }
 
@@ -236,22 +246,23 @@ function deleteArticle(articleId) {
     
 }
 
-function loadArticles() {
-    let articles = getArticles();
-    if (articles == undefined)
-        return;
+async function loadArticles() {
+   try {
+    const response = await fetch("/api/submissions");
+    const articles = await response.json();
+
     let searchText = $("#contentSearch").val() ? $("#contentSearch").val().toLowerCase() : "";
     let filterCat = $("#filterCategory").val() || "All";
 
     let html = "";
-    for (article of articles) {
+    for (let article of articles) {
         let matchesSearch = article.title.toLowerCase().includes(searchText) || article.id.toLowerCase().includes(searchText);
         let matchesCategory = (filterCat === "All" || article.category === filterCat);
         if (matchesSearch && matchesCategory) {
         html += '<div class="col-md-6"><div class="border rounded p-3 h-100 bg-white">';
         html += '<div class="d-flex justify-content-between align-items-start gap-2"><div>';
         html += `<div class="fw-bold">${article.id}</div>`;
-        html += `<div class="text-muted small">${article.category} • ${article.format} • ${article.value}</div></div>`;
+        html += `<div class="text-muted small">${article.category} • ${article.contentSnippet} • ${article.preferredDistChannel}</div></div>`;
         html += '<div class="d-flex gap-2">';
         html += `<button type="button" class="btn btn-sm btn-outline-dark editBtn" data-id="${article.id}">Edit</button>`;
         html += `<button type="button" class="btn btn-sm btn-outline-danger deleteBtn" data-id="${article.id}" data-bs-toggle="modal" data-bs-target="#deleteModal">Delete</button>`;
@@ -261,40 +272,56 @@ function loadArticles() {
         html += "</div></div>";
         }
     }
-    $contentCards = $("#contentCards");
+   ;
     $contentCards.html(html);
 
-    editButtons = $contentCards.find(".editBtn").on("click", onEdit);
-    deleteButtons = $contentCards.find(".deleteBtn").on("click", handleDeleteBtn);
+    $(".editBtn").on("click", onEdit);
+    $(".deleteBtn").on("click", handleDeleteBtn);
+   } catch (error) {
+    console.error("Error loading articles:", error);
+
+   }
 }
 
 /**
  * Handler for submitting the form,
  * whether adding a new article or updating an existing one.
  */
-function onSave(event) {
+async function onSave(event) {
     event.preventDefault();
 
     let article = checkForm();
     if (!article)
         return;
+try {
+const response = await fetch("/api/submissions", {
+    method: "POST",
+    headers: {
+        "Content-Type": "application/json"
+    },
+    body: JSON.stringify(article)
+});
 
-    if ($(this).attr("data-mode") == "edit") {
-        updateArticle(article.id, article);
-        changeToAddForm();
-        clearForm();
-        loadArticles();
-    } else {
-        addArticle(article);
-        clearForm();
-        loadArticles();
-    }
+const result = await response.json();
+
+if (response.ok) {
+    alert(result.message);
+    changeToAddForm();
+    clearForm();
+    loadArticles();
+} else {
+    alert("Error: " + result.message);
+}
+} catch (error) {
+    console.error("Error submitting article:", error);
+    alert("An unexpected error occurred while submitting the article.");
+}
 }
 
 /**
  * Handler for "edit" button.
  */
-function onEdit() {
+async function onEdit() {
     // Get ID of article to edit
     let id = $(this).attr("data-id");
     if (!id)
@@ -304,23 +331,26 @@ function onEdit() {
     clearForm();
     changeToEditForm();
 
-    // Get article to edit
-    let articles = getArticles();
-    let article = null;
-    for (a of articles) {
-        if (a.id == id) {
-            article = a;
-            break;
-        }
-    }
+   try {
+    const response = await fetch(`/api/submissions/${id}`);
+    const articles = await response.json();
+    
+    let article = articles.find(a => a.id === id);
+    if (!article) {
+               
+    
 
     // Update form to reflect the current article information
-    $articleId.val(id);
+    $articleId.val(article.id);
     $articleTitle.val(article.title);
     $category.val(article.category);
-    $format.val(article.format);
-    $value.val(article.value);
+    $format.val(article.contentSnippet);
+    $value.val(article.prefferedDistChannel);
     $notes.val(article.notes);
+}
+    } catch (error) {
+        console.error("Error loading article for editing:", error);
+    }
 }
 
 function onCancelEdit() {
@@ -332,9 +362,21 @@ function onCancelEdit() {
  * Handler for deleting an article (in the "delete" modal).
  * Deletes the article with an ID matching the button's data-id. 
  */
-function onDelete() {
-    deleteArticle($("#confirmDeleteBtn").attr("data-id"));
-    loadArticles();
+async function onDelete() {
+    let id = $("#confirmDeleteBtn").attr("data-id");
+
+    try {
+        const response = await fetch(`/api/submissions/${id}`, {
+            method: "DELETE"
+        });
+       if (response.ok) {
+        loadArticles();
+        bootstrap.Modal.getInstance(document.getElementById("deleteModal")).hide();
+       }
+    } catch (error) {
+        console.error("Error deleting article:", error);
+    }
+
 }
 
 /**
@@ -350,14 +392,7 @@ function handleDeleteBtn() {
 
 $(document).ready(function() {
     
-   if (!localStorage.getItem("articles")) {
-        const intialData = [
-            {id: "A101", title: "Fix a leaky faucet", category: "DIY & Repairs", format: "Blog Post", value: "Free", notes: "Beginner friendly"},
-            {id: "LS-FOOD-001", title: "30 Useful Life Hacks", category: "Food & Cooking", format: "Video", value: "Free", notes: "Quick tips"}
-        ];
-        localStorage.setItem("articles", JSON.stringify(intialData));
-    }
-    
+     
     $formHeader = $("#formHeader");
     $formModeBadge = $("#formModeBadge");
     $editModeBanner = $("#editModeBanner");

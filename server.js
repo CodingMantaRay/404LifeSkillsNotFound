@@ -4,13 +4,35 @@ const fs = require('fs');
 const cors = require('cors');
 const app = express();
 const router = express.Router();
-const mysql = require("mysql");
+const sqlite3 = require("sqlite3").verbose();
 const crypto = require("crypto");
+const e = require('express');
 
 // https://stackoverflow.com/questions/50093144
-const pool = mysql.createPool(
-    JSON.parse(fs.readFileSync("database.json", 'utf8') || [])
-);
+const db = new sqlite3.Database('./magazine.db', (err) => {
+    if (err) {
+        console.error(err.message);
+    } else {
+    console.log('Connected to the magazine database.');
+    db.run("PRAGMA foreign_keys = ON");
+
+    db.serialize(() => {
+        db.run(`CREATE TABLE IF NOT EXISTS articles (id TEXT PRIMARY KEY, title TEXT NOT NULL, category TEXT NOT NULL, contentSnippet TEXT NOT NULL, preferredDistChannel TEXT NOT NULL, notes TEXT, status TEXT DEFAULT 'Pending')`);
+        
+        db.run(`CREATE TABLE IF NOT EXISTS subscribers (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, email TEXT NOT NULL, phone TEXT, age INTEGER, address TEXT)`);
+
+        db.run(`CREATE TABLE IF NOT EXISTS returnRequests ( id TEXT PRIMARY KEY, sessionId TEXT, productDesc TEXT, price REAL, reason TEXT, itemCondition TEXT, notes TEXT, status TEXT DEFAULT 'Pending')`);
+
+        db.run (`CREATE TABLE IF NOT EXISTS billingInfo (billingId TEXT PRIMARY KEY, purchaseId TEXT, name TEXT, address TEXT, city TEXT, state TEXT, zipCode TEXT, creditCardNum TEXT, expirationDate TEXT, securityCode TEXT, shippingDetails TEXT)`);
+
+        db.run (`CREATE TABLE IF NOT EXISTS carts (cartId TEXT PRIMARY KEY, sessionId TEXT UNIQUE)`);
+
+        db.run (`CREATE TABLE IF NOT EXISTS cartItems (cartId TEXT, productId TEXT, quantity INTEGER, PRIMARY KEY (cartId, productId), FOREIGN KEY (cartId) REFERENCES carts(cartId) ON DELETE CASCADE)`);
+
+        console.log("Database tables initialized.");
+    });
+    }
+});
 
 app.use(cors());
 app.use(express.static("public")); // Serve static files from the "public" directory
@@ -37,14 +59,14 @@ function verifyFields(item, fields, exclude = []) {
 // Subscribers
 
 const subscriberTable = "subscribers";
-const subscriberFields = ["name", "email", "phone", "ageOrYear", "address", "id"];
+const subscriberFields = ["name", "email", "phone", "age", "address", "id"];
 
 function verifySubscriber(subscriber, exclude = []) {
     return verifyFields(subscriber, subscriberFields, exclude);
 }
 
-app.get("/api/subscribers", async (req, res) => {
-    pool.query("SELECT * FROM " + subscriberTable, (err, rows) => {
+app.get("/api/subscribers", (req, res) => {
+    db.all("SELECT * FROM " + subscriberTable, [], (err, rows) => {
         if (err) {
             console.log(err);
             res.status(500).json("Server Error");
@@ -58,17 +80,19 @@ app.get("/api/subscribers", async (req, res) => {
     });
 });
 
-app.post("/api/subscribers", async (req, res) => {
+app.post("/api/subscribers", (req, res) => {
     if (req.body && verifySubscriber(req.body, ["id"])) {
-        pool.query(`INSERT INTO ${subscriberTable} (name, email, phone, age, address) VALUES (?, ?, ?, ?, ?)`,
-            [req.body.name, req.body.email, req.body.phone, req.body.ageOrYear, req.body.address],
-            (err, result) => {
+       const sql = `INSERT INTO ${subscriberTable} (name, email, phone, age, address) VALUES (?, ?, ?, ?, ?)`;
+       const params = [req.body.name, req.body.email, req.body.phone, req.body.age, req.body.address];
+       
+        db.run(sql, params, function(err) {
                 if (err) {
                     console.log(err);
                     res.status(500).json("Server Error");
                 } else {
                     res.json({
-                        success: result.affectedRows > 0
+                        id: this.lastID,
+                        success: true
                     });
                 }
             });
@@ -79,17 +103,18 @@ app.post("/api/subscribers", async (req, res) => {
     }
 });
 
-app.put("/api/subscribers", async (req, res) => {
+app.put("/api/subscribers", (req, res) => {
     if (req.body && verifySubscriber(req.body)) {
-        pool.query(`UPDATE ${subscriberTable} SET name=?, email=?, phone=?, age=?, address=? WHERE id=?`,
-            [req.body.name, req.body.email, req.body.phone, req.body.ageOrYear, req.body.address, req.body.id],
-            (err, result) => {
+        const sql = `UPDATE ${subscriberTable} SET name=?, email=?, phone=?, age=?, address=? WHERE id=?`;
+        const params = [req.body.name, req.body.email, req.body.phone, req.body.age, req.body.address, req.body.id];
+
+        db.run(sql, params, function(err) {
                 if (err) {
                     console.log(err);
                     res.status(500).json("Server Error");
                 } else {
                     res.json({
-                        success: result.affectedRows > 0
+                        success: this.changes > 0
                     });
                 }
             });
@@ -100,17 +125,16 @@ app.put("/api/subscribers", async (req, res) => {
     }
 });
 
-app.delete("/api/subscribers", async (req, res) => {
+app.delete("/api/subscribers", (req, res) => {
     if (req.body && "id" in req.body) {
-        pool.query(`DELETE FROM ${subscriberTable} WHERE id=?`,
-            [req.body.id],
-            (err, result) => {
+      const sql = `DELETE FROM ${subscriberTable} WHERE id=?`;
+        db.run(sql, [req.body.id],function(err) {
                 if (err) {
                     console.log(err);
                     res.status(500).json("Server Error");
                 } else {
                     res.json({
-                        success: result.affectedRows > 0
+                        success: this.changes > 0
                     });
                 }
             });
@@ -125,14 +149,14 @@ app.delete("/api/subscribers", async (req, res) => {
 
 // Submissions
 
-const submissionFields = ["id", "title", "author", "category", "contentSnippet", "preferredDistChannel", "notes", "status"];
+const submissionFields = ["id", "title", "author", "category", "contentSnippet", "preferredDistChannel", "notes", "status", "pubDate", "featured", "access"];
 // const statusOptions = ["Pending", "Approved", "Rejected", "Revisions Requested"];
 // const distOptions = ["Website Feature", "Email Newsletter", "Subscriber Portal", "Blog Feature"];
 
 app.get('/api/submissions', (req, res) => {
-    pool.query("SELECT * FROM submissions", (err, rows) => {
+    db.all("SELECT * FROM submissions", [], (err, rows) => {
         if (err) {
-            console.log(err)
+            console.error(err.message)
             res.status(500).json({ message: 'Error reading submissions' });
         } else {
             res.json(rows);
@@ -145,15 +169,16 @@ app.post('/api/submit', postSubmission);
 
 function postSubmission(req, res) {
     if (req.body && verifyFields(req.body, submissionFields, ["status"])) {
-        pool.query('SELECT (id) FROM submissions WHERE id = ?', [req.body.id], (err, result) => {
+        db.get('SELECT id FROM submissions WHERE id = ?', [req.body.id], (err, row) => {
             if (err) {
-                console.log(err);
+                console.error(err.message);
+                return res.status(500).json({ message: 'Error saving submission' });
             } else {
-                const idFound = (result.length > 0);
+                const idFound = !!row;
 
                 let query, values;
                 if (!idFound) {
-                    query = 'INSERT INTO submissions VALUES (?, ?, ?, ?, ?, ?, ?, ?)';
+                    query = 'INSERT INTO submissions (id, title, author, category, contentSnippet, preferredDistChannel, notes, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)';
                     values = [req.body.id, req.body.title, req.body.author, req.body.category, req.body.contentSnippet,
                         req.body.preferredDistChannel, req.body.notes, "Pending"];
                 } else {
@@ -162,14 +187,14 @@ function postSubmission(req, res) {
                         req.body.preferredDistChannel, req.body.notes, req.body.id];
                 }
 
-                pool.query(query, values, (err, result) => {
+                db.run(query, values, function(err){
                     if (err) {
-                        console.log(err);
+                        console.error(err.message);
                         res.status(500).json({ message: 'Error saving submission' });
                     } else {
                         res.json({
                             message: 'Submission received successfully',
-                            success: result.affectedRows > 0
+                            success: this.changes > 0
                         });
                     }
                 });
@@ -184,18 +209,18 @@ function postSubmission(req, res) {
 
 app.post('/api/approve', putApprove);
 app.put('/api/approve', putApprove); // Preferred
-
+app.put('/api/submissions/status', putApprove);
 function putApprove(req, res) {
     if ("id" in req.body && "status" in req.body) {
-        pool.query('UPDATE submissions SET status=? WHERE id=?', [req.body.status, req.body.id],
-            (err, result) => {
+        db.run('UPDATE submissions SET status=? WHERE id=?', [req.body.status, req.body.id],
+            function(err) {
                 if (err) {
-                    console.log(err);
+                    console.error(err.message);
                     res.status(500).json({ message: 'Error updating submission' });
                 } else {
                     res.json({
                         message: `Submission status updated to ${req.body.status}`,
-                        success: result.affectedRows > 0
+                        success: this.changes > 0
                     });
                 }
             });
@@ -218,9 +243,9 @@ function putApprove(req, res) {
 const articleFields = ["id", "title", "category", "format", "value", "notes"];
 
 app.get('/api/articles', (req, res) => {
-    pool.query("SELECT * FROM articles", (err, rows) => {
+    db.all("SELECT * FROM articles", [], (err, rows) => {
         if (err) {
-            console.log(err)
+            console.error(err.message);
             res.status(500).json({ message: 'Error reading articles' });
         } else {
             res.json(rows);
@@ -230,15 +255,16 @@ app.get('/api/articles', (req, res) => {
 
 app.post("/api/articles", (req, res) => {
     if (req.body && verifyFields(req.body, articleFields)) {
-        pool.query('SELECT (id) FROM articles WHERE id = ?', [req.body.id], (err, result) => {
+       db.get('SELECT id FROM articles WHERE id = ?', [req.body.id], (err, result) => {
             if (err) {
-                console.log(err);
-            } else {
+                console.error(err.message);
+                return res.status(500).json({ message: 'Error saving article' });
+            } 
                 const idFound = (result.length > 0);
 
                 let query, values;
                 if (!idFound) {
-                    query = 'INSERT INTO articles VALUES (?, ?, ?, ?, ?, ?)';
+                    query = 'INSERT INTO articles (id, title, category, format, value, notes) VALUES (?, ?, ?, ?, ?, ?)';
                     values = [req.body.id, req.body.title, req.body.category, req.body.format, req.body.value,
                     req.body.notes];
                 } else {
@@ -247,19 +273,18 @@ app.post("/api/articles", (req, res) => {
                     req.body.notes, req.body.id];
                 }
 
-                pool.query(query, values, (err, result) => {
+                db.run(query, values, function(err) {
                     if (err) {
-                        console.log(err);
+                        console.error(err.message);
                         res.status(500).json({ message: 'Error saving article' });
                     } else {
                         res.json({
                             message: 'Article received successfully',
-                            success: result.affectedRows > 0
+                            success: this.changes > 0
                         });
                     }
                 });
-            }
-        });
+            });
     } else {
         res.status(400).json({
             message: 'Message body is missing properties'
@@ -269,15 +294,15 @@ app.post("/api/articles", (req, res) => {
 
 app.delete("/api/articles", async (req, res) => {
     if (req.body && "id" in req.body) {
-        pool.query(`DELETE FROM articles WHERE id=?`,
+        db.run(`DELETE FROM articles WHERE id=?`,
             [req.body.id],
-            (err, result) => {
+            function(err) {
                 if (err) {
-                    console.log(err);
+                    console.error(err.message);
                     res.status(500).json("Server Error");
                 } else {
                     res.json({
-                        success: result.affectedRows > 0
+                        success: this.changes > 0
                     });
                 }
             });
@@ -297,7 +322,7 @@ const pubOptionCols = ["id", "title", "pubDate", "webFeaturePreferred", "emailNe
     "blogFeaturePreferred", "reviewStatus", "author", "featured", "access", "editNotes"];
 
 app.get('/api/pubOptions', (req, res) => {
-    pool.query("SELECT * FROM publicationOptions", (err, rows) => {
+    db.all("SELECT * FROM publicationOptions", [], (err, rows) => {
         if (err) {
             console.log(err)
             res.status(500).json({ message: 'Error reading publication options' });
@@ -333,15 +358,16 @@ app.post("/api/pubOptions", (req, res) => {
         const subPortalPreferred = req.body.distChannel.includes("Subscriber Portal") ? 1 : 0;
         const blogFeaturePreferred = req.body.distChannel.includes("Blog Feature") ? 1 : 0;
 
-        pool.query('SELECT (id) FROM publicationOptions WHERE id = ?', [req.body.id], (err, result) => {
+        db.get('SELECT (id) FROM publicationOptions WHERE id = ?', [req.body.id], (err, result) => {
             if (err) {
-                console.log(err);
+                console.error(err.message);
+                return res.status(500).json({ message: 'Error saving publication option' });
             } else {
-                const idFound = (result.length > 0);
+                const idFound = !!row;
 
                 let query, values;
                 if (!idFound) {
-                    query = 'INSERT INTO publicationOptions VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
+                    query = `INSERT INTO publicationOptions (${pubOptionCols.join(', ')}) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
                     values = [req.body.id, req.body.title, req.body.pubDate, webFeaturePreferred, 
                         emailNewsletterPreferred, subPortalPreferred, blogFeaturePreferred, req.body.reviewStatus, 
                         req.body.author, req.body.featured, req.body.access, req.body.editNotes];
@@ -354,14 +380,14 @@ app.post("/api/pubOptions", (req, res) => {
                         req.body.author, req.body.featured, req.body.access, req.body.editNotes, req.body.id];
                 }
 
-                pool.query(query, values, (err, result) => {
+                db.run(query, values, function(err) {
                     if (err) {
-                        console.log(err);
+                        console.error(err.message);
                         res.status(500).json({ message: 'Error saving submission' });
                     } else {
                         res.json({
                             message: 'Submission received successfully',
-                            success: result.affectedRows > 0
+                            success: this.changes > 0
                         });
                     }
                 });
@@ -381,9 +407,9 @@ app.post("/api/pubOptions", (req, res) => {
 const productFields = ["id", "description", "category", "unit", "price", "weight", "color", "details"];
 
 app.get('/api/products', (req, res) => {
-    pool.query("SELECT * FROM products", (err, rows) => {
+    db.all("SELECT * FROM products", [], (err, rows) => {
         if (err) {
-            console.log(err)
+            console.error(err.message);
             res.status(500).json({ message: 'Error reading products' });
         } else {
             res.json(rows);
@@ -393,15 +419,16 @@ app.get('/api/products', (req, res) => {
 
 app.post("/api/products", (req, res) => {
     if (req.body && verifyFields(req.body, productFields)) {
-        pool.query('SELECT (id) FROM products WHERE id = ?', [req.body.id], (err, result) => {
+        db.get('SELECT (id) FROM products WHERE id = ?', [req.body.id], (err, row) => {
             if (err) {
-                console.log(err);
+                console.error(err.message);
+                return res.status(500).json({ message: 'Error saving product' });
             } else {
-                const idFound = (result.length > 0);
+                const idFound = !!row;
 
                 let query, values;
                 if (!idFound) {
-                    query = 'INSERT INTO products VALUES (?, ?, ?, ?, ?, ?, ?, ?)';
+                    query = 'INSERT INTO products(id, description, category, unit, price, weight, color, details) VALUES (?, ?, ?, ?, ?, ?, ?, ?)';
                     values = [req.body.id, req.body.description, req.body.category, req.body.unit, req.body.price,
                     req.body.weight, req.body.color, req.body.details];
                 } else {
@@ -411,14 +438,14 @@ app.post("/api/products", (req, res) => {
                     req.body.weight, req.body.color, req.body.details, req.body.id];
                 }
 
-                pool.query(query, values, (err, result) => {
+                db.run(query, values, function(err) {
                     if (err) {
-                        console.log(err);
+                        console.error(err.message);
                         res.status(500).json({ message: 'Error saving product' });
                     } else {
                         res.json({
                             message: 'Product received successfully',
-                            success: result.affectedRows > 0
+                            success: this.changes > 0
                         });
                     }
                 });
@@ -431,20 +458,18 @@ app.post("/api/products", (req, res) => {
     }
 });
 
-app.delete("/api/products", async (req, res) => {
+app.delete("/api/products",  (req, res) => {
     if (req.body && "id" in req.body) {
-        pool.query(`DELETE FROM products WHERE id=?`,
-            [req.body.id],
-            (err, result) => {
-                if (err) {
-                    console.log(err);
-                    res.status(500).json("Server Error");
-                } else {
-                    res.json({
-                        success: result.affectedRows > 0
-                    });
-                }
-            });
+        db.run(`DELETE FROM products WHERE id=?`, [req.body.id], (err, result) => {
+            if (err) {
+                console.error(err.message);
+                res.status(500).json("Server Error");
+            } else {
+                res.json({
+                    success: this.changes > 0
+                });
+            }
+        });
     } else {
         res.status(400).json({
             message: 'Message body is missing an "id" property'
@@ -459,25 +484,22 @@ app.delete("/api/products", async (req, res) => {
 // Given a session ID, get a list of items in cart, as product objects
 app.get('/api/cart', (req, res) => {
     if (req.query && "sessionId" in req.query) {
-        const query = `SELECT id, description, category, unit, price, weight, color, details, quantity
-            FROM carts AS c LEFT JOIN cartItems AS i
-            ON  c.cartId = i.cartId
-            INNER JOIN products AS p
-            ON i.productId = p.id
+        const query = `SELECT p.id, p.description, p.category, p.unit, p.price, p.weight, p.color, p.details, i.quantity
+            FROM carts AS c 
+            LEFT JOIN cartItems AS i ON c.cartId = i.cartId
+            INNER JOIN products AS p ON i.productId = p.id
             WHERE c.sessionId = ?`;
-        const values = [req.query.sessionId];
-        pool.query(query, values, (err, result) => {
+        
+        db.all(query, [req.query.sessionId], (err, rows) => {
             if (err) {
-                console.log(err);
+                console.error(err.message);
                 res.status(500).json("Server Error");
             } else {
-                res.json(result);
+                res.json(rows);
             }
         });
     } else {
-        res.status(400).json({
-            message: 'Need to provide a "sessionId" query parameter.'
-        });
+        res.status(400).json({ message: 'Need to provide a "sessionId" query parameter.' });
     }
 });
 
@@ -485,160 +507,114 @@ app.get('/api/cart', (req, res) => {
 // Add item: POST /api/cart?sessionId=id&productId=id
 // Modify quantity: POST /api/cart?sessionId=id&productId=id&quantity=3
 app.post('/api/cart', (req, finalResult) => {
-    if (req.query && "sessionId" in req.query && "productId" in req.query && req.query.sessionId && req.query.productId) {
-        let query = `SELECT cartId FROM carts WHERE sessionId = ?`;
-        let values = [req.query.sessionId, req.query.productId];
-        pool.query(query, values, (err, res) => {
-            if (err) {
-                console.log(err);
-                finalResult.status(500).json("Server Error");
-            } else {
-                // Case 1: Cart doesn't exist
-                if (res.length == 0) {
-                    // Create new cart ID
-                    let cartId = Date.now().toString(16);
-                    cartId += crypto.randomBytes(4).toString('hex'); // 4 bytes = 8 chars in hex
+    const { sessionId, productId, quantity: queryQty } = req.query;
 
-                    // Create cart
-                    query = `INSERT INTO carts VALUES (?, ?)`;
-                    values = [cartId, req.query.sessionId];
-                    pool.query(query, values, (err, res) => {
+    if (sessionId && productId) {
+
+        db.get(`SELECT cartId FROM carts WHERE sessionId = ?`, [sessionId], (err, cartRow) => {
+            if (err) {
+                console.error(err.message);
+                return finalResult.status(500).json("Server Error");
+            }
+                // Case 1: Cart doesn't exist
+                if (!cartRow) {
+                let cartId = Date.now().toString(16) + crypto.randomBytes(4).toString('hex');
+                
+                db.run(`INSERT INTO carts (cartId, sessionId) VALUES (?, ?)`, [cartId, sessionId], function(err) {
+                    if (err) {
+                        console.error(err.message);
+                        return finalResult.status(500).json("Server Error");
+                    }
+                    
+                    const qty = queryQty ? parseInt(queryQty) : 1;
+                    db.run(`INSERT INTO cartItems (cartId, productId, quantity) VALUES (?, ?, ?)`, [cartId, productId, qty], function(err) {
                         if (err) {
-                            console.log(err);
-                            finalResult.status(500).json("Server Error");
-                        } else {
-                            // Create cart item
-                            query = `INSERT INTO cartItems VALUES (?, ?, ?)`;
-                            values = [cartId, req.query.productId, "quantity" in req.query ? req.query.quantity : 1];
-                            pool.query(query, values, (err, res) => {
-                                if (err) {
-                                    console.log(err);
-                                    finalResult.status(500).json("Server Error");
-                                } else {
-                                    finalResult.json({
-                                        success: res.affectedRows > 0
-                                    });
-                                }
-                            });
+                            console.error(err.message);
+                            return finalResult.status(500).json("Server Error");
                         }
+                        finalResult.json({ success: this.changes > 0 });
                     });
-                } else {
-                    const row = res[0];
-                    if ("cartId" in row && row.cartId) {
-                        query = 'SELECT quantity FROM cartItems WHERE cartId = ? AND productId = ?';
-                        values = [row.cartId, req.query.productId];
-                        pool.query(query, values, (err, res) => {
+                });
+            } else {
+               const cartId = cartRow.cartId;
+                db.get('SELECT quantity FROM cartItems WHERE cartId = ? AND productId = ?', [cartId, productId], (err, itemRow) => {
+                    if (err) {
+                        console.error(err.message);
+                        return finalResult.status(500).json("Server Error");
+                    }
+
+                    if (!itemRow) {
+                       const qty = queryQty ? parseInt(queryQty) : 1;
+                        db.run(`INSERT INTO cartItems (cartId, productId, quantity) VALUES (?, ?, ?)`, [cartId, productId, qty], function(err) {
                             if (err) {
-                                console.log(err);
-                                finalResult.status(500).json("Server Error");
-                            } else {
-                                // Case 2: Cart exists, but product doesn't
-                                if (res.length == 0) {
-                                    query = `INSERT INTO cartItems VALUES (?, ?, ?)`;
-                                    values = [row.cartId, req.query.productId, "quantity" in req.query ? req.query.quantity : 1];
-                                    pool.query(query, values, (err, res) => {
-                                        if (err) {
-                                            console.log(err);
-                                            finalResult.status(500).json("Server Error");
-                                        } else {
-                                            finalResult.json({
-                                                success: res.affectedRows > 0
-                                            });
-                                        }
-                                    });
-                                }
-                                // Case 3: Cart and product exist, need to modify quantity
-                                else {
-                                    let quantity;
-                                    if ("quantity" in req.query) {
-                                        quantity = req.query.quantity;
-                                    } else {
-                                        quantity = (res[0].quantity || 0) + 1;
-                                    }
-                                    query = `UPDATE cartItems SET quantity = ? WHERE cartId = ? AND productId = ?`;
-                                    values = [quantity, row.cartId, req.query.productId];
-                                    pool.query(query, values, (err, res) => {
-                                        if (err) {
-                                            console.log(err);
-                                            finalResult.status(500).json("Server Error");
-                                        } else {
-                                            finalResult.json({
-                                                success: res.affectedRows > 0
-                                            });
-                                        }
-                                    });
-                                }
+                                console.error(err.message);
+                                return finalResult.status(500).json("Server Error");
                             }
+                            finalResult.json({ success: this.changes > 0 });
+                        });
+                    } else {
+
+                        const newQty = queryQty ? parseInt(queryQty) : (itemRow.quantity || 0) + 1;
+                        db.run(`UPDATE cartItems SET quantity = ? WHERE cartId = ? AND productId = ?`, [newQty, cartId, productId], function(err) {
+                            if (err) {
+                                console.error(err.message);
+                                return finalResult.status(500).json("Server Error");
+                            }
+                            finalResult.json({ success: this.changes > 0 });
                         });
                     }
-                }
-            }
-        });
-    } else {
-        finalResult.status(400).json({
-            message: 'Need to provide "sessionId" and "productId" query parameters'
-        });
-    }
-});
-
-app.delete("/api/cart", async (req, res) => {
-    if (req.query && "sessionId" in req.query) {
-        let query = "DELETE i FROM carts AS c INNER JOIN cartItems AS i ON c.cartId = i.cartId WHERE sessionId = ?";
-        let values = [req.query.sessionId];
-        if ("productId" in req.query) {
-            query += " AND productId = ?";
-            values.push(req.query.productId);
-        }
-        pool.query(query, values, (err, result) => {
-            if (err) {
-                console.log(err);
-                res.status(500).json("Server Error");
-            } else {
-                res.json({
-                    success: result.affectedRows > 0
                 });
             }
         });
     } else {
-        res.status(400).json({
-            message: 'Need to provide "sessionId" and "productId" query parameters'
-        });
+        finalResult.status(400).json({ message: 'Need to provide "sessionId" and "productId" query parameters' });
     }
 });
 
-/**
- * Given the session ID and product ID, 
- * gets the cart ID, product ID, and quantity from the database.
- * @param {*} sessionId 
- * @param {*} productId - for query, also passed onto callback
- * @param {*} newQuantity - integer or null, to be passed onto callback
- * @param {*} callback - function that takes 3 parameters: query result, 
- *      product ID, and new quantity
- */
+
+
+app.delete("/api/cart", (req, res) => {
+    if (req.query && "sessionId" in req.query) {
+        // SQLite: Joins aren't allowed in DELETE. We use a subquery instead.
+        let query = `DELETE FROM cartItems WHERE cartId IN (SELECT cartId FROM carts WHERE sessionId = ?)`;
+        let values = [req.query.sessionId];
+
+        if ("productId" in req.query) {
+            query += " AND productId = ?";
+            values.push(req.query.productId);
+        }
+
+        db.run(query, values, function(err) {
+            if (err) {
+                console.error(err.message);
+                res.status(500).json("Server Error");
+            } else {
+                res.json({ success: this.changes > 0 });
+            }
+        });
+    } else {
+        res.status(400).json({ message: 'Need to provide "sessionId" query parameter' });
+    }
+});
 function getProduct(sessionId, productId, newQuantity, callback) {
-
+    const query = `SELECT cartId, quantity FROM carts WHERE sessionId = ?`;
+    db.get(query, [sessionId], (err, row) => {
+        callback(row, productId, newQuantity);
+    });
 }
 
-/**
- * Given a cart ID, creates a new cart item with the given product ID and quantity.
- * @param {*} cartId 
- * @param {*} productId 
- * @param {*} quantity - integer or null
- * @param {*} callback - function that takes query result as only param
- */
 function insertProduct(cartId, productId, quantity, callback) {
-
+    const query = `INSERT INTO cartItems (cartId, productId, quantity) VALUES (?, ?, ?)`;
+    db.run(query, [cartId, productId, quantity], function(err) {
+        callback(this);
+    });
 }
 
-/**
- * Given a cart ID and product ID, modify its quantity.
- * @param {*} cartId 
- * @param {*} productId 
- * @param {*} newQuantity 
- * @param {*} callback - function that takes query result as only param
- */
 function updateProductQuantity(cartId, productId, newQuantity, callback) {
-
+    const query = `UPDATE cartItems SET quantity = ? WHERE cartId = ? AND productId = ?`;
+    db.run(query, [newQuantity, cartId, productId], function(err) {
+        callback(this);
+    });
 }
 
 // ----------------------------------------------------------------
@@ -651,76 +627,73 @@ const cartItemCols = ["id", "description", "category", "unit", "price", "weight"
 
 app.get("/api/purchase/items", (req, finalRes) => {
     if (req.query && "sessionId" in req.query) {
-        // Get list of purchased items
-        const query = `SELECT productId, quantity, description, category, unit, price, weight, color, details 
+        const query = `SELECT i.productId, i.quantity, i.description, i.category, i.unit, i.price, i.weight, i.color, i.details 
             FROM purchases AS p INNER JOIN purchasedItems AS i
             ON p.purchaseId = i.purchaseId
-            WHERE sessionId = ?`;
-        const values = [req.query.sessionId];
-        pool.query(query, values, (err, result) => {
+            WHERE p.sessionId = ?`;
+        
+        db.all(query, [req.query.sessionId], (err, rows) => {
             if (err) {
-                console.log(err);
-                res.status(500).json("Server Error");
+                console.error(err.message);
+                finalRes.status(500).json("Server Error");
             } else {
-                finalRes.json(result);
+                finalRes.json(rows);
             }
         });
     }
 });
 
 // Post purchase - get purchaseId back
-app.post("/api/purchase", async (req, finalRes) => {
+app.post("/api/purchase", (req, finalRes) => {
     if (req.body && "sessionId" in req.body) {
-        let purchaseId = Date.now().toString(16);
-        purchaseId += crypto.randomBytes(8).toString('hex');
-
-        const query = `SELECT id, description, category, unit, price, weight, color, details, quantity
-            FROM carts AS c LEFT JOIN cartItems AS i
-            ON  c.cartId = i.cartId
-            INNER JOIN products AS p
-            ON i.productId = p.id
+        let purchaseId = Date.now().toString(16) + crypto.randomBytes(8).toString('hex');
+const cartQuery = `SELECT p.id, p.description, p.category, p.unit, p.price, p.weight, p.color, p.details, i.quantity
+            FROM carts AS c 
+            INNER JOIN cartItems AS i ON c.cartId = i.cartId
+            INNER JOIN products AS p ON i.productId = p.id
             WHERE c.sessionId = ?`;
-        const values = [req.body.sessionId];
-        pool.query(query, values, (err, cart) => {
+
+        db.all(cartQuery, [req.body.sessionId], (err, cartItems) => {
             if (err) {
-                console.log(err);
-                finalRes.status(500).json("Server Error");
-            } else {
-                if (cart.length == 0) {
-                    finalRes.status(400).json("No items in cart");
-                } else {
-                    pool.query('INSERT INTO purchases VALUES (?, ?)', [purchaseId, req.body.sessionId],
-                        (err, res) => {
-                            if (err) {
-                                console.log(err);
-                                finalRes.status(500).json("Server Error");
-                            } else {
-                                for (let item of cart) {
-                                    if (!verifyFields(item, cartItemCols)) {
-                                        continue;
-                                    }
-                                    pool.query(`INSERT INTO purchasedItems VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-                                        [purchaseId, item.id, item.quantity, item.description, item.category, item.unit, item.price, item.weight, item.color, item.details],
-                                        (err, res) => {
-                                            if (err) {
-                                                console.log(err);
-                                            }
-                                        });
-                                }
-                                finalRes.json({
-                                    purchaseId: purchaseId, 
-                                    success: res.affectedRows > 0
-                                });
-                            }
-                        }
-                    );
-                }
+                console.error(err.message);
+                return finalRes.status(500).json("Server Error");
             }
+
+            if (cartItems.length === 0) {
+                return finalRes.status(400).json("No items in cart");
+            }
+db.run('INSERT INTO purchases (purchaseId, sessionId) VALUES (?, ?)', 
+                [purchaseId, req.body.sessionId], function(err) {
+                if (err) {
+                    console.error(err.message);
+                    return finalRes.status(500).json("Server Error");
+                }
+let errorOccurred = false;
+                const itemInsertQuery = `INSERT INTO purchasedItems 
+                    (purchaseId, productId, quantity, description, category, unit, price, weight, color, details) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+
+                cartItems.forEach((item) => {
+                    if (verifyFields(item, cartItemCols)) {
+                        db.run(itemInsertQuery, [
+                            purchaseId, item.id, item.quantity, item.description, item.category, 
+                            item.unit, item.price, item.weight, item.color, item.details
+                        ], (err) => {
+                            if (err) {
+                                console.error("Item Insert Error:", err.message);
+                                errorOccurred = true;
+                            }
+                        });
+                    }
+                });
+finalRes.json({
+                    purchaseId: purchaseId, 
+                    success: !errorOccurred
+                });
+            });
         });
     } else {
-        finalRes.status(400).json({
-            message: 'Message body is missing properties'
-        });
+        finalRes.status(400).json({ message: 'Message body is missing properties' });
     }
 });
 
@@ -728,67 +701,56 @@ app.post("/api/purchase", async (req, finalRes) => {
 
 // Billing Info
 
-const billingFields = ["purchaseId", "fullName", "address", "city", "state", "zip", "creditCardNum", "expDate",
-    "secCode", "shippingDetails"];
-// const billingCols = [billingId, purchaseId, name, address, city, state,
-//     zipCode, creditCardNum, expirationDate, securityCode, shippingDetails];
+const billingFields = ["purchaseId", "fullName", "address", "city", "state", "zip", "creditCardNum", "expDate", "secCode", "shippingDetails"];
 
-app.post("/api/billing", async (req, res) => {
+app.post("/api/billing", (req, res) => {
     if (req.body && verifyFields(req.body, billingFields)) {
         const billingId = Date.now().toString(16) + crypto.randomBytes(4).toString('hex');
-        const query = `INSERT INTO billingInfo (billingId, purchaseId, name, address, city, state, zipCode, creditCardNum, expirationDate, securityCode, shippingDetails) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
-        pool.query(query,
-            [billingId, req.body.purchaseId, req.body.fullName, req.body.address, req.body.city, req.body.state, req.body.zip, req.body.creditCardNum, req.body.expDate, req.body.secCode, req.body.shippingDetails],
+        
+        const query = `INSERT INTO billingInfo (billingId, purchaseId, name, address, city, state, zipCode, creditCardNum, expirationDate, securityCode, shippingDetails) 
+                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+        
+        const values = [
+            billingId, req.body.purchaseId, req.body.fullName, req.body.address, req.body.city, 
+            req.body.state, req.body.zip, req.body.creditCardNum, req.body.expDate, 
+            req.body.secCode, req.body.shippingDetails
+        ];
 
-            
-            (err, result) => {
-                if (err) {
-                    console.log(err);
-                    res.status(500).json("Server Error");
-                }
-
-    
-
-            if (req.body.sessionId) {
-                pool.query(`DELETE i FROM carts AS c INNER JOIN cartItems AS i ON c.cartId = i.cartId WHERE sessionId = ?`, [req.body.sessionId]);
-
+        db.run(query, values, function(err) {
+            if (err) {
+                console.error(err.message);
+                return res.status(500).json("Server Error");
             }
-                res.json({ billingId, success: true });
+if (req.body.sessionId) {
+                const deleteQuery = `DELETE FROM cartItems WHERE cartId IN (SELECT cartId FROM carts WHERE sessionId = ?)`;
+                db.run(deleteQuery, [req.body.sessionId], (err) => {
+                    if (err) console.error("Cart cleanup error:", err.message);
+                });
             }
-        );
-    } else {
-        res.status(400).json({
-            message: 'Message body is missing properties'
+
+            res.json({ billingId, success: true });
         });
+    } else {
+        res.status(400).json({ message: 'Message body is missing properties' });
     }
 });
-
-// ----------------------------------------------------------------
-
-// Returns
-
 const returnFields = ["sessionId", "productDesc", "price", "reason", "condition", "notes"];
-// const returnCols = ["id", "sessionId", "productDesc", "price", "reason", "itemCondition", "notes", "status"];
 
 app.post("/api/returns", (req, res) => {
-    if (req.body && verifyFields(req.body, returnFields)) {
-        const returnId = Date.now().toString(16) + crypto.randomBytes(4).toString('hex');
-        const query = `INSERT INTO returnRequests (id, sessionId, productDesc, price, reason, itemCondition, notes, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
-        pool.query(query,
-            [returnId, req.body.sessionId, req.body.productDesc, req.body.price, req.body.reason, req.body.condition, req.body.notes, "Pending"],
-            (err, result) => {
-                if (err) return res.status(500).send(err);
-                res.json({ returnId, success: true });
-            }
-        );
+    const { id, productDesc, price, reason, itemCondition, notes, status, sessionId } = req.body;
+const sql = `INSERT INTO returns (id, productDesc, price, reason, itemCondition, notes, status, sessionId) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
+
+    db.run(sql, [id, productDesc, price, reason, itemCondition, notes, status, sessionId], function(err) {
+       if (err) {
+        console.error("Database Error:", err.message);
+        return res.status(500).json({ error: err.message})
     }
+res.json({ id, success: true });
+});
 });
 
-// ----------------------------------------------------------------
-
 app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-    console.log(`Access site at http://localhost:${PORT}/index.html`);
+    console.log(`Server is running on port ${PORT}`);
 });
 
 // TODO: close pool

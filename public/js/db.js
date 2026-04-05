@@ -75,6 +75,23 @@ async function init() {
         )
     `);
 
+    db.run(`
+        CREATE TABLE IF NOT EXISTS returns (
+        id TEXT PRIMARY KEY,
+        productDesc TEXT,
+        price REAL,
+        reason TEXT,
+        itemCondition TEXT,
+        notes TEXT,
+        status TEXT DEFAULT 'Pending',
+        sessionId TEXT
+    )
+     `);
+
+     db.run(`
+        CREATE TABLE IF NOT EXISTS billingInfo( billingID TEXT PRIMARY KEY, purchaseId TEXT, name TEXT, address TEXT, city TEXT, state TEXT, zipCode TEXT, creditCardNum TEXT, expirationDate TEXT, securityCode TEXT, shippingDetails TEXT)
+    `);
+
     // ─── Seed initial articles (only if table is empty) ──────────────────────
 
     const countResult = db.exec('SELECT COUNT(*) FROM articles');

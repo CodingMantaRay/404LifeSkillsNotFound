@@ -3,6 +3,8 @@ let $productForm, $productId, $productDesc, $category, $unit, $price, $weight, $
 let $cartTable;
 let categories, units;
 let formWidgets, formItems;
+const sessionId = localStorage.getItem("cart_session") || (Math.random().toString(36).substring(2) + Date.now().toString(36));
+localStorage.setItem("cart_session", sessionId);
 
 // -----------------------------------------------------------------------------------------------
 // Utility functions:                                                                            |
@@ -253,47 +255,62 @@ function onSave(event) {
     if (!product)
         return;
 
-    updateItem("products", product.id, product);
-    clearForm();
-    loadProducts();
-    $("#jsonPreview").text(JSON.stringify(getItems("products"), null, 2));
+    $.ajax({
+        url: '/api/products',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify(product),
+        success: function() {
+            clearForm();
+            loadProducts();
+            alert("Product added successfully!");
+        }
+    });
+
+   
 }
 
 function loadCart() {
-    // Get products from localStorage
-    let productsArr = getItems("products");
-    if (!productsArr)
-        return;
-    // Create map out of products to make it easier to search by ID
-    const products = new Map(productsArr.map((o) => [o.id, o]));
+    $.ajax({
+        url: '/api/cart/${sessionId}',
+        type: 'GET',
+        success: function(cartItems) {
+            $cartTable.empty();
+            let total = 0;
 
-    // Get cart (list of IDs) from localStorage
-    const cartIds = JSON.parse(localStorage.getItem("cart")) || [];
-    
-    // Get product objects from cart
-    const cart = cartIds.map((id) => products.get(id)).filter(p => p !== undefined);
-
-    // Add cart to HTML table
-    $cartTable.find("tr:not(#emptyCartRow)").remove();
-    for (let c of cart) {
-        $cartTable.append($(cartItemHtml(c)));
-    }
-
-    setCartTotal(); 
-
-    $cartTable.find(".removeCartBtn").on("click", function() {
-        const $row = $(this).closest("tr");
-        // Get the index of the removed row (minus 1 due to the empty row)
-        const index = $row.index() - 1;
-        let cartIds = JSON.parse(localStorage.getItem("cart")) || [];
-        cartIds.splice(index, 1);
-
-        localStorage.setItem("cart", JSON.stringify(cartIds));
-
-        loadCart();
+            if (cartItems.length === 0) {
+                $cartTable.append('<tr><td colspan="5" class="text-center text-muted">Your cart is empty.</td></tr>');
+            } else {
+                cartItems.forEach(item => {
+                    total += parseFloat(item.price) * item.quantity;
+                    $cartTable.append(`<tr>
+                        <td>${item.productId}</td>
+                        <td>${item.description}</td>
+                        <td>${item.quantity}</td>
+                        <td>$${item.price * item.quantity}</td>
+                        <td class="text-end">
+                            <button class="btn btn-sm btn-outline-danger removeCartBtn" data-id="${item.productId}">Remove</button>
+                        </td>
+                    </tr>`);
+                });
+                    }
+                    $("#cartTotal").text(`$${total.toFixed(2)}`);
+                    $(".stat-items-count").text(cartItems.length);
+                    $($cartTable.find(".removeCartBtn").on("click", onRemoveFromCart));
+                }
+            });
+        }
+       
+function onRemoveFromCart() {
+    const productId = $(this).data("id");
+    $.ajax({
+        url: `/api/cart${sessionId}?productId=${productId}`,
+        type: 'DELETE',
+        success: function() {
+            loadCart();
+        }
     });
-}        
-
+}
 
 function cartItemHtml(product) {
     return `
@@ -309,31 +326,19 @@ function cartItemHtml(product) {
 }
 
 function onAddToCart() {
-    let productId = $(this).attr("data-id"); // TODO
+   const productId = $(this).data("id");
+    // Replace with actual session ID management
 
-    // Get product
-    let products = getItems("products");
-    if (!products)
-        return;
-    let product = null;
-    for (let p of products) {
-        if (p.id == productId) {
-            product = p;
-            break;
-        }  
-    }
-    if (!product)
-        return;
-
-    // Add product to cart in localStorage
-    let cart = JSON.parse(localStorage.getItem("cart"));
-    if (!Array.isArray(cart))
-        cart = [];
-    cart.push(productId); // Only add ID
-    localStorage.setItem("cart", JSON.stringify(cart));
-    loadCart();    
-
-    setCartTotal();
+    $.ajax({
+        url: `/api/cart?sessionId=${sessionId}&productId=${productId}&quantity=1`,
+        type: 'POST',
+       
+        
+        success: function() {
+            alert("added to cart");
+            loadCart();
+        }
+   });
 }
 
 function setCartTotal() {
@@ -362,49 +367,44 @@ function setCartTotal() {
 }
 
 function loadProducts() {
-    let products = getItems("products");
-    if (!products)
-        return;
-
-    // let products = filterItems("contentSearch", "filterCategory", (product, searchText) => {product.title.toLowerCase().includes(searchText) || product.id.toLowerCase().includes(searchText)})
-
-    let html = "";
-    for (let product of products) {
-        html += `<div class="col-md-6">
-            <div class="entry-card border rounded p-3 bg-white h-100" style="border-left: 3px solid brown;">
-                <div class="d-flex justify-content-between align-items-start gap-2">
-                    <div>
-                        <div class="fw-bold">${product.id}</div>
-                        <div class="mt-1 d-flex flex-wrap gap-1">
-                        <span class="badge text-bg-brown">${product.category}</span>
-                        <span class="badge text-bg-brown-light">${product.unit}</span>
+    $.ajax({
+        url: '/api/products',
+        type: 'GET',
+        success: function(products) {
+            let html = "";
+            for (let product of products) {
+                html += `
+                <div class="col-md-6 col-md-6 mb-3">
+                    <div class="entry-card border rounded p-3 bg-white h-100" style="border-left: 3px solid browb;">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <div class="fw-bold">${product.description}</div>
+                            <div class="mt-1">
+                            <span class="bade text-bg-brown">${product.category}</span>
+                            <span class="badge text-bg-brown-light">${product.unit}</span>
+                            </div>
                         </div>
-                    </div>
-                    <div class="d-flex gap-1">
                         <button type="button" class="btn btn-sm btn-brown addToCartBtn" data-id="${product.id}">Add to Cart</button>
-                        <button type="button" class="btn btn-sm btn-outline-brown favBtn" data-id="${product.id}" data-title="${product.description}" data-price="$${parseFloat(product.price).toFixed(2)}" title="Add to Favorites"><i class="bi bi-heart"></i></button>
+                        </div>
+                        <div class="mt-2 fw-semibold">${product.description}</div>
+                        <div class="text-muted small mt-1">$${parseFloat(product.price).toFixed(2)}</div>
                     </div>
-                </div>
-                <div class="mt-2 fw-semibold">${product.description}</div>
-                <div class="text-muted small mt-2">$${parseFloat(product.price).toFixed(2)}</div>
-            </div>
-        </div>\n`;
-    }
-    let $productCards = $("#productCards");
-    $productCards.html(html);
+                </div>`;
+            }
+            $("#productCards").html(html);
+            $(".addToCartBtn").on("click", onAddToCart);
+            $("#productCount").text(products.length);
+            $("#jsonPreview").text(JSON.stringify(products, null, 2));
 
-    $productCards.on("click", ".addToCartBtn", onAddToCart);
+        },
+        error: function() {
+            $("#productCards").html('<div class="alert alert-danger">Error loading products.</div>');
+        }
+    });
 }
 
 $(document).ready(function() {
-    if (!localStorage.getItem("products")) {
-        const initialData = [
-            {id: "HS101", description: "Kitchen Reset Guide", category: "Kitchen Resources", unit: "Download", price: 12.99, weight: "", color: "", details: ""},
-            {id: "HS102", description: "Closet Refresh Bundle", category: "Home Organization", unit: "Bundle", price: 15.99, weight: "", color: "", details: ""},
-            {id: "HS103", description: "Weekly Home Planner Pack", category: "Printable Planners", unit: "Pack", price: 8.99, weight: "", color: "", details: ""}
-        ];
-        localStorage.setItem("products", JSON.stringify(initialData));
-    }
+    
     
     $productForm = $("#productForm");
     $productId = $($productForm.find("#productId")[0]);
@@ -449,27 +449,29 @@ $(document).ready(function() {
     });
 
     $("#checkoutBtn").on("click", function() {
-        const cartIds = JSON.parse(localStorage.getItem("cart")) || [];
-        const productsArr = getItems("products") || [];
-        const productsMap = new Map(productsArr.map((o) => [o.id, o]));
-        const fullCartData = cartIds.map(id => productsMap.get(id)).filter(p => p !== undefined);
+       const checkoutData = {
+        sessionId: localStorage.getItem("cart_session"),
+       };
 
-
-        const JsonData = JSON.stringify(fullCartData, null, 2);
-
+       
         $.ajax({
-            url: 'https://jsonplaceholder.typicode.com/posts',
+            url: '/api/purchase',
             type: 'POST',
             contentType: 'application/json',
-            data: JsonData,
+            data: JSON.stringify(checkoutData),
             success: function(response) {
-                $("#ajaxStatus").html('<div class="alert alert-success">AJAX Success: JSON Data Collection Transported!</div>');
-                $("#jsonPreview").text(JsonData);
-                alert("Data sent to Restful API");
+                if (response.purchaseId) {
+                    sessionStorage.setItem("lastPurchaseId", response.purchaseId);
+                    $("#ajaxStatus").html('<div class="alert alert-success">Purchase successful! Your purchase ID is: ' + response.purchaseId + '</div>');
+                    setTimeout(() => {
+                        window.location.href = "billing.html";
+                    }, 1500);
+                }
             },
-            error: function(xhr) {
-                $("#ajaxStatus").html('<div class="alert alert-danger">AJAX Error: Status ' + xhr.status + '</div>');
-                
+            error: function(xhr) 
+            {
+                $("#ajaxStatus").html('<div class="alert alert-danger">Error occurred while processing purchase.</div>');
+                console.error("Purchase error:", xhr.responseText);
             }
         });   
     });

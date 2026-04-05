@@ -275,7 +275,7 @@
       }
     }
     updateSubscriberCount();
-    const tableBody = document.getElementById('subscriberTableBody');
+   
     if (tableBody) {
       new MutationObserver(updateSubscriberCount).observe(tableBody, { childList: true, subtree: true });
     }

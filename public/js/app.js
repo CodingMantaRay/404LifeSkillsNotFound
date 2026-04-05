@@ -69,9 +69,9 @@ function clearValidity(widget) {
  * @returns true if widget's input is valid, else false
  */
 function checkWidget(widget, validator) {
-    if (typeof(widget) != "HTMLElement" && typeof(validator) != "function")
+    if (!typeof(widget) instanceof HTMLElement && typeof(validator) != "function") {
         return false;
-
+}
     let isValid = validator(widget.value.trim());
     if (isValid) {
         widget.setCustomValidity(''); // :valid
@@ -139,7 +139,7 @@ function renderTable(){
          <td>${sub.name}</td>
          <td>${sub.email}</td>
          <td>${sub.phone}</td>
-         <td>${sub.ageOrYear}</td>
+         <td>${sub.age}</td>
          <td>${sub.address}</td>
          <td class="text-end">
         <button class="btn btn-sm btn-primary me-1" onclick="editSub(${index})">Edit</button>
@@ -155,7 +155,7 @@ const sub = subscribers[index];
 document.getElementById('fullName').value = sub.name;
 document.getElementById('email').value = sub.email;
 document.getElementById('phone').value = sub.phone;
-document.getElementById('age').value = sub.ageOrYear;
+document.getElementById('age').value = sub.age;
 document.getElementById('address').value = sub.address;
 
 document.getElementById('editIndex').value = index;
@@ -165,48 +165,65 @@ document.getElementById('submitBtn').textContent = "Update Subscriber";
  function deleteSub(index) {
     const sub = subscribers[index];
     // DELETE from database if we have a DB id
-    if (sub && sub.id) {
-        fetch(`/api/subscribers/${sub.id}`, { method: 'DELETE' })
-            .catch(err => console.error('Failed to delete subscriber:', err));
+    if (!sub || !sub.id) return;
+    if (confirm(`Are you sure you want to delete subscriber "${sub.name}"?`)) {
+        fetch(`/api/subscribers`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: sub.id })
+        })
+           .then(res => {
+            if (res.ok) {
+                subscribers.splice(index, 1);
+                finishSubmission();
     }
-    subscribers.splice(index, 1);
-    localStorage.setItem('subscribersData', JSON.stringify(subscribers));
-    renderTable();
- }
+    
+ })
+    .catch(err => console.error('Failed to delete subscriber:', err));
+        }
+    }
 
 /**
  * Checks if the submitted signup form is valid
  * and updates the Bootstrap UI accordingly.
  */
 function checkForm(event) {
+    event.preventDefault();
     if (!checkEmail() || !checkPhoneNumber() || !checkAge() || !checkAddressOrAffiliation() || !checkFullName()) {
         signupForm.classList.add('was-validated');
-        event.preventDefault();
-    } else {
-        event.preventDefault()
+        return;
+    }
+    
         
 // object creation
         const newUser = {
-            name: nameWidget.value,
-            email: emailWidget.value,
-            phone: phoneWidget.value,
-            ageOrYear: ageWidget.value,
-            address: addressWidget.value
+            name: nameWidget.value.trim(),
+            email: emailWidget.value.trim(),
+            phone: phoneWidget.value.trim(),
+            age: ageWidget.value.trim(),
+            address: addressWidget.value.trim()
         };
-        const editIndex = document.getElementById('editIndex').value
+        const editIndex = document.getElementById('editIndex').value;
 
-        if (editIndex !== "") {
+        if (editIndex !== "" && editIndex !== null) {
             const dbId = subscribers[editIndex] && subscribers[editIndex].id;
-            subscribers[editIndex] = newUser;
-            document.getElementById('editIndex').value = "";
-            document.getElementById('submitBtn').textContent = "Add Subscriber";
+           
             // PUT to update subscriber in database
             if (dbId) {
-                fetch(`/api/subscribers/${dbId}`, {
+                const updatedUser = { ...newUser, id: dbId };
+                fetch(`/api/subscribers`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(newUser)
-                }).catch(err => console.error('Failed to update subscriber:', err));
+                    body: JSON.stringify(updatedUser)
+                })
+                .then(res => {
+                    if (res.ok) {
+                        subscribers[editIndex] = { ...newUser, id: dbId };
+                        finishSubmission();
+
+                    }
+            })
+            .catch(err => console.error('Failed to update subscriber:', err));
             }
         } else {
             // POST to create subscriber in database
@@ -220,25 +237,14 @@ function checkForm(event) {
                 // Store the database-assigned id on the subscriber object
                 if (data.id) {
                     newUser.id = data.id;
-                    localStorage.setItem('subscribersData', JSON.stringify(subscribers));
+                    subscribers.push(newUser);
+                    finishSubmission();
                 }
             })
             .catch(err => console.error('Failed to save subscriber:', err));
-
-// adds to the array
-subscribers.push(newUser);
-
         }
-// Saves it to local storage
-localStorage.setItem('subscribersData', JSON.stringify(subscribers));
-
-renderTable();
-resetForm();
-
-console.log("Storage Updated");
-    }
+   
 }
-
 /**
  * Click handler for "Clear" button. Resets the form to default.
  */
@@ -292,3 +298,10 @@ document.addEventListener('DOMContentLoaded', () => {
             renderTable();
         });
 });
+
+function finishSubmission() {
+    localStorage.setItem('subscribersData', JSON.stringify(subscribers));
+    renderTable();
+    resetForm();
+    console.log("Subscribers array after submission: ", subscribers);
+   }

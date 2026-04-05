@@ -276,8 +276,7 @@ function onSubmit(event) {
 
 
     articleIdea.status = "Pending";
-    updateItem("articleIdeas", articleIdea);
-    loadArticleIdeas();
+    
 
     $("#submissionStatus").removeClass("alert-secondary alert-danger").addClass("alert-info").html(`<i class="bi bi-cloud-arrow-up-fill"></i>Sending to Node.js...`);
 
@@ -288,14 +287,15 @@ function onSubmit(event) {
         data: JSON.stringify(articleIdea),
         success: function (response) {
             $("#submissionStatus").removeClass("alert-info").addClass("alert-success").html(`<i class="bi bi-check-circle-fill me-2"></i>Success: ${response.message}`);
-    
+            
             $("#jsonPreview").text(JSON.stringify(articleIdea, null, 2));
 
-           
+           loadArticleIdeas();
+           clearForm();
         },
 
         error: function (xhr) {
-            $("#submissionStatus").removeClass("alert-info").addClass("alert-danger").html(`<i class="bi bi-wifi-off"></i> Server Offline: Save to Local Stroage.`);
+            $("#submissionStatus").removeClass("alert-info").addClass("alert-danger").html(`<i class="bi bi-exclamation-triangle-fill me-2"></i> Server Offline: ${xhr.responseJSON ? xhr.responseJSON.message : "Unknown error"}.`);
         }
 });
 }
@@ -303,7 +303,7 @@ function onSubmit(event) {
 /**
  * Handler for "Use Idea" button.
  */
-function onUseIdea() {
+async function onUseIdea() {
     // Get ID of article to edit
     let id = $(this).attr("data-id");
     if (!id)
@@ -313,19 +313,21 @@ function onUseIdea() {
     // TODO warning??
     clearForm();
 
-    // Get article idea
-    const articleIdeasWithId = getItems("articleIdeas", []).filter((item) => item.id == id);
-    const articleIdea = articleIdeasWithId.length > 0 ? articleIdeasWithId[0] : null;
-    if (!articleIdea)
-        return;
-
+    try {
+    const response = await fetch (`http://localhost:3000/api/submissions`);
+   const articleIdeas = await response.json();
+    const articleIdea = Array.isArray(articleIdeas) ? articleIdeas.find(a => a.id === id) : articleIdeas;
+   
+    if (articleIdea)
+        {
     // Update form to reflect the current article submission
-    $articleId.val(id);
+    $articleId.val(articleIdea.id);
     $articleTitle.val(articleIdea.title);
     $articleAuthor.val(articleIdea.author);
     $category.val(articleIdea.category);
     $contentSnippet.val(articleIdea.contentSnippet);
     $prefDistChannel.val(articleIdea.preferredDistChannel);
+    $notes.val(articleIdea.notes);
     /* // Code from "finalize.js" - for checkboxes only
     $(".channel-check").prop("checked", false);
     if (Array.isArray(articleIdea.preferredDistChannel)) {
@@ -336,13 +338,16 @@ function onUseIdea() {
         $(`.channel-check[value="${articleIdea.preferredDistChannel}"]`).prop("checked", true);
     }
     */
-    $notes.val(articleIdea.notes);
+    
     
 
     // Disable id field
     $articleId.attr("disabled", true);
 
-    updatePreview();
+    updatePreview(articleIdea.status); }
+} catch (err) {
+    console.error("Error loading article idea:", err);
+}
 }
 
 function updatePreview(status="Pending") {
@@ -386,14 +391,7 @@ function updatePreview(status="Pending") {
 
 $(document).ready(function () {
     // TODO remove
-    if (!localStorage.getItem("articleIdeas")) {
-        const initialData = [
-            { id: "HS301", title: "Sunday Reset Routine", author: "Lauren", category: "Home Organization", contentSnippet: "A simple routine to prepare the home for the week ahead.", preferredDistChannel: "", notes: "", status: "Pending" },
-            { id: "HS302", title: "5-Minute Kitchen Reset", author: "Lauren", category: "Kitchen Resources", contentSnippet: "Quick habits that help keep the kitchen clean and calm.", preferredDistChannel: "", notes: "", status: "Pending" },
-            { id: "HS303", title: "Weekly Cleaning Checklist", author: "Lauren", category: "Printable Planners", contentSnippet: "A printable guide readers can use to stay on track all week.", preferredDistChannel: "", notes: "", status: "Pending" }
-        ];
-        localStorage.setItem("articleIdeas", JSON.stringify(initialData));
-    }
+     
 
     $submissionForm = $("#submissionForm");
     $articleId = $($submissionForm.find("#articleId")[0]);

@@ -1,3 +1,6 @@
+const { error } = require("node:console");
+const { type } = require("node:os");
+
 // Global variables
 let $formHeader, $formModeBadge, $editModeBanner, $editId;
 let $contentForm, $articleId, $articleTitle, $category, $format, $value, $notes;
@@ -235,10 +238,15 @@ function deleteArticle(articleId) {
     
 }
 
-function loadArticles() {
-    let articles = getArticles();
-    if (articles == undefined)
-        return;
+async function loadArticles() {
+    try {
+    const response = await fetch("http://localhost:3000/api/articles");
+    const articles = await response.json();
+   
+
+   
+   
+       if (!articles) return;
     let searchText = $("#contentSearch").val() ? $("#contentSearch").val().toLowerCase() : "";
     let filterCat = $("#filterCategory").val() || "All";
 
@@ -260,11 +268,13 @@ function loadArticles() {
         html += "</div></div>";
         }
     }
-    $contentCards = $("#contentCards");
-    $contentCards.html(html);
+    $("#contentCards").html(html);
+    $(".editBtn").on("click", onEdit);
+    $(".deleteBtn").on("click", handleDeleteBtn);
+} catch (err) {
+    console.error("Error loading articles:", err);
 
-    editButtons = $contentCards.find(".editBtn").on("click", onEdit);
-    deleteButtons = $contentCards.find(".deleteBtn").on("click", handleDeleteBtn);
+}
 }
 
 /**
@@ -278,48 +288,53 @@ function onSave(event) {
     if (!article)
         return;
 
-    if ($(this).attr("data-mode") == "edit") {
-        updateArticle(article.id, article);
-        changeToAddForm();
-        clearForm();
-        loadArticles();
-    } else {
-        addArticle(article);
-        clearForm();
-        loadArticles();
-    }
+        const isEdit = ($contentForm.attr("data-mode") == "edit");
+        const apiUrl = isEdit ? "/api/articles/update" : "/api/articles/add";
+
+        $.ajax({
+            url: `http://localhost:3000${apiUrl}`,
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(article),
+            success: function(response) {
+                alert(isEdit ? "Article updated successfully!" : "Article added successfully!");
+                changeToAddForm();
+                clearForm();
+                loadArticles();
+            },
+            error: function() {
+                alert("Error: Failed to save article");
+            }
+        });
+  
 }
 
 /**
  * Handler for "edit" button.
  */
-function onEdit() {
+async function onEdit() {
     // Get ID of article to edit
     let id = $(this).attr("data-id");
     if (!id)
         return;
 
-    // Change form to edit form
-    clearForm();
     changeToEditForm();
+   try {
+    const response = await fetch(`http://localhost:3000/api/articles?id=${id}`);
+    const articles = await response.json();
+    const article = articles.find(a => a.id === id);
 
-    // Get article to edit
-    let articles = getArticles();
-    let article = null;
-    for (a of articles) {
-        if (a.id == id) {
-            article = a;
-            break;
-        }
-    }
-
-    // Update form to reflect the current article information
+    if (article) {    // Update form to reflect the current article information
     $articleId.val(id);
     $articleTitle.val(article.title);
     $category.val(article.category);
     $format.val(article.format);
     $value.val(article.value);
     $notes.val(article.notes);
+}
+   } catch (err) {
+    console.error("Error loading article information:", err);
+    }
 }
 
 function onCancelEdit() {
@@ -332,8 +347,18 @@ function onCancelEdit() {
  * Deletes the article with an ID matching the button's data-id. 
  */
 function onDelete() {
-    deleteArticle($("#confirmDeleteBtn").attr("data-id"));
-    loadArticles();
+   const artilceId = $confirmDeleteButton.attr("data-id");
+    $.ajax({
+        url: `http://localhost:3000/api/articles/delete`,
+        type: "DELETE",
+        success: function() {
+            $("#deleteModal").modal("hide");
+            loadArticles();
+        },
+        error: function() {
+            alert("Error: Failed to delete article");
+        }
+    });
 }
 
 /**

@@ -1,3 +1,5 @@
+import { clear } from "node:console";
+
 // Global variables
 let $articleId, $articleTitle, $pubDate, $distChannel, $reviewStatus, $articleAuthor, $featured, $access, $editNotes;
 let $pubOptionsForm, $articleCards;
@@ -255,17 +257,18 @@ function defaultPubOptions(id) {
     };
 }
 
-function loadPubInfo() {
+async function loadPubInfo() {
     // TODO filter pubOptions
-    let articles = getItems("articles");
-    if (articles == undefined)
-        return;
+ try {
+  const response = await fetch('http://localhost:3000/api/submissions');
+  const articles = await response.json();
+
+  if (!articles)     return;
 
 const searchTerm = $("#articleSearch").val().trim().toLowerCase();
 const statusFilter = $("#statusFilter").val();
 
-    let pubOptionsMap = new Map(getItems("pubOptions", []).map(item => [item.id, item]));
-
+    
     /**
      * Notes on structure of storage:
      * - All values except the article's category are stored in "pubOptions" in localStorage.
@@ -276,7 +279,7 @@ const statusFilter = $("#statusFilter").val();
 
     let html = "";
     for (let article of articles) {
-        let pubOptions = pubOptionsMap.get(article.id) || defaultPubOptions(article.id);
+        const currentStatus = article.status || "Pending";
 
         const matchesSearch = article.id.toLowerCase().includes(searchTerm) || article.title.toLowerCase().includes(searchTerm);
         const matchesStatusFilter = (statusFilter === "All" || pubOptions.reviewStatus === statusFilter);
@@ -304,6 +307,11 @@ const statusFilter = $("#statusFilter").val();
 
     $articleCards.html(html);
     $articleCards.find(".loadBtn").on("click", onLoad);
+
+    } catch (err) {
+        console.error("Error loading publication information:", err);
+    }
+
 }
 
 function updateArticle(articleId, articleTitle, articleAccess) {
@@ -325,82 +333,73 @@ function updateArticle(articleId, articleTitle, articleAccess) {
  */
 function onSave(event) {
     event.preventDefault();
-    const checked = $(".channel-check:checked");
-    if (checked.length == 0) {
-        $("#channelError").removeClass("d-none");
-        return;
-    } else {
-        $("#channelError").addClass("d-none");
-    }
-
-    let pubOptions = checkForm();
-    if (!pubOptions) return;
     
-    const jsonString = JSON.stringify(pubOptions, null, 2);
-    $("#jsonPreview").text(jsonString);
-    transmitWithReact(pubOptions);
+let pubOptions = checkForm();
+    if (!pubOptions) return;
+   
+$.ajax({
+    url: "http://localhost:3000/api/submissions",
+    type: "POST",
+    contentType: "application/json",
+    data: JSON.stringify(pubOptions),
+    success: function(response) {
+        transmitWithReact(pubOptions);
 
-    updateArticle(pubOptions.id, pubOptions.title, pubOptions.access);
-    updateItem("pubOptions", pubOptions, (item) => (
-        
-            "id" in item && "title" in item && "pubDate" in item && "distChannel" in item 
-            && "reviewStatus" in item && "author" in item && "featured" in item 
-            && "access" in item && "editNotes" in item
-    )); // Note: id, title, and access (value) are also stored in "articles" collection in storage
-   setTimeout(() => {
-    clearForm();
-    loadPubInfo();
-   }, 3000);
+        alert("Publication options saved successfully!");
+       
+            clearForm();
+            loadPubInfo();
+       
+    },
+    error: function() {
+        alert("Error saving publication options.");
+    }
+});
 }
 
 /**
  * Handler for "Load" button.
  */
-function onLoad() {
+async function onLoad() {
     // Get ID of article to edit
     let id = $(this).attr("data-id");
     if (!id)
         return;
-
-    // Get article from "articles" collection
-    const articlesWithId = getItems("articles", []).filter((item) => item.id == id);
-    if (articlesWithId.length == 0)
-        return;
-    const article = articlesWithId[0];
-
-    // Clear form
-    // TODO warning??
     clearForm();
 
-    // Get publication options to edit
-    let pubOptionsWithId = getItems("pubOptions", []).filter((item) => item.id == id);
-    const pubOptions = pubOptionsWithId.length > 0
-        ? pubOptionsWithId[0]
-        : defaultPubOptions(id);
+    try {
+     const response = await fetch(`http://localhost:3000/api/submissions?id=${id}`);
+     const articles = await response.json();
+     const article = articles.find(a => a.id === id);
+    // Get article from "articles" collection
+    
+        if (article) {
 
     // Update form to reflect the current article information
     $articleId.val(id);
     $articleTitle.val(article.title);
-    $pubDate.val(pubOptions.pubDate);
+    $pubDate.val(article.pubDate || "");
+    $reviewStatus.val(article.reviewStatus || "Pending");
+    $articleAuthor.val(article.author || "");
+    $featured.val(article.featured || "No");
+    $editNotes.val(article.editNotes || "");
+    $access.val(article.value || article.access || "Free");
+
     $(".channel-check").prop("checked", false);
-    if (Array.isArray(pubOptions.distChannel)) {
-        pubOptions.distChannel.forEach(channel => {
-            $(`.channel-check[value="${channel}"]`).prop("checked", true);
-        });
-    } else if (pubOptions.distChannel) {
-        $(`.channel-check[value="${pubOptions.distChannel}"]`).prop("checked", true);
+    if (article.distChannel) {
+        const channels = Array.isArray(article.distChannel) ? article.distChannel : [article.distChannel];
+        channels.forEach(channel => $(`.channel-check[value="${channel}"]`).prop("checked", true));
     }
-    $reviewStatus.val(pubOptions.reviewStatus);
-    $articleAuthor.val(pubOptions.author);
-    $featured.val(pubOptions.featured);
-    $editNotes.val(pubOptions.editNotes);
-    
-    $access.val(article.value);
+   
 
     // Disable id field
     $articleId.attr("disabled", true);
 
     updatePreview();
+}
+} catch (err) {
+    console.error("Error loading article information:", err);
+}
 }
 
 

@@ -1,7 +1,7 @@
 // Global variables
 let $productName, $price, $reason, $condition, $notes;
 let $returnForm, $purchaseCards;
-let reasons, categories;
+let reasons, conditions;
 
 //-----------------------------------------------------
 // Utility Functions                                  |
@@ -203,7 +203,7 @@ function loadPurchases() {
                                 <h6 class="mb-1 fw-bold">${product.description}</h6>
                                 <span class="badge bg-light text-brown border">${product.category}</span>
                             </div>
-                            <button class="btn btn-sm btn-brown selectBtn" data-id="${product.id}">Use Product</button>
+                            <button class="btn btn-sm btn-brown selectBtn" data-id="${product.id}" data-price="${product.price}">Use Idea</button>
                         </div>
                     </div>`;
         }
@@ -229,11 +229,11 @@ function onSubmit(event) {
 
     returnReq.id = "RET-" + Date.now();
     returnReq.status = "Pending";
-    returnReq.sessionId = "STUB-SESSION-123";
+    returnReq.sessionId = localStorage.getItem('cart_session');
 
 
    
-    $("#returnJsonPreview").text(jsonString);
+    $("#returnJsonPreview").text(JSON.stringify(returnReq, null, 2));
     $.ajax({
         url: '/api/returns',
         type: 'POST',
@@ -242,11 +242,12 @@ function onSubmit(event) {
         success: function(response) {
             $("#returnStatus")
             .removeClass("alert-brown alert-danger")
-            .addClass("alert-success")
+            .addClass("alert-success d-block")
             .html(`<i class="bi bi-db-check"></i> Request Saved to Database (ID: ${response.id})`)
 
             clearForm();
             loadPurchases();
+            updatePreview();
         },
         error: function(xhr) {
            console.error("Error submitting return request:", xhr.responseText);
@@ -261,6 +262,8 @@ function onSubmit(event) {
 function onSelect() {
     // Get ID of article to edit
     let id = $(this).attr("data-id");
+    let price = $(this).attr("data-price");
+
     if (!id)
         return;
 
@@ -269,15 +272,19 @@ function onSelect() {
     clearForm();
 
     // Get product
-    const purchasesWithId = getItems("purchases", []).filter((item) => item.id == id);
-    const purchasedProduct = purchasesWithId.length > 0 ? purchasesWithId[0] : null;
-    if (!purchasedProduct)
-        return;
+    
+    const description = $(this).closest(".card").find(".fw-bold").text().trim();
+   
+    
 
-    $productName.val(purchasedProduct.description);
-    $price.val(purchasedProduct.price);
+    $productName.val(description);
+    $price.val(price);
 
     updatePreview();
+
+    $('html, body').animate({
+        scrollTop: $returnForm.offset().top - 100
+    }, 500);
 }
 
 function updatePreview() {

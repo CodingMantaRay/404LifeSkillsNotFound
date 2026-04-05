@@ -1,3 +1,6 @@
+const { url } = require("node:inspector");
+const { cached } = require("sqlite3");
+
 // Global variables
 let $articleIdeaCards;
 
@@ -91,7 +94,7 @@ function updateApprovalHeaderStats(articles) {
         }
     });
 
-    $("statPending").text(counts.Pending);
+    $("#statPending").text(counts.Pending);
     $("#statApproved").text(counts.Approved);
     $("#statRejected").text(counts.Rejected);
     $("#statRevisions").text(counts.Revisions);
@@ -100,11 +103,9 @@ function updateApprovalHeaderStats(articles) {
 
 }
 
-function loadArticleIdeas() {
-    let articleIdeas = getItems("articleIdeas");
-    if (articleIdeas == undefined)
+function loadArticleIdeas(articleIdeas = cachedArticles) {
+    if (!articleIdeas)
         return;
-updateApprovalHeaderStats(articleIdeas);
 
     const searchTerm = $("#approvalSearch").val().trim().toLowerCase();
     const statusFilter = $("#statusFilter").val();
@@ -185,51 +186,32 @@ function clearFilters() {
  * Changes the status of a given article idea in storage
  */
 function updateStatus(articleId, status) {
-    let articles = getItems("articleIdeas");
-   let articleIdea = articles.find((item) => item.id === articleId);
-    if (!articleIdea) {
-        console.error("Article not found: " + articleId);
-        return;
-
-    }
-
-    updatePreview(articleIdea, status);
-
-    articleIdea["status"] = status;
-    $("#jsonPreview").text(JSON.stringify(articleIdea, null, 2));
-    updateItem("articleIdeas", articleIdea);
-
+    
     $.ajax({
-        url: "/api/approve",
-        type: "POST",
+        url: "/api/submissions/status",
+        type: "PUT",
         contentType: "application/json",
         data: JSON.stringify({
             id: articleId,
             status: status
         }),
-        success: function(response) {
+        success: function() {
+            fetchAndLoad();
             $("#apiStatus").html(`
                 <div class="alert alert-success mb-0">
                     <i class="bi bi-check-circle-fill me-2"></i>
                     <strong>Server Status:</strong> Succesfully updated ${articleId} to ${status}
                     </div>
             `);
+        },
+        error: function() {
+            alert(`Failed to update status for article ${articleId}`);
             
+        }
+        });
+    }
 
-        
-},
-error: function(xhr, status, error) {
-$("#apiStatus").html(`
-    <div class="alert alert-danger mb-0">
-        <i class="bi bi-x-circle-fill me-2"></i>
-        <strong>Server Status:</strong> Failed to update </div>
-        `);
-}
-});
-
-loadArticleIdeas();
-
-}
+    
         
 
 /**
@@ -306,15 +288,22 @@ $(document).ready(function () {
     // Load articles from the database via API, then render
     function fetchAndLoad() {
         $.ajax({
-            url: '/api/articles',
+            url: '/api/submissions',
             type: 'GET',
             success: function (data) {
-                localStorage.setItem("articleIdeas", JSON.stringify(data));
-                loadArticleIdeas();
+               cachedArticles = data;
+                loadArticleIdeas(data);
+               updateApprovalHeaderStats(data); 
+
             },
             error: function () {
-                // Fall back to localStorage if server is unreachable
-                loadArticleIdeas();
+               $("#apiStatus").html(`
+                    <div class="alert alert-danger mb-0">
+                        <i class="bi bi-x-circle-fill me-2"></i>
+                        <strong>Server Status:</strong> Failed to fetch article ideas
+                    </div>
+                `);
+               loadArticleIdeas();
             }
         });
     }
