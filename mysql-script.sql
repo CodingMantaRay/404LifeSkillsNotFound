@@ -89,7 +89,8 @@ CREATE TABLE purchasedItems (
   weight VARCHAR(100),
   color VARCHAR(100),
   details VARCHAR(1000),
-  PRIMARY KEY (purchaseId, productId)
+  PRIMARY KEY (purchaseId, productId),
+  FOREIGN KEY (purchaseId) REFERENCES purchases(purchaseId)
   -- productId is NOT a foreign key since the productId could change after purchase
 );
 
@@ -107,4 +108,15 @@ CREATE TABLE billingInfo (
   shippingDetails VARCHAR(30),
   PRIMARY KEY (billingId),
   FOREIGN KEY (purchaseId) REFERENCES purchases(purchaseId)
+);
+
+CREATE TABLE returnRequests (
+  id VARCHAR(30) PRIMARY KEY,
+  sessionId VARCHAR(30),
+  productDesc VARCHAR(300),
+  price FLOAT,
+  reason VARCHAR(50), 
+  itemCondition VARCHAR(50),
+  notes VARCHAR(300),
+  status VARCHAR(20)
 );

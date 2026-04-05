@@ -590,6 +590,25 @@ function updateProductQuantity(cartId, productId, newQuantity, callback) {
 //     "category", "unit", "price", "weight", "color", "details"];
 const cartItemCols = ["id", "description", "category", "unit", "price", "weight", "color", "details", "quantity"];
 
+app.get("/api/purchase/items", (req, finalRes) => {
+    if (req.query && "sessionId" in req.query) {
+        // Get list of purchased items
+        const query = `SELECT productId, quantity, description, category, unit, price, weight, color, details 
+            FROM purchases AS p INNER JOIN purchasedItems AS i
+            ON p.purchaseId = i.purchaseId
+            WHERE sessionId = ?`;
+        const values = [req.query.sessionId];
+        pool.query(query, values, (err, result) => {
+            if (err) {
+                console.log(err);
+                res.status(500).json("Server Error");
+            } else {
+                finalRes.json(result);
+            }
+        });
+    }
+});
+
 // Post purchase - get purchaseId back
 app.post("/api/purchase", async (req, finalRes) => {
     if (req.body && "sessionId" in req.body) {
@@ -670,6 +689,37 @@ app.post("/api/billing", async (req, res) => {
                 } else {
                     res.json({
                         billingId: billingId,
+                        success: result.affectedRows > 0
+                    });
+                }
+            });
+    } else {
+        res.status(400).json({
+            message: 'Message body is missing properties'
+        });
+    }
+});
+
+// ----------------------------------------------------------------
+
+// Returns
+
+const returnFields = ["sessionId", "productName", "price", "reason", "condition", "notes"];
+// const returnCols = ["id", "sessionId", "productDesc", "price", "reason", "itemCondition", "notes", "status"];
+
+app.post("/api/returns", (req, res) => {
+    if (req.body && verifyFields(req.body, returnFields)) {
+        let returnId = Date.now().toString(16);
+        returnId += crypto.randomBytes(4).toString('hex');
+        pool.query(`INSERT INTO returnRequests VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+            [returnId, req.body.sessionId, req.body.productName, req.body.price, req.body.reason, req.body.condition, req.body.notes, "Pending"],
+            (err, result) => {
+                if (err) {
+                    console.log(err);
+                    res.status(500).json("Server Error");
+                } else {
+                    res.json({
+                        returnId: returnId,
                         success: result.affectedRows > 0
                     });
                 }

@@ -263,6 +263,7 @@ $.ajax({
 // -----------------------------------------
 
 // Make purchase
+// - Need session ID, see "Cart" section for more info
 let purchaseId = null;
 $.ajax({
     url: '/api/purchase',
@@ -294,6 +295,38 @@ $.ajax({
         "expDate": "11/11",
         "secCode": "333",
         "shippingDetails": ""
+    }),
+    success: function (response) { /* do something */ },
+    error: function (xhr) { /* do something */ }
+});
+
+// Get all purchased items
+// - Need session ID, see "Cart" section for more info
+$.ajax({
+    url: '/api/purchase/items?' + $.param({ sessionId: 'ses1' }),
+    type: 'GET',
+    contentType: 'application/json',
+    success: function (response) { /* do something */ },
+    error: function (xhr) { /* do something */ }
+});
+
+// ---------------------------
+// Returns - returns.js      |
+// ---------------------------
+
+// Submit return request
+// - Need session ID, see "Cart" section for more info
+$.ajax({
+    url: '/api/returns',
+    type: 'POST',
+    contentType: 'application/json',
+    data: JSON.stringify({
+        "sessionId": "ses1",
+        "productName": "Kitchen Reset Guide",
+        "price": 12,
+        "reason": "Download issue",
+        "condition": "Downloaded accidentally",
+        "notes": ""
     }),
     success: function (response) { /* do something */ },
     error: function (xhr) { /* do something */ }
