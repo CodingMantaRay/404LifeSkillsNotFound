@@ -69,7 +69,7 @@ const submission = {
     "author": "John Doe",
     "category": "DIY Home Tips",
     "contentSnippet": "Content is here.",
-    "preferredDistChannel": ["Website Feature", "Blog Feature"],
+    "preferredDistChannel": "Website Feature",
     "notes": "N/A"
 };
 $.ajax({
@@ -137,6 +137,39 @@ $.ajax({
     success: function (response) { /* do something */ },
     error: function (xhr) { /* do something */ }
 }); 
+
+// -----------------------------------------
+// Publication Options - finalize.js       |
+// -----------------------------------------
+
+// Get list of publication options
+$.ajax({
+    url: '/api/pubOptions',
+    type: 'GET',
+    success: function (response) { /* do something */ },
+    error: function (xhr) { /* do something */ }
+});
+
+// Add or update publication options
+const pubOptions = {
+    "id": "A101",
+    "title": "Fix a Leaky Faucet",
+    "pubDate": "2026-11-11",
+    "distChannel": ["Website", "Subscriber Portal"],
+    "reviewStatus": "Draft",
+    "author": "Jane Doe",
+    "featured": "Yes",
+    "access": "Free",
+    "editNotes": ""
+};
+$.ajax({
+    url: '/api/pubOptions',
+    type: 'POST',
+    contentType: 'application/json',
+    data: JSON.stringify(pubOptions),
+    success: function (response) { /* do something */ },
+    error: function (xhr) { /* do something */ }
+});
 
 // -------------------------------------
 // Products - cart.js, billing.js      |

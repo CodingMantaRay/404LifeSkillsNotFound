@@ -135,25 +135,6 @@ app.get('/api/submissions', (req, res) => {
             console.log(err)
             res.status(500).json({ message: 'Error reading submissions' });
         } else {
-            for (let row of rows) {
-                row.preferredDistChannel = [];
-                if (row.webFeaturePreferred) {
-                    row.preferredDistChannel.push("Website Feature");
-                }
-                if (row.emailNewsletterPreferred) {
-                    row.preferredDistChannel.push("Email Newsletter");
-                }
-                if (row.subPortalPreferred) {
-                    row.preferredDistChannel.push("Subscriber Portal");
-                }
-                if (row.blogFeaturePreferred) {
-                    row.preferredDistChannel.push("Blog Feature");
-                }
-                delete row.webFeaturePreferred;
-                delete row.emailNewsletterPreferred;
-                delete row.subPortalPreferred;
-                delete row.blogFeaturePreferred;
-            }
             res.json(rows);
         }
     });
@@ -164,11 +145,6 @@ app.post('/api/submit', postSubmission);
 
 function postSubmission(req, res) {
     if (req.body && verifyFields(req.body, submissionFields, ["status"])) {
-        const webFeaturePreferred = req.body.preferredDistChannel.includes("Website Feature") ? 1 : 0;
-        const emailNewsletterPreferred = req.body.preferredDistChannel.includes("Email Newsletter") ? 1 : 0;
-        const subPortalPreferred = req.body.preferredDistChannel.includes("Subscriber Portal") ? 1 : 0;
-        const blogFeaturePreferred = req.body.preferredDistChannel.includes("Blog Feature") ? 1 : 0;
-
         pool.query('SELECT (id) FROM submissions WHERE id = ?', [req.body.id], (err, result) => {
             if (err) {
                 console.log(err);
@@ -177,16 +153,13 @@ function postSubmission(req, res) {
 
                 let query, values;
                 if (!idFound) {
-                    query = 'INSERT INTO submissions VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
+                    query = 'INSERT INTO submissions VALUES (?, ?, ?, ?, ?, ?, ?, ?)';
                     values = [req.body.id, req.body.title, req.body.author, req.body.category, req.body.contentSnippet,
-                        webFeaturePreferred, emailNewsletterPreferred, subPortalPreferred, blogFeaturePreferred,
-                    req.body.notes, "Pending"];
+                        req.body.preferredDistChannel, req.body.notes, "Pending"];
                 } else {
-                    query = `UPDATE submissions SET title=?, author=?, category=?, contentSnippet=?, webFeaturePreferred=?, 
-                        emailNewsletterPreferred=?, subPortalPreferred=?, blogFeaturePreferred=?, notes=? WHERE id=?`;
+                    query = `UPDATE submissions SET title=?, author=?, category=?, contentSnippet=?, preferredDistChannel=?, notes=? WHERE id=?`;
                     values = [req.body.title, req.body.author, req.body.category, req.body.contentSnippet,
-                        webFeaturePreferred, emailNewsletterPreferred, subPortalPreferred, blogFeaturePreferred,
-                    req.body.notes, req.body.id];
+                        req.body.preferredDistChannel, req.body.notes, req.body.id];
                 }
 
                 pool.query(query, values, (err, result) => {
@@ -311,6 +284,92 @@ app.delete("/api/articles", async (req, res) => {
     } else {
         res.status(400).json({
             message: 'Message body is missing an "id" property'
+        });
+    }
+});
+
+// ----------------------------------------------------------------
+
+// Publication Options
+
+const pubOptionFields = ["id", "title", "pubDate", "distChannel", "reviewStatus", "author", "featured", "access", "editNotes"];
+const pubOptionCols = ["id", "title", "pubDate", "webFeaturePreferred", "emailNewsletterPreferred", "subPortalPreferred", 
+    "blogFeaturePreferred", "reviewStatus", "author", "featured", "access", "editNotes"];
+
+app.get('/api/pubOptions', (req, res) => {
+    pool.query("SELECT * FROM publicationOptions", (err, rows) => {
+        if (err) {
+            console.log(err)
+            res.status(500).json({ message: 'Error reading publication options' });
+        } else {
+            for (let row of rows) {
+                row.distChannel = [];
+                if (row.webFeaturePreferred) {
+                    row.distChannel.push("Website");
+                }
+                if (row.emailNewsletterPreferred) {
+                    row.distChannel.push("Email Newsletter");
+                }
+                if (row.subPortalPreferred) {
+                    row.distChannel.push("Subscriber Portal");
+                }
+                if (row.blogFeaturePreferred) {
+                    row.distChannel.push("Blog Feature");
+                }
+                delete row.webFeaturePreferred;
+                delete row.emailNewsletterPreferred;
+                delete row.subPortalPreferred;
+                delete row.blogFeaturePreferred;
+            }
+            res.json(rows);
+        }
+    });
+});
+
+app.post("/api/pubOptions", (req, res) => {
+    if (req.body && verifyFields(req.body, pubOptionFields, ["status"])) {
+        const webFeaturePreferred = req.body.distChannel.includes("Website") ? 1 : 0;
+        const emailNewsletterPreferred = req.body.distChannel.includes("Email Newsletter") ? 1 : 0;
+        const subPortalPreferred = req.body.distChannel.includes("Subscriber Portal") ? 1 : 0;
+        const blogFeaturePreferred = req.body.distChannel.includes("Blog Feature") ? 1 : 0;
+
+        pool.query('SELECT (id) FROM publicationOptions WHERE id = ?', [req.body.id], (err, result) => {
+            if (err) {
+                console.log(err);
+            } else {
+                const idFound = (result.length > 0);
+
+                let query, values;
+                if (!idFound) {
+                    query = 'INSERT INTO publicationOptions VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
+                    values = [req.body.id, req.body.title, req.body.pubDate, webFeaturePreferred, 
+                        emailNewsletterPreferred, subPortalPreferred, blogFeaturePreferred, req.body.reviewStatus, 
+                        req.body.author, req.body.featured, req.body.access, req.body.editNotes];
+                } else {
+                    query = `UPDATE publicationOptions SET title=?, pubDate=?, webFeaturePreferred=?, 
+                        emailNewsletterPreferred=?, subPortalPreferred=?, blogFeaturePreferred=?, reviewStatus=?,
+                        author=?, featured=?, access=?, editNotes=? WHERE id=?`;
+                    values = [req.body.title, req.body.pubDate, webFeaturePreferred, 
+                        emailNewsletterPreferred, subPortalPreferred, blogFeaturePreferred, req.body.reviewStatus, 
+                        req.body.author, req.body.featured, req.body.access, req.body.editNotes, req.body.id];
+                }
+
+                pool.query(query, values, (err, result) => {
+                    if (err) {
+                        console.log(err);
+                        res.status(500).json({ message: 'Error saving submission' });
+                    } else {
+                        res.json({
+                            message: 'Submission received successfully',
+                            success: result.affectedRows > 0
+                        });
+                    }
+                });
+            }
+        });
+    } else {
+        res.status(400).json({
+            message: 'Message body is missing properties'
         });
     }
 });

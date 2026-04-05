@@ -17,10 +17,7 @@ CREATE TABLE submissions (
   author VARCHAR(100),
   category VARCHAR(100),
   contentSnippet VARCHAR(1000),
-  webFeaturePreferred BOOL,
-  emailNewsletterPreferred BOOL,
-  subPortalPreferred BOOL,
-  blogFeaturePreferred BOOL,
+  preferredDistChannel VARCHAR(50),
   notes VARCHAR(1000),
   status VARCHAR(50),
   PRIMARY KEY (id)
@@ -33,6 +30,21 @@ CREATE TABLE articles (
   format VARCHAR(30),
   value VARCHAR(30),
   notes VARCHAR(300)
+);
+
+CREATE TABLE publicationOptions ( 
+  id VARCHAR(30) PRIMARY KEY, 
+  title VARCHAR(100),
+  pubDate DATE,
+  webFeaturePreferred BOOL,
+  emailNewsletterPreferred BOOL,
+  subPortalPreferred BOOL,
+  blogFeaturePreferred BOOL,
+  reviewStatus VARCHAR(20),
+  author VARCHAR(100),
+  featured VARCHAR(5),
+  access VARCHAR(10),
+  editNotes VARCHAR(1000)
 );
 
 CREATE TABLE products (
