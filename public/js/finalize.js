@@ -5,6 +5,7 @@ let $articleId, $articleTitle, $pubDate, $distChannel, $reviewStatus, $articleAu
 let $pubOptionsForm, $articleCards;
 let distChannels, reviewStatuses, featuredOptions, accessTypes, defaultIdErrorMsg;
 
+
 function setError($widget, isError, errorMessage=null) {
     // Set error message
     if (errorMessage) {

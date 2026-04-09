@@ -270,12 +270,22 @@ function onCompletePayment(event) {
         contentType: 'application/json',
         data: JSON.stringify(billingInfo),
         success: function(response) {
+            
+            const purchase = {
+                billingId: response.billingId,
+                sessionId: billingInfo.sessionId,
+                items: $("#cartItems").data() || [],
+                total: billingInfo.totalAmount
+            };
+
+            sessionStorage.setItem("lastPurchase", JSON.stringify(purchase));
             $("#paymentStatus")
+
             .removeClass("alert-brown")
             .addClass("alert-success")
             .html(`<i class="bi bi-check-circle"></i> Success! Order ID: ${response.billingId}`);
 
-            localStorage.removeItem("cart");
+            localStorage.setItem("cart", JSON.stringify([]));
             loadCart();
 
             setTimeout(() => {
