@@ -134,12 +134,14 @@ function renderTable(){
     console.log("Subscribers array: ", subscribers);
     tableBody.innerHTML = '';
     subscribers.forEach((sub, index) => {
+    const displayAge = sub.age !== undefined ? sub.age : sub.ageOrYear;
+
         tableBody.innerHTML += `
         <tr>
          <td>${sub.name}</td>
          <td>${sub.email}</td>
          <td>${sub.phone}</td>
-         <td>${sub.age}</td>
+         <td>${displayAge || ''}</td>
          <td>${sub.address}</td>
          <td class="text-end">
         <button class="btn btn-sm btn-primary me-1" onclick="editSub(${index})">Edit</button>
@@ -155,7 +157,8 @@ const sub = subscribers[index];
 document.getElementById('fullName').value = sub.name;
 document.getElementById('email').value = sub.email;
 document.getElementById('phone').value = sub.phone;
-document.getElementById('age').value = sub.age;
+
+document.getElementById('age').value = sub.age !== undefined ? sub.age : sub.ageOrYear || '';
 document.getElementById('address').value = sub.address;
 
 document.getElementById('editIndex').value = index;
@@ -200,7 +203,7 @@ function checkForm(event) {
             name: nameWidget.value.trim(),
             email: emailWidget.value.trim(),
             phone: phoneWidget.value.trim(),
-            age: ageWidget.value.trim(),
+            age: parseInt(ageWidget.value.trim()),
             address: addressWidget.value.trim()
         };
         const editIndex = document.getElementById('editIndex').value;

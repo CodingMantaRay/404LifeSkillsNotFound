@@ -153,7 +153,7 @@ function checkForm() {
         formIsValid = false;
 
     $widget = form.$zip;
-    [billingInfo.zip, isError] = (validate.get($widget).func)($widget);
+    [billingInfo.zipCode, isError] = (validate.get($widget).func)($widget);
     if (isError)
         formIsValid = false;
 
@@ -249,7 +249,7 @@ function onCompletePayment(event) {
         alert("Error: No purchase ID found. Please try again.");
         return;
     }
-    billingInfo.sessionId = localStorage.getItem("cart_session");
+    billingInfo.sessionId = localStorage.getItem("sessionId") || "ses1";
     billingInfo.email = "student.example@university.edu";
     billingInfo.totalAmount = parseFloat($("#total").text().replace("$", ""));
 

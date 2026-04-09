@@ -1,3 +1,5 @@
+const e = require("express");
+
 // Global variables
 let $productForm, $productId, $productDesc, $category, $unit, $price, $weight, $color, $details;
 let $cartTable;
@@ -272,17 +274,23 @@ function onSave(event) {
 
 function loadCart() {
     $.ajax({
-        url: '/api/cart/${sessionId}',
+        url: `/api/cart/${sessionId}`,
         type: 'GET',
         success: function(cartItems) {
             $cartTable.empty();
-            let total = 0;
+            setCartTotal(cartItems);
 
-            if (cartItems.length === 0) {
+            if (!cartItems || cartItems.length === 0) {
                 $cartTable.append('<tr><td colspan="5" class="text-center text-muted">Your cart is empty.</td></tr>');
             } else {
                 cartItems.forEach(item => {
-                    total += parseFloat(item.price) * item.quantity;
+                    
+                        const price = parseFloat(item.price) || 0;
+                        const quantity = parseInt(item.quantity) || 0;
+                        const itemTotal = price * quantity;
+                        total += itemTotal;
+
+
                     $cartTable.append(`<tr>
                         <td>${item.productId}</td>
                         <td>${item.description}</td>
@@ -304,10 +312,14 @@ function loadCart() {
 function onRemoveFromCart() {
     const productId = $(this).data("id");
     $.ajax({
-        url: `/api/cart${sessionId}?productId=${productId}`,
+        url: `/api/cart${sessionId}/product/${productId}`,
         type: 'DELETE',
         success: function() {
             loadCart();
+
+        },
+        error: function() {
+            alert("Error removing product from cart. Please try again.");
         }
     });
 }
@@ -332,38 +344,51 @@ function onAddToCart() {
     $.ajax({
         url: `/api/cart?sessionId=${sessionId}&productId=${productId}&quantity=1`,
         type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({ sessionId, productId, quantity: 1 }),
        
         
         success: function() {
-            alert("added to cart");
+           console.log(`Added product ${productId} to cart for session ${sessionId}`);
             loadCart();
+            
+
+            },
+            error: function() {
+                alert("Error adding product to cart. Please try again.");
         }
    });
 }
 
-function setCartTotal() {
-    let productsArr = getItems("products");
-        if (!productsArr) return;
-        const products = new Map(productsArr.map((o) => [o.id, o]));
-        const cartIds = JSON.parse(localStorage.getItem("cart")) || [];
+function setCartTotal(cartItems) {
+    
+        if (!cartItems) return;
+       let total = 0;
+       let totalProducts = 0;
+       const uniqueProductIds = new Set();
+       
+       
 
-        let total = 0;
-        cartIds.forEach(id => {
-            const product = products.get(id);
-            if (product) {
-                total += parseFloat(product.price);
-            }
-    });
+        cartItems.forEach(item => {
+            const price = parseFloat(item.price) || 0;
+            const quantity = parseInt(item.quantity) || 0;
+            total += price * quantity;
+            totalProducts += quantity;
+            uniqueProductIds.add(item.productId);
+        });
 
     $("#cartTotal").text(`$${total.toFixed(2)}`);
 
-    $("#totalProductsCount").text(productsArr.length);
-    $("#productCountBadge").text(`${productsArr.length} products)`);
+    
+    $(".stat-items-count").text(totalProducts);
+    $("#productCount").text(`${cartItems.length} unique products`);
+    $("#totalProductsCount").text(uniqueProductIds.size);
+    
 
-    $(".stat-items-count").text(cartIds.length);
+    
 
     const uniqueCartIds = [...new Set(productsArr.map(p => p.id).filter(id => cartIds.includes(id)))];
-    $("#totalCategoriesCount").text(uniqueCartIds.length);
+    
 }
 
 function loadProducts() {
@@ -375,7 +400,7 @@ function loadProducts() {
             for (let product of products) {
                 html += `
                 <div class="col-md-6 col-md-6 mb-3">
-                    <div class="entry-card border rounded p-3 bg-white h-100" style="border-left: 3px solid browb;">
+                    <div class="entry-card border rounded p-3 bg-white h-100" style="border-left: 3px solid brown;">
                     <div class="d-flex justify-content-between align-items-start">
                         <div>
                             <div class="fw-bold">${product.description}</div>

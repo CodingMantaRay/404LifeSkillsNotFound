@@ -1,8 +1,6 @@
-const { url } = require("node:inspector");
-const { cached } = require("sqlite3");
-
 // Global variables
 let $articleIdeaCards;
+let cachedArticles = [];
 
 //-----------------------------------------------------
 // Utility Functions                                  |
@@ -241,7 +239,7 @@ function onRequestRevisions() {
     const articleId = $(this).attr("data-id");
     if (!articleId)
         return;
-    updateStatus(articleId, "Revisions Requested");
+    updateStatus(articleId, "Requested");
 }
 
 function onUndoStatus() {
@@ -286,7 +284,7 @@ $(document).ready(function () {
     $articleIdeaCards = $("#submissionCards");
 
     // Load articles from the database via API, then render
-    function fetchAndLoad() {
+    window.fetchAndLoad = function() {
         $.ajax({
             url: '/api/submissions',
             type: 'GET',

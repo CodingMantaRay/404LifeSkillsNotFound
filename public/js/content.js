@@ -18,7 +18,7 @@ function setError($widget, isError) {
 function loadOptions($select) {
     let options = [];
     // Loop through "option" children of $select
-    for (option of $select.children("option")) {
+    for ( let option of $select.children("option")) {
         let $option = $(option);
         // Don't include options with value "" (i.e. placeholder options)
         if ($option.attr("value") != "") {
@@ -240,7 +240,7 @@ function deleteArticle(articleId) {
 
 async function loadArticles() {
     try {
-    const response = await fetch("http://localhost:3000/api/articles");
+    const response = await fetch("/api/articles");
     const articles = await response.json();
    
 
@@ -251,7 +251,7 @@ async function loadArticles() {
     let filterCat = $("#filterCategory").val() || "All";
 
     let html = "";
-    for (article of articles) {
+    for (let article of articles) {
         let matchesSearch = article.title.toLowerCase().includes(searchText) || article.id.toLowerCase().includes(searchText);
         let matchesCategory = (filterCat === "All" || article.category === filterCat);
         if (matchesSearch && matchesCategory) {
@@ -347,9 +347,9 @@ function onCancelEdit() {
  * Deletes the article with an ID matching the button's data-id. 
  */
 function onDelete() {
-   const artilceId = $confirmDeleteButton.attr("data-id");
+   const articleId = $confirmDeleteButton.attr("data-id");
     $.ajax({
-        url: `http://localhost:3000/api/articles/delete`,
+        url: `http://localhost:3000/api/articles/delete?id=${articleId}`,
         type: "DELETE",
         success: function() {
             $("#deleteModal").modal("hide");
