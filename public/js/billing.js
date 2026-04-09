@@ -97,7 +97,7 @@ function isUSState(value) {
         "ND", "OH", "OK", "OR", "PA", "RI", "SC", "SD", "TN", "TX", "UT",
         "VT", "VA", "WA", "WV", "WI", "WY"
     ];
-    return value in states;
+    return states.includes(value.toUpperCase());
 } 
 
 validate.set(form.$state, {func: ()=>check(form.$state, isUSState), event: "keyup"});

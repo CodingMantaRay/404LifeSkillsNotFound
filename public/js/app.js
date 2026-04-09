@@ -272,6 +272,7 @@ function resetForm() {
     clearValidity(phoneWidget);
     clearValidity(ageWidget);
     clearValidity(addressWidget);
+    signupForm.classList.remove('was-validated');
 }
 
 let signupForm = document.getElementById("subscriberForm");

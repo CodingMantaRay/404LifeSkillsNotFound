@@ -16,19 +16,19 @@ function setError($widget, isError) {
 function loadOptions($select) {
     let options = [];
     // Loop through "option" children of $select
-    for ( let option of $select.children("option")) {
-        let $option = $(option);
+   $select.children("option").each(function() {
+        let $option = $(this);
         // Don't include options with value "" (i.e. placeholder options)
-        if ($option.attr("value") != "") {
+        if ($option.val() != "") {
             // Add "option" text to categories
             options.push($option.text());
         }
-    }
+    });
     return options; 
 }
 
 function isValidOption(chosenOption, options) {
-    return chosenOption == "" || options.indexOf(chosenOption) == -1
+    return chosenOption == "" || options.includes(chosenOption);
 }
 
 /**
@@ -319,7 +319,8 @@ async function onEdit() {
     changeToEditForm(id);
    try {
     const response = await fetch(`/api/articles?id=${id}`);
-    const article = await response.json();
+    const data = await response.json();
+    const article = Array.isArray(data) ? data[0] : data;
     
 
     if (article) {    // Update form to reflect the current article information

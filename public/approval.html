@@ -96,7 +96,63 @@
       </div>
    </header>
 
+   <div class="row text-center mb-4">
+
+   <div class="col">
+      <div class="fw-bold" id="statPending">0</div>
+      <div class="text-muted small">Pending</div>
+   </div>
+
+   <div class="col">
+      <div class="fw-bold" id="statApproved">0</div>
+      <div class="text-muted small">Approved</div>
+   </div>
+
+   <div class="col">
+      <div class="fw-bold" id="statRejected">0</div>
+      <div class="text-muted small">Rejected</div>
+   </div>
+
+   <div class="col">
+      <div class="fw-bold" id="statRevisions">0</div>
+      <div class="text-muted small">Revisions</div>
+   </div>
+
+</div>
+
+   <div class="mb-3">
+      <span class="badge bg-secondary" id="submissionCountBadge">
+      0 pending items
+   </span>
+   </div>
+
    <!-- MAIN CONTENT -->
+
+<div class="row mb-3 g-2">
+   <div class="col-md-4">
+      <input id="approvalSearch" class="form-control" placeholder="Search submissions...">
+      </div>
+      <div class="col-md-4">
+         <select id="statusFilter" class="form-select">
+         <option value="All">ALL</option>
+         <option value="Pending">Pending</option>
+         <option value="Approved">Approved</option>
+         <option value="Rejected">Rejected</option>
+         <option value="Revisions Requested">Revisions Requested</option>
+         </select>
+      </div>
+      <div class="col-md-4">
+         <select id="categoryFilter" class="form-select">
+         <option value="All">ALL</option>
+         <option value="Education">Education</option>
+         <option value="Health">Health</option>
+         <option value="Lifestyle">Lifestyle</option>
+         <option value="Finance">Finance</option>
+         </select>
+      </div>
+   </div>
+</div>
+
    <main class="container py-4">
 
       <div class="card shadow-sm mb-4">

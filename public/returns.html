@@ -284,7 +284,10 @@
                                     <span class="badge text-bg-brown-light">Digital Download</span>
                                  </div>
                               </div>
-                              <button type="button" class="btn btn-sm btn-brown">Select</button>
+                              <button type="button" class="btn btn-sm btn-brown selectBtn"
+                              data-price="12.99"
+
+                              >Select</button>
                            </div>
                            <div class="text-muted small mt-2">$12.99</div>
                         </div>
@@ -300,7 +303,10 @@
                                     <span class="badge text-bg-brown-light">Bundle</span>
                                  </div>
                               </div>
-                              <button type="button" class="btn btn-sm btn-brown">Select</button>
+                              <button type="button" class="btn btn-sm btn-brown selectBtn"
+                              data-price="15.99">
+                              Select
+                              </button>
                            </div>
                            <div class="text-muted small mt-2">$15.99</div>
                         </div>
@@ -316,7 +322,10 @@
                                     <span class="badge text-bg-brown-light">Printable Pack</span>
                                  </div>
                               </div>
-                              <button type="button" class="btn btn-sm btn-brown">Select</button>
+                              <button type="button" class="btn btn-sm btn-brown selectBtn"
+                              data-price="8.99">
+                              Select
+                              </button>
                            </div>
                            <div class="text-muted small mt-2">$8.99</div>
                         </div>
@@ -332,7 +341,10 @@
                                     <span class="badge text-bg-brown-light">Digital File</span>
                                  </div>
                               </div>
-                              <button type="button" class="btn btn-sm btn-brown">Select</button>
+                              <button type="button" class="btn btn-sm btn-brown selectBtn"
+                              data-price = "5.99">
+                              Select
+                              </button>
                            </div>
                            <div class="text-muted small mt-2">$5.99</div>
                         </div>
@@ -481,6 +493,8 @@
          if (priceField && price) priceField.value = price;
          nameField?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       });
+
+
    </script>
 </body>
 

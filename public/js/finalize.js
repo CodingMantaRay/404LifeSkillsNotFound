@@ -1,4 +1,4 @@
-import { clear } from "node:console";
+
 
 // Global variables
 let $articleId, $articleTitle, $pubDate, $distChannel, $reviewStatus, $articleAuthor, $featured, $access, $editNotes;
@@ -141,7 +141,7 @@ function checkArticleId($widget) {
         return [id, true];
     } 
     // TODO - pulling from storage could increase latency if we check every time the ID field changes
-    const articlesWithId = getItems("articles", []).filter((article) => article.id == id);
+    const articlesWithId = window.__articlesCache?.filter(a => a.id == id) || [];
     // Article with ID must be present in "articles" list in storage
     if (articlesWithId.length == 0) {
         setError($widget, true, "Article ID not found.");
@@ -259,6 +259,7 @@ function defaultPubOptions(id) {
 
 async function loadPubInfo() {
     // TODO filter pubOptions
+    window.__articlesCache = articles;
  try {
   const response = await fetch('http://localhost:3000/api/submissions');
   const articles = await response.json();
@@ -369,8 +370,9 @@ async function onLoad() {
 
     try {
      const response = await fetch(`http://localhost:3000/api/submissions?id=${id}`);
-     const articles = await response.json();
-     const article = articles.find(a => a.id === id);
+     const data = await response.json();
+     const article = Array.isArray(data) ? data.find(a => a.id === id) : data;
+     
     // Get article from "articles" collection
     
         if (article) {

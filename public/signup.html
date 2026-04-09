@@ -279,6 +279,12 @@
     if (tableBody) {
       new MutationObserver(updateSubscriberCount).observe(tableBody, { childList: true, subtree: true });
     }
+
+const tableBody = document.getElementById('subscriberTableBody');
+if (tableBody) {
+  new MutationObserver(updateSubscriberCount).observe(tableBody, { childList: true, subtree: true });
+}
+
   </script>
 </body>
 </html>
