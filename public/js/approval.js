@@ -85,7 +85,7 @@ function updateApprovalHeaderStats(articles) {
             counts.Approved++;
         } else if (article.status === "Rejected") {
             counts.Rejected++;
-        } else if (article.status === "Revisions") {
+        } else if (article.status === "Revisions Requested") {
             counts.Revisions++;
         } else {
             counts.Pending++;
@@ -97,7 +97,7 @@ function updateApprovalHeaderStats(articles) {
     $("#statRejected").text(counts.Rejected);
     $("#statRevisions").text(counts.Revisions);
 
-    $("#submissionCountBadge").text(`${counts.Pending} pending items`);
+    $("#submissionCountBadge").text(`${counts.Pending} pending items${counts.Pending === 1 ? "" : "s"}`);
 
 }
 
@@ -193,8 +193,12 @@ function updateStatus(articleId, status) {
             id: articleId,
             status: status
         }),
-        success: function() {
-            fetchAndLoad();
+        success: function(response) {
+           if (response.success) {
+                fetchAndLoad();
+            } else {
+                alert(`Failed to update status for article ${articleId}`);
+            }
             $("#apiStatus").html(`
                 <div class="alert alert-success mb-0">
                     <i class="bi bi-check-circle-fill me-2"></i>
@@ -239,7 +243,7 @@ function onRequestRevisions() {
     const articleId = $(this).attr("data-id");
     if (!articleId)
         return;
-    updateStatus(articleId, "Requested");
+    updateStatus(articleId, "Revisions Requested");
 }
 
 function onUndoStatus() {

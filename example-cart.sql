@@ -1,6 +1,6 @@
 INSERT INTO products VALUES ("prod1", "Product 1", "Wellness at Home", "Bundle", 43.23, "light", "blue", "notes 1");
-INSERT INTO products VALUES ("prod2", "Product 2", "Printable Planners", "Pack", 7.99, "medium", "", "notes 2");
-INSERT INTO products VALUES ("prod3", "Product 3", "Cleaning Guides", "Download", 20, "heavy", "", "notes 3");
+INSERT INTO products VALUES ("prod2", "Product 2", "Printable Planners", "Pack", 7.99, "medium", "NULL", "notes 2");
+INSERT INTO products VALUES ("prod3", "Product 3", "Cleaning Guides", "Download", 20, "heavy", "NULL", "notes 3");
 
 INSERT INTO carts VALUES ("1", "ses1");
 INSERT INTO carts VALUES ("2", "ses2");

@@ -89,7 +89,7 @@ function check($widget, isValid) {
 
 // --------------------------------------------------------------------------
 
-/* // TODO
+// TODO
 function isUSState(value) {
     const states = ["AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "FL",
         "GA", "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD", "MA",
@@ -98,7 +98,10 @@ function isUSState(value) {
         "VT", "VA", "WA", "WV", "WI", "WY"
     ];
     return value in states;
-} */
+} 
+
+validate.set(form.$state, {func: ()=>check(form.$state, isUSState), event: "keyup"});
+
 
 function isZip(value) {
     const re = /^\d\d\d\d\d$/;
@@ -197,12 +200,12 @@ function clearForm() {
     $("#billingJsonPreview").text("");
 }
 
-function getCart() {
+/*(function getCart() {
     const products = new Map(getItems("products", []).map((o)=> [o.id, o]));
     const cart = getItems("cart", []).map((o)=>products.get(o));
     return cart;
 }
-
+*/
 function loadCart() {
     const sessionId = localStorage.getItem("sessionId") || "ses1";
 
@@ -232,6 +235,10 @@ function loadCart() {
         $("#total").text("$" + subtotal.toFixed(2));
         $("#statItems").text(cart.length);
         $("#statTotal").text("$" + subtotal.toFixed(2));
+    }).fail(function(xhr) {
+        console.error("Failed to load cart:", xhr);
+        $("#cartItems").html("<div class='text-danger'>Failed to load cart items.</div>");
+
     });
 }
 
@@ -324,7 +331,8 @@ $(document).ready(function () {
     validate.set(form.$creditCardNum, {func: ()=>check(form.$creditCardNum, isCCNum), event: "keyup"});
     validate.set(form.$expDate, {func: ()=>check(form.$expDate, isExpDate), event: "keyup"});
     validate.set(form.$secCode, {func: ()=>check(form.$secCode, isSecCode), event: "keyup"});
-    validate.set(form.$shippingDetails, {func: ()=>checkOptionOrBlank(form.$shippingDetails, shippingOptions), event: "keyup change"});
+    validate.set(form.$shippingDetails, 
+        {func: ()=>checkOptionOrBlank(form.$shippingDetails, shippingOptions), event: "change keyup"});
 
     for (let widgetName in form) {
         $widget = form[widgetName]

@@ -1,4 +1,4 @@
-const e = require("express");
+
 
 // Global variables
 let $productForm, $productId, $productDesc, $category, $unit, $price, $weight, $color, $details;
@@ -273,8 +273,9 @@ function onSave(event) {
 }
 
 function loadCart() {
+  let total = 0;
     $.ajax({
-        url: `/api/cart/${sessionId}`,
+        url: `/api/cart/?sessionId=${sessionId}`,
         type: 'GET',
         success: function(cartItems) {
             $cartTable.empty();
@@ -288,21 +289,20 @@ function loadCart() {
                         const price = parseFloat(item.price) || 0;
                         const quantity = parseInt(item.quantity) || 0;
                         const itemTotal = price * quantity;
-                        total += itemTotal;
-
+                        
 
                     $cartTable.append(`<tr>
-                        <td>${item.productId}</td>
+                        <td>${item.id}</td>
                         <td>${item.description}</td>
                         <td>${item.quantity}</td>
                         <td>$${item.price * item.quantity}</td>
                         <td class="text-end">
-                            <button class="btn btn-sm btn-outline-danger removeCartBtn" data-id="${item.productId}">Remove</button>
+                            <button class="btn btn-sm btn-outline-danger removeCartBtn" data-id="${item.id}">Remove</button>
                         </td>
                     </tr>`);
                 });
                     }
-                    $("#cartTotal").text(`$${total.toFixed(2)}`);
+                    
                     $(".stat-items-count").text(cartItems.length);
                     $($cartTable.find(".removeCartBtn").on("click", onRemoveFromCart));
                 }
@@ -312,7 +312,7 @@ function loadCart() {
 function onRemoveFromCart() {
     const productId = $(this).data("id");
     $.ajax({
-        url: `/api/cart${sessionId}/product/${productId}`,
+        url: `/api/cart?sessionId=${sessionId}&productId=${productId}`,
         type: 'DELETE',
         success: function() {
             loadCart();
@@ -343,10 +343,7 @@ function onAddToCart() {
 
     $.ajax({
         url: `/api/cart?sessionId=${sessionId}&productId=${productId}&quantity=1`,
-        type: 'POST',
-        contentType: 'application/json',
-        data: JSON.stringify({ sessionId, productId, quantity: 1 }),
-       
+        type: 'POST',    
         
         success: function() {
            console.log(`Added product ${productId} to cart for session ${sessionId}`);
@@ -374,7 +371,7 @@ function setCartTotal(cartItems) {
             const quantity = parseInt(item.quantity) || 0;
             total += price * quantity;
             totalProducts += quantity;
-            uniqueProductIds.add(item.productId);
+            uniqueProductIds.add(item.id);
         });
 
     $("#cartTotal").text(`$${total.toFixed(2)}`);
@@ -387,7 +384,7 @@ function setCartTotal(cartItems) {
 
     
 
-    const uniqueCartIds = [...new Set(productsArr.map(p => p.id).filter(id => cartIds.includes(id)))];
+   
     
 }
 

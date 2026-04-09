@@ -1,5 +1,3 @@
-const { error } = require("node:console");
-const { type } = require("node:os");
 
 // Global variables
 let $formHeader, $formModeBadge, $editModeBanner, $editId;
@@ -292,7 +290,7 @@ function onSave(event) {
         const apiUrl = isEdit ? "/api/articles/update" : "/api/articles/add";
 
         $.ajax({
-            url: `http://localhost:3000${apiUrl}`,
+            url: `${apiUrl}${isEdit ? `?id=${$editId.val()}` : ""}`,
             type: "POST",
             contentType: "application/json",
             data: JSON.stringify(article),
@@ -318,14 +316,14 @@ async function onEdit() {
     if (!id)
         return;
 
-    changeToEditForm();
+    changeToEditForm(id);
    try {
-    const response = await fetch(`http://localhost:3000/api/articles?id=${id}`);
-    const articles = await response.json();
-    const article = articles.find(a => a.id === id);
+    const response = await fetch(`/api/articles?id=${id}`);
+    const article = await response.json();
+    
 
     if (article) {    // Update form to reflect the current article information
-    $articleId.val(id);
+    $articleId.val(article.id);
     $articleTitle.val(article.title);
     $category.val(article.category);
     $format.val(article.format);
@@ -349,7 +347,7 @@ function onCancelEdit() {
 function onDelete() {
    const articleId = $confirmDeleteButton.attr("data-id");
     $.ajax({
-        url: `http://localhost:3000/api/articles/delete?id=${articleId}`,
+        url: `/api/articles/delete?id=${articleId}`,
         type: "DELETE",
         success: function() {
             $("#deleteModal").modal("hide");
@@ -366,21 +364,19 @@ function onDelete() {
  * Modifies the "delete" modal.
  */
 function handleDeleteBtn() {
-    $deleteBtn = $(this);
-    let articleId = $deleteBtn.attr("data-id");
+    let articleId = $(this).attr("data-id");
     $confirmDeleteButton.attr("data-id", articleId);
     $("#deletedInfo").text("ID = " + articleId);
 }
 
+function onCancelDelete() {
+    changeToAddForm();
+        clearForm();
+}
+
 $(document).ready(function() {
     
-   if (!localStorage.getItem("articles")) {
-        const intialData = [
-            {id: "A101", title: "Fix a leaky faucet", category: "DIY & Repairs", format: "Blog Post", value: "Free", notes: "Beginner friendly"},
-            {id: "LS-FOOD-001", title: "30 Useful Life Hacks", category: "Food & Cooking", format: "Video", value: "Free", notes: "Quick tips"}
-        ];
-        localStorage.setItem("articles", JSON.stringify(intialData));
-    }
+  
     
     $formHeader = $("#formHeader");
     $formModeBadge = $("#formModeBadge");
@@ -393,16 +389,15 @@ $(document).ready(function() {
     $category = $($contentForm.find("#category")[0]);
     $format = $($contentForm.find("#format")[0]);
     $value = $($contentForm.find("#value")[0]);
-    $notes = $($contentForm.find("#extraInfo")[0]);
-    $confirmDeleteButton = $("#confirmDeleteBtn");
+    $notes = $($contentForm.find("#notes")[0]);
+    $confirmDeleteButton = $("#confirmDeleteButton");
 
-    let checkEmpty = function() {
-        let isError = ($(this).val().trim() == "");
-        setError($(this), isError);
+    const checkEmpty = function() {
+        setError($(this), ($(this).val().trim() == ""));
     };
-    let checkOption = function($widget, options) {
-        let isError = isValidOption($widget.val().trim(), options);
-        setError($widget, isError);
+
+        const checkOption = function($select, options) {
+        setError($select, isValidOption($select.val().trim(), options));
     };
 
     $contentForm.on("submit", onSave);

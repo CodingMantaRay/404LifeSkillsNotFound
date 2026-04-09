@@ -279,10 +279,10 @@ const statusFilter = $("#statusFilter").val();
 
     let html = "";
     for (let article of articles) {
-        const currentStatus = article.status || "Pending";
+        
 
-        const matchesSearch = article.id.toLowerCase().includes(searchTerm) || article.title.toLowerCase().includes(searchTerm);
-        const matchesStatusFilter = (statusFilter === "All" || pubOptions.reviewStatus === statusFilter);
+        const matchesSearch = (article.id || "").toLowerCase().includes(searchTerm) || (article.title || "").toLowerCase().includes(searchTerm);
+        const matchesStatusFilter = (statusFilter === "All" || article.reviewStatus === statusFilter);
         if (matchesSearch && matchesStatusFilter) {
 
         html += `<div class="col-md-6">
@@ -292,13 +292,13 @@ const statusFilter = $("#statusFilter").val();
                     <div class="fw-bold">${article.id}</div>
                     <div class="mt-1 d-flex flex-wrap gap-1">
                     <span class="badge text-bg-brown">${article.category}</span>
-                    <span class="badge text-bg-brown-light">${pubOptions.reviewStatus}</span>
+                    <span class="badge text-bg-brown-light">${article.reviewStatus || "Pending"}</span>
                     </div>
                 </div>
                 <button type="button" class="btn btn-sm btn-brown loadBtn" data-id="${article.id}">Load</button>
                 </div>
                 <div class="mt-2 fw-semibold">${article.title}</div>
-                <div class="text-muted small mt-2">${pubOptions.editNotes}</div>
+                <div class="text-muted small mt-2">${article.editNotes || ""}</div>
             </div>
         </div>`;
         }
@@ -405,7 +405,7 @@ async function onLoad() {
 
 const updatePreview = () => {
         const formData = {
-            title: $articleId.val(),
+            title: $articleTitle.val(),
             pubDate: $pubDate.val(),
             reviewStatus: $reviewStatus.val(),
             access: $access.val()
@@ -414,7 +414,7 @@ const updatePreview = () => {
             const jsonString = JSON.stringify(formData, null, 2);
             $("#jsonPreview").text(jsonString);
 
-            const $prviewValues = $(".col-lg-8 .border.bg-light .fw-bold");
+            const $previewValues = $(".col-lg-8 .border.bg-light .fw-bold");
             $(".col-lg-8 .border.bg-light .fw-bold").eq(0).text(formData.title || "--");
             $(".col-lg-8 .border.bg-light .fw-bold").eq(1).text(formData.pubDate || "--");
             $(".col-lg-8 .border.bg-light .fw-bold").eq(2).text(formData.reviewStatus || "--");
@@ -475,8 +475,7 @@ $(document).ready(function() {
    
     $("#articleSearch, #statusFilter").on("keyup change", function () {
         loadPubInfo();
-        updatePreview();
-    });
+            });
 
     loadPubInfo();
     $("#jsonPreview").text("");

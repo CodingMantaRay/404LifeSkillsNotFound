@@ -1,3 +1,4 @@
+/*
 const initSqlJs = require('sql.js');
 const path = require('path');
 const fs = require('fs');
@@ -120,3 +121,4 @@ async function init() {
 }
 
 module.exports = { init, save, all, get, run };
+*/

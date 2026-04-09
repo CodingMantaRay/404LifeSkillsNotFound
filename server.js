@@ -27,17 +27,17 @@ const db = new sqlite3.Database('./magazine.db', (err) => {
 
         db.run (`CREATE TABLE IF NOT EXISTS carts (cartId TEXT PRIMARY KEY, sessionId TEXT UNIQUE)`);
 
-        db.run (`CREATE TABLE IF NOT EXISTS cartItems (cartId TEXT, productId TEXT, quantity INTEGER, PRIMARY KEY (cartId, productId), FOREIGN KEY (cartId) REFERENCES carts(cartId) ON DELETE CASCADE)`);
+        db.run (`CREATE TABLE IF NOT EXISTS cartItems (cartId TEXT, productId TEXT, quantity INTEGER, PRIMARY KEY (cartId, productId), FOREIGN KEY (cartId) REFERENCES carts(cartId) ON DELETE CASCADE, FOREIGN KEY (productId) REFERENCES products(id) ON DELETE CASCADE)`);
 
         db.run (`CREATE TABLE IF NOT EXISTS submissions (id TEXT PRIMARY KEY, title TEXT NOT NULL, author TEXT NOT NULL, category TEXT NOT NULL, contentSnippet TEXT DEFAULT '', preferredDistChannel TEXT DEFAULT '', notes TEXT DEFAULT '', status TEXT DEFAULT 'Pending')`);
 
         db.run (`CREATE TABLE IF NOT EXISTS products (id TEXT PRIMARY KEY, description TEXT NOT NULL, category TEXT NOT NULL, unit TEXT NOT NULL, price REAL NOT NULL, weight REAL, color TEXT, details TEXT)`);
 
-        db.run (`CREATE TABLE IF NOT EXISTS publicationOptions (id TEXT PRIMARY KEY, title TEXT, pubDate TEXT, webFeaturePreferred INTEGER, emailNewsLetterPreferred INTEGER, subPortalPreferred INTEGER, blogFeaturePreferred INTEGER, reviewStatus TEXT, author TEXT, featured TEXT, access TEXT, editNotes TEXT )`);
+        db.run (`CREATE TABLE IF NOT EXISTS publicationOptions (id TEXT PRIMARY KEY, title TEXT, pubDate TEXT, webFeaturePreferred INTEGER, emailNewsletterPreferred INTEGER, subPortalPreferred INTEGER, blogFeaturePreferred INTEGER, reviewStatus TEXT, author TEXT, featured TEXT, access TEXT, editNotes TEXT )`);
 
         db.run (`CREATE TABLE IF NOT EXISTS purchases (purchaseId TEXT PRIMARY KEY, sessionId TEXT)`);
 
-        db.run (`CREATE TABLE IF NOT EXISTS purchasedItems (purchaseId TEXT, productId TEXT, quantity INTEGER, description TEXT, category TEXT, unit TEXT, price REAL, weight REAL, color TEXT, details TEXT)`);
+        db.run (`CREATE TABLE IF NOT EXISTS purchasedItems (purchaseId TEXT, productId TEXT, quantity INTEGER, description TEXT, category TEXT, unit TEXT, price REAL, weight REAL, color TEXT, details TEXT, PRIMARY KEY (purchaseId, productId))`);
 
         console.log("Database tables initialized.");
     });
@@ -744,7 +744,7 @@ if (req.body.sessionId) {
         res.status(400).json({ message: 'Message body is missing properties' });
     }
 });
-const returnFields = ["sessionId", "productDesc", "price", "reason", "condition", "notes"];
+const returnFields = ["sessionId", "productDesc", "price", "reason", "itemCondition", "notes"];
 
 app.post("/api/returns", (req, res) => {
     const { id, productDesc, price, reason, itemCondition, notes, status, sessionId } = req.body;

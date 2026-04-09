@@ -175,7 +175,7 @@ function clearForm() {
 
 function loadPurchases() {
     $.ajax({
-        url: '/api/purchases',
+        url: '/api/purchase/items',
         type: 'GET',
         success: function(purchases) {
             const $container = $("#returnProductCards")
@@ -229,7 +229,7 @@ function onSubmit(event) {
 
     returnReq.id = "RET-" + Date.now();
     returnReq.status = "Pending";
-    returnReq.sessionId = localStorage.getItem('cart_session');
+    returnReq.sessionId = localStorage.getItem('sessionId') || "ses1";
 
 
    
@@ -277,7 +277,7 @@ function onSelect() {
    
     
 
-    $productName.val(description);
+    $productName.val(description || "");
     $price.val(price);
 
     updatePreview();
@@ -289,10 +289,10 @@ function onSelect() {
 
 function updatePreview() {
     const formData = {
-        productName: $productName.val().trim(),
+        productDesc: $productName.val().trim(),
         price: $price.val().trim(),
         reason: $reason.val().trim(),
-        condition: $condition.val().trim(),
+        itemCondition: $condition.val().trim(),
         notes: $notes.val().trim(),
         status: "Pending"
     };
@@ -300,10 +300,10 @@ function updatePreview() {
     /*const jsonString = JSON.stringify(formData, null, 2);
     $("#returnJsonPreview").text(jsonString);*/
 
-    $("#previewName").text(formData.productName || "--");
+    $("#previewName").text(formData.productDesc || "--");
     $("#previewPrice").text(formData.price || "--");
     $("#previewReason").text(formData.reason || "--");
-    $("#previewCondition").text(formData.condition || "--");
+    $("#previewCondition").text(formData.itemCondition || "--");
 };
 
 

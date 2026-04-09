@@ -69,7 +69,7 @@ function clearValidity(widget) {
  * @returns true if widget's input is valid, else false
  */
 function checkWidget(widget, validator) {
-    if (!typeof(widget) instanceof HTMLElement && typeof(validator) != "function") {
+    if (!(widget instanceof HTMLElement) || typeof(validator) !== "function") {
         return false;
 }
     let isValid = validator(widget.value.trim());
@@ -175,14 +175,14 @@ document.getElementById('submitBtn').textContent = "Update Subscriber";
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: sub.id })
         })
-           .then(res => {
-            if (res.ok) {
+           .then(res => res.json())
+           .then(data => {
+            if (data.success) {
                 subscribers.splice(index, 1);
-                finishSubmission();
-    }
-    
- })
-    .catch(err => console.error('Failed to delete subscriber:', err));
+                reloadSubscribers();
+            }
+        })
+        .catch(err => console.error('Failed to delete subscriber:', err));
         }
     }
 
@@ -222,7 +222,8 @@ function checkForm(event) {
                 .then(res => {
                     if (res.ok) {
                         subscribers[editIndex] = { ...newUser, id: dbId };
-                        finishSubmission();
+                        reloadSubscribers();
+                        resetForm();
 
                     }
             })
@@ -241,12 +242,23 @@ function checkForm(event) {
                 if (data.id) {
                     newUser.id = data.id;
                     subscribers.push(newUser);
-                    finishSubmission();
+                    reloadSubscribers();
+                    resetForm();
                 }
             })
             .catch(err => console.error('Failed to save subscriber:', err));
         }
    
+}
+
+function reloadSubscribers() {
+    fetch('/api/subscribers')
+        .then(res => res.json())
+        .then(data => {
+            subscribers = data;
+            localStorage.setItem('subscribersData', JSON.stringify(subscribers));
+            renderTable();
+        });
 }
 /**
  * Click handler for "Clear" button. Resets the form to default.
