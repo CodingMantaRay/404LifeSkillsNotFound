@@ -6,7 +6,7 @@ const app = express();
 const router = express.Router();
 const sqlite3 = require("sqlite3").verbose();
 const crypto = require("crypto");
-const e = require('express');
+
 
 // https://stackoverflow.com/questions/50093144
 const db = new sqlite3.Database('./magazine.db', (err) => {
@@ -17,7 +17,7 @@ const db = new sqlite3.Database('./magazine.db', (err) => {
     db.run("PRAGMA foreign_keys = ON");
 
     db.serialize(() => {
-        db.run(`CREATE TABLE IF NOT EXISTS articles (id TEXT PRIMARY KEY, title TEXT NOT NULL, author TEXT NOT NULL, category TEXT NOT NULL, contentSnippet TEXT NOT NULL, preferredDistChannel TEXT NOT NULL, notes TEXT, status TEXT DEFAULT 'Pending')`);
+        db.run(`CREATE TABLE IF NOT EXISTS articles (id TEXT PRIMARY KEY, title TEXT NOT NULL, category TEXT NOT NULL, format TEXT, value TEXT, notes TEXT);`);
         
         db.run(`CREATE TABLE IF NOT EXISTS subscribers (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, email TEXT NOT NULL, phone TEXT, age INTEGER, address TEXT)`);
 
@@ -32,6 +32,12 @@ const db = new sqlite3.Database('./magazine.db', (err) => {
         db.run (`CREATE TABLE IF NOT EXISTS submissions (id TEXT PRIMARY KEY, title TEXT NOT NULL, author TEXT NOT NULL, category TEXT NOT NULL, contentSnippet TEXT DEFAULT '', preferredDistChannel TEXT DEFAULT '', notes TEXT DEFAULT '', status TEXT DEFAULT 'Pending')`);
 
         db.run (`CREATE TABLE IF NOT EXISTS products (id TEXT PRIMARY KEY, description TEXT NOT NULL, category TEXT NOT NULL, unit TEXT NOT NULL, price REAL NOT NULL, weight REAL, color TEXT, details TEXT)`);
+
+        db.run (`CREATE TABLE IF NOT EXISTS publicationOptions (id TEXT PRIMARY KEY, title TEXT, pubDate TEXT, webFeaturePreferred INTEGER, emailNewsLetterPreferred INTEGER, subPortalPreferred INTEGER, blogFeaturePreferred INTEGER, reviewStatus TEXT, author TEXT, featured TEXT, access TEXT, editNotes TEXT )`);
+
+        db.run (`CREATE TABLE IF NOT EXISTS purchases (purchaseId TEXT PRIMARY KEY, sessionId TEXT)`);
+
+        db.run (`CREATE TABLE IF NOT EXISTS purchasedItems (purchaseId TEXT, productId TEXT, quantity INTEGER, description TEXT, category TEXT, unit TEXT, price REAL, weight REAL, color TEXT, details TEXT)`);
 
         console.log("Database tables initialized.");
     });
@@ -172,7 +178,7 @@ app.post("/api/submissions", postSubmission);
 app.post('/api/submit', postSubmission);
 
 function postSubmission(req, res) {
-    if (req.body && verifyFields(req.body, submissionFields, ["status"])) {
+    if (req.body && verifyFields(req.body, submissionFields, ["status", "pubDate", "featured", "access"])) {
         db.get('SELECT id FROM submissions WHERE id = ?', [req.body.id], (err, row) => {
             if (err) {
                 console.error(err.message);
@@ -258,7 +264,7 @@ app.get('/api/articles', (req, res) => {
 });
 
 app.post("/api/articles", (req, res) => {
-    if (req.body && verifyFields(req.body, articleFields)) {
+    if (req.body && verifyFields(req.body, articleFields, ["format", "value", "notes"])) {
        db.get('SELECT id FROM articles WHERE id = ?', [req.body.id], (err, result) => {
             if (err) {
                 console.error(err.message);
@@ -269,12 +275,12 @@ app.post("/api/articles", (req, res) => {
                 let query, values;
                 if (!idFound) {
                     query = 'INSERT INTO articles (id, title, category, format, value, notes) VALUES (?, ?, ?, ?, ?, ?)';
-                    values = [req.body.id, req.body.title, req.body.category, req.body.format, req.body.value,
-                    req.body.notes];
+                    values = [req.body.id, req.body.title, req.body.category, req.body.format || "", req.body.value || "",
+                    req.body.notes || ""];
                 } else {
                     query = `UPDATE articles SET title=?, category=?, format=?, value=?, notes=? WHERE id=?`;
-                    values = [req.body.title, req.body.category, req.body.format, req.body.value,
-                    req.body.notes, req.body.id];
+                    values = [req.body.title, req.body.category, req.body.format || "", req.body.value || "",
+                    req.body.notes || "", req.body.id];
                 }
 
                 db.run(query, values, function(err) {
@@ -356,18 +362,18 @@ app.get('/api/pubOptions', (req, res) => {
 });
 
 app.post("/api/pubOptions", (req, res) => {
-    if (req.body && verifyFields(req.body, pubOptionFields, ["status"])) {
+    if (req.body && verifyFields(req.body, pubOptionFields, ["distChannel"])) {
         const webFeaturePreferred = req.body.distChannel.includes("Website") ? 1 : 0;
         const emailNewsletterPreferred = req.body.distChannel.includes("Email Newsletter") ? 1 : 0;
         const subPortalPreferred = req.body.distChannel.includes("Subscriber Portal") ? 1 : 0;
         const blogFeaturePreferred = req.body.distChannel.includes("Blog Feature") ? 1 : 0;
 
-        db.get('SELECT (id) FROM publicationOptions WHERE id = ?', [req.body.id], (err, result) => {
+        db.get('SELECT id FROM publicationOptions WHERE id = ?', [req.body.id], (err, result) => {
             if (err) {
                 console.error(err.message);
                 return res.status(500).json({ message: 'Error saving publication option' });
             } else {
-                const idFound = !!row;
+                const idFound = !!result;
 
                 let query, values;
                 if (!idFound) {
@@ -464,7 +470,7 @@ app.post("/api/products", (req, res) => {
 
 app.delete("/api/products",  (req, res) => {
     if (req.body && "id" in req.body) {
-        db.run(`DELETE FROM products WHERE id=?`, [req.body.id], (err, result) => {
+        db.run(`DELETE FROM products WHERE id=?`, [req.body.id], function(err) {
             if (err) {
                 console.error(err.message);
                 res.status(500).json("Server Error");
@@ -742,7 +748,7 @@ const returnFields = ["sessionId", "productDesc", "price", "reason", "condition"
 
 app.post("/api/returns", (req, res) => {
     const { id, productDesc, price, reason, itemCondition, notes, status, sessionId } = req.body;
-const sql = `INSERT INTO returns (id, productDesc, price, reason, itemCondition, notes, status, sessionId) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
+const sql = `INSERT INTO returnRequests (id, productDesc, price, reason, itemCondition, notes, status, sessionId) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
 
     db.run(sql, [id, productDesc, price, reason, itemCondition, notes, status, sessionId], function(err) {
        if (err) {

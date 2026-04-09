@@ -4,8 +4,8 @@ use 404LifeSkills;
 -- Subscribers table
 CREATE TABLE subscribers (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  name TEXT,
-  email TEXT,
+  name TEXT NOT NULL,
+  email TEXT NOT NULL,
   phone TEXT,
   age INTEGER,
   address TEXT
@@ -39,7 +39,7 @@ CREATE TABLE publicationOptions (
   title TEXT,
   pubDate TEXT, -- SQLite uses TEXT or INTEGER for dates
   webFeaturePreferred INTEGER, -- 0 or 1
-  emailNewsletterPreferred INTEGER,
+  emailNewsLetterPreferred INTEGER,
   subPortalPreferred INTEGER,
   blogFeaturePreferred INTEGER,
   reviewStatus TEXT,
@@ -57,7 +57,7 @@ CREATE TABLE products (
   category TEXT,
   unit TEXT,
   price REAL, -- FLOAT is REAL in SQLite
-  weight TEXT,
+  weight REAL,
   color TEXT,
   details TEXT
 );
@@ -91,7 +91,7 @@ CREATE TABLE purchasedItems (
   category TEXT,
   unit TEXT,
   price REAL,
-  weight TEXT,
+  weight REAL,
   color TEXT,
   details TEXT,
   PRIMARY KEY (purchaseId, productId),
