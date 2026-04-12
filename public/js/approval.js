@@ -120,7 +120,7 @@ function loadArticleIdeas(articleIdeas = cachedArticles) {
         for (let idea of articleIdeas) {
             const matchesSearch = idea.id.toLowerCase().includes(searchTerm) || idea.title.toLowerCase().includes(searchTerm) || idea.author.toLowerCase().includes(searchTerm);
             const matchesStatusFilter = (statusFilter === "All" || idea.status === statusFilter);
-            const matchesCategoryFilter = (categoryFilter === "All" || idea.category === categoryFilter);
+            const matchesCategoryFilter = categoryFilter === "All" || (idea.category && idea.category.toLowerCase() === categoryFilter.toLowerCase());
             if (matchesSearch && matchesStatusFilter && matchesCategoryFilter) {
                 html += `<div class="col-12">
                             <div class="entry-card border rounded p-3 bg-white" style="border-left: 4px solid brown;">
