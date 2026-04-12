@@ -71,7 +71,8 @@ function verifyFields(item, fields, exclude = []) {
 const subscriberTable = "subscribers";
 const subscriberFields = ["name", "email", "phone", "age", "address", "id"];
 
-function verifySubscriber(subscriber, exclude = []) {
+
+function verifySubscriber(subscriber, exclude = []) { 
     return verifyFields(subscriber, subscriberFields, exclude);
 }
 

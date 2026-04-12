@@ -142,8 +142,7 @@ function checkArticleId($widget) {
         return [id, true];
     } 
     // TODO - pulling from storage could increase latency if we check every time the ID field changes
-    const articlesWithId = window.__articlesCache?.filter(a => a.id == id) || [];
-    // Article with ID must be present in "articles" list in storage
+    const articlesWithId = (window.__articlesCache && window.__articlesCache.filter(a => a.id == id)) || [];    // Article with ID must be present in "articles" list in storage
     if (articlesWithId.length == 0) {
         setError($widget, true, "Article ID not found.");
         return [id, true]; 
@@ -176,11 +175,13 @@ function checkForm() {
     if (isError)
         formIsValid = false;
 
+
+
     // Check article distribution channel
     const selectedChannels = $(".channel-check:checked").map(function() {
         return $(this).val();
     }).get();
-    articleInfo.distChannel = selectedChannels;
+    articleInfo.distChannel = selectedChannels; // Store as comma-separated string
     if (selectedChannels.length == 0) {
         $("#channelError").removeClass("d-none");
         formIsValid = false;
@@ -210,6 +211,15 @@ function checkForm() {
 
     // Add article editorial notes (no checking)
     articleInfo.editNotes = $editNotes.val().trim();
+    
+
+    const articles = getItems("articles", []);
+    const match = articles.find(article => article.id == articleInfo.id);
+
+    articleInfo.category = match ? match.category : ""; // Get category from storage based on article ID, or default to "general" if not found
+    articleInfo.contentSnippet = articleInfo.title.substring(0, 100) + "..."; // Create a snippet of the title
+
+    
 
     if (formIsValid) {
         return articleInfo;
@@ -260,10 +270,12 @@ function defaultPubOptions(id) {
 
 async function loadPubInfo() {
     // TODO filter pubOptions
-    window.__articlesCache = articles;
+    
  try {
   const response = await fetch('http://localhost:3000/api/submissions');
   const articles = await response.json();
+
+window.__articlesCache = articles;
 
   if (!articles)     return;
 
@@ -338,9 +350,9 @@ function onSave(event) {
     
 let pubOptions = checkForm();
     if (!pubOptions) return;
-   
+   console.log("Sending pubOptions:", pubOptions);
 $.ajax({
-    url: "http://localhost:3000/api/submissions",
+    url: "http://localhost:3000/api/pubOptions",
     type: "POST",
     contentType: "application/json",
     data: JSON.stringify(pubOptions),
@@ -386,7 +398,7 @@ async function onLoad() {
     $articleAuthor.val(article.author || "");
     $featured.val(article.featured || "No");
     $editNotes.val(article.editNotes || "");
-    $access.val(article.value || article.access || "Free");
+    $access.val(article.access || article.value || "Free");
 
     $(".channel-check").prop("checked", false);
     if (article.distChannel) {
@@ -428,12 +440,12 @@ const updatePreview = () => {
 $(document).ready(function() {
     // TODO remove
     if (!localStorage.getItem("articles")) {
-        const intialData = [
+        const initialData = [
             {id: "HS201", title: "Spring Kitchen Reset", category: "Kitchen Resources", value: "Free"},
             {id: "HS202", title: "Closet Cleanout Weekend Guide", category: "Home Organization", value: "Premium"},
             {id: "HS203", title: "Weekly Cleaning Planner Pack", category: "Printable Planner", value: "Free"}
         ];
-        localStorage.setItem("articles", JSON.stringify(intialData));
+        localStorage.setItem("articles", JSON.stringify(initialData));
     }
 
     $pubOptionsForm = $("#finalizationForm");
