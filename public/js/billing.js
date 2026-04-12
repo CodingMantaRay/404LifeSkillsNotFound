@@ -12,6 +12,7 @@ const form = {
 };
 const validate = new Map();
 let $billingForm;
+ let currentCart = [];
 
 //-----------------------------------------------------
 // Utility Functions                                  |
@@ -156,7 +157,7 @@ function checkForm() {
         formIsValid = false;
 
     $widget = form.$zip;
-    [billingInfo.zipCode, isError] = (validate.get($widget).func)($widget);
+    [billingInfo.zip, isError] = (validate.get($widget).func)($widget);
     if (isError)
         formIsValid = false;
 
@@ -207,39 +208,64 @@ function clearForm() {
 }
 */
 function loadCart() {
-    const sessionId = localStorage.getItem("sessionId") || "ses1";
+     const sessionId = localStorage.getItem("sessionId") 
+     currentCart = cart;
+     if (!sessionId) {
+        console.error("No session ID found in localStorage");
+        return;
+     }
 
-    $.get("/api/cart", {sessionId: sessionId}, function(cart) {
-        const $cart = $("#cartItems");
-        let html = "";
-        let subtotal = 0;
+    $.ajax({
+        url: "/api/cart",
+        method: "GET",
+        data: { sessionId },
+        success: function(cart) {
 
-        cart.forEach(item => {
-            const price = parseFloat(item.price);
-            const quantity = item.quantity || 1; // Assuming quantity is 1 for each item in cart
-            const lineTotal = price * quantity;
-            subtotal += lineTotal;
+            console.log("CART RESPONSE:", cart);
 
-            html += `
-            <div class="d-flex justify-content-between align-items-start mb-2">
-                <div>
-                    <div class="fw-semibold">${item.description} (x${quantity})</div>
-                    <div class="small text-muted">${item.unit}</div>
-                </div>
-                <div class="fw-semibold">$${lineTotal.toFixed(2)}</div>
-            </div>`;
-        });
+            const $cart = $("#cartItems");
+            let html = "";
+            let subtotal = 0;
 
-        $cart.html(html);
-        $("#subtotal").text("$" + subtotal.toFixed(2));
-        $("#total").text("$" + subtotal.toFixed(2));
-        $("#statItems").text(cart.length);
-        $("#statTotal").text("$" + subtotal.toFixed(2));
-    }).fail(function(xhr) {
-        console.error("Failed to load cart:", xhr);
-        $("#cartItems").html("<div class='text-danger'>Failed to load cart items.</div>");
+            if (!Array.isArray(cart) || cart.length === 0) {
+                $cart.html("<div class='text-muted'>Your cart is empty.</div>");
+                $("#statItems").text("0");
+                $("#statTotal").text("$0.00");
+                return;
+            }
 
+            cart.forEach(item => {
+
+                const price = Number(item.price ?? item.unitPrice ?? 0);
+                const quantity = Number(item.quantity ?? 1);
+                const description = item.description ?? item.name ?? "Item";
+                const unit = item.unit ?? "";
+
+                const lineTotal = price * quantity;
+                subtotal += lineTotal;
+
+                html += `
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <div>
+                        <div class="fw-semibold">${description} (x${quantity})</div>
+                        <div class="small text-muted">${unit}</div>
+                    </div>
+                    <div class="fw-semibold">$${lineTotal.toFixed(2)}</div>
+                </div>`;
+            });
+
+            $cart.html(html);
+
+            $("#statItems").text(cart.length);
+            $("#statTotal").text("$" + subtotal.toFixed(2));
+        },
+
+        error: function(xhr) {
+            console.error("Cart load failed:", xhr);
+            $("#cartItems").html("<div class='text-danger'>Failed to load cart items.</div>");
+        }
     });
+
 }
 
 /**
@@ -269,12 +295,13 @@ function onCompletePayment(event) {
         method: 'POST',
         contentType: 'application/json',
         data: JSON.stringify(billingInfo),
+        cartItems: currentCart,
         success: function(response) {
             
             const purchase = {
                 billingId: response.billingId,
                 sessionId: billingInfo.sessionId,
-                items: $("#cartItems").data() || [],
+                items: currentCart,
                 total: billingInfo.totalAmount
             };
 

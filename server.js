@@ -494,11 +494,23 @@ app.delete("/api/products",  (req, res) => {
 
 // Given a session ID, get a list of items in cart, as product objects
 app.get('/api/cart', (req, res) => {
+   
+    console.log("CART API HIT");
+    console.log("SESSION ID RECEIVED:", req.query.sessionId);
+
+    db.all("SELECT * FROM carts", [], (err, carts) => {
+        console.log("ALL CARTS:", carts);
+
+        db.all("SELECT * FROM cartItems", [], (err2, items) => {
+            console.log("ALL CART ITEMS:", items);
+        });
+    });
+   
     if (req.query && "sessionId" in req.query) {
         const query = `SELECT p.id, p.description, p.category, p.unit, p.price, p.weight, p.color, p.details, i.quantity
-            FROM carts AS c 
-            LEFT JOIN cartItems AS i ON c.cartId = i.cartId
-            INNER JOIN products AS p ON i.productId = p.id
+            FROM carts c 
+             JOIN cartItems i ON c.cartId = i.cartId
+             JOIN products p ON i.productId = p.id
             WHERE c.sessionId = ?`;
         
         db.all(query, [req.query.sessionId], (err, rows) => {
@@ -506,6 +518,7 @@ app.get('/api/cart', (req, res) => {
                 console.error(err.message);
                 res.status(500).json("Server Error");
             } else {
+                console.log("CART ITEMS FOR SESSION:", rows);
                 res.json(rows);
             }
         });
@@ -660,8 +673,8 @@ app.post("/api/purchase", (req, finalRes) => {
         let purchaseId = Date.now().toString(16) + crypto.randomBytes(8).toString('hex');
 const cartQuery = `SELECT p.id, p.description, p.category, p.unit, p.price, p.weight, p.color, p.details, i.quantity
             FROM carts AS c 
-            INNER JOIN cartItems AS i ON c.cartId = i.cartId
-            INNER JOIN products AS p ON i.productId = p.id
+            LEFT JOIN cartItems i ON c.cartId = i.cartId
+            LEFT JOIN products p ON i.productId = p.id
             WHERE c.sessionId = ?`;
 
         db.all(cartQuery, [req.body.sessionId], (err, cartItems) => {
