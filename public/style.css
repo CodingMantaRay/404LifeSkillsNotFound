@@ -233,6 +233,7 @@ h3 {color: #3b1a0a;}
   color: #fff !important;
 }
 .table-dark-brown th {
+  background-color: #3b1a0a !important;
   color: #fff !important;
   font-weight: 600;
 }

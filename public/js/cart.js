@@ -54,140 +54,6 @@ function isValidOption(chosenOption, options) {
     return chosenOption == "" || options.indexOf(chosenOption) == -1
 }
 
-/**
- * Gets the given collection (a JSON array) from local storage.
- * If collection not found (i.e. item with key == collectionName not found 
- * in local storage), then returns undefined.
- * 
- * @param {string} collectionName - name (key) of collection to get from storage
- * @returns Array of objects converted from JSON, or undefined
- */
-function getItems(collectionName) {
-    let json = localStorage.getItem(collectionName);
-    let items;
-    if (json == null) {
-        return undefined;
-    }
-    items = JSON.parse(json);
-    if (!Array.isArray(items))
-        throw new Error(`localStorage item ${collectionName} is not an array`);
-    return items;
-}
-
-/**
- * Adds new item to local storage.
- * If an item with the same ID already exists, does NOT add item.
- * 
- * @param {string} collectionName - name of collection to store item in
- * @param {object} item - object with a unique "id" property
- * @returns true if item was added successfully, else false
- */
-function addItem(collectionName, item) {
-    let items = getItems(collectionName);
-    if (items == undefined)
-        items = [item];
-    else {
-        for (let i of items) {
-            if (i.id == item.id)
-                // Don't add item with duplicate ID
-                return false;
-        }
-        items.push(item);
-    }
-    localStorage.setItem(collectionName, JSON.stringify(items));
-    return true;
-}
-
-/**
- * Updates the item with the given ID in the given collection.
- * 
- * Note: If itemId and newItem.id differ, the existing item 
- * with id equal to itemId is removed and replaced with newItem,
- * UNLESS another item with newItem.id exists (in which case
- * nothing is updated).
- * 
- * @param {string} collectionName - name of collection to store item in
- * @param {string} itemId - id of object to update
- * @param {object} newItem - object with updated properties, including a unique "id" property
- * @param {function} verifyItem - function with one param that verifies the properties of newItem
- * @returns true if item was added successfully, else false
- */
-function updateItem(collectionName, itemId, newItem, verifyItem = (item) => true) {
-    // Verify newItem parameter
-    if (!verifyItem(newItem))
-        throw new Error("New item missing a required property");
-    
-    let items = getItems(collectionName);
-    if (items == undefined) {
-        // No saved items - create new item list
-        items = [newItem];
-    } else {
-        let idChanged = (itemId != newItem.id);
-        // Find an existing item with the given id (itemId parameter)
-        let itemIndex = null;
-        for (let i = 0; i < items.length; i++) {
-            // Case 1: idChanged false. Assumes only ONE item with given ID, returns first one.
-            // Case 2: idChanged true, no items with newItem.id. Update & return true.
-            // Case 3: idChanged true, item with newItem.id exists. Return false.
-            if (items[i].id == itemId) {
-                itemIndex = i;
-                if (!idChanged)
-                    break;
-            } if (idChanged && items[i].id == newItem.id) {
-                // Item with given ID already exists and we are not updating it
-                return false;
-            }
-        }
-        if (itemIndex != null) {
-            // If item exists, modify it
-            items[itemIndex] = newItem;
-        } else {
-            // If item doesn't exist, add it
-            items.push(newItem);
-        }
-    }
-
-    localStorage.setItem(collectionName, JSON.stringify(items));
-    return true;
-}
-
-function deleteItem(collectionName, itemId) {
-    // Get items from the given collection
-    let items = getItems(collectionName);
-    if (items == undefined) {
-        // No saved collection
-        return;
-    }
-    
-    // Delete all items with the given id (itemId parameter)
-    let numItems = items.length;
-    items = items.filter(function (a) {
-        return a.id != itemId;
-    });
-    if (items.length < numItems) {
-        localStorage.setItem(collectionName, JSON.stringify(items));
-    }
-}
-
-function filterItems(collectionName, searchId, filterId, matchesSearchFunc) {
-    let allItems = getItems(collectionName);
-    if (!allItems)
-        return;
-    let searchText = $(`#${searchId}`).val() ? $(`#${searchId}`).val().toLowerCase() : "";
-    let filterCat = $(`#${filterId}`).val() || "All";
-
-    let loadedItems = [];
-    for (let item of allItems) {
-        let matchesSearch = matchesSearchFunc(item, searchText);
-        let matchesCategory = (filterCat === "All" || item.category === filterCat);
-        if (matchesSearch && matchesCategory) {
-            loadedItems.push(item);
-        }
-    }
-
-    return loadedItems;
-}
-
 // -----------------------------------------------------------------------------------------------
 
 function checkPosNum($widget) {
@@ -342,7 +208,7 @@ function onAddToCart() {
     // Replace with actual session ID management
 
     $.ajax({
-        url: `/api/cart?sessionId=${sessionId}&productId=${productId}&quantity=1`,
+        url: `/api/cart?sessionId=${sessionId}&productId=${productId}`,
         type: 'POST',    
         
         success: function() {
@@ -466,8 +332,19 @@ $(document).ready(function() {
     });
 
     $("#clearCartBtn").on("click", function() {
-        localStorage.removeItem("cart");
-        loadCart();
+        $.ajax({
+            url: '/api/cart?' + $.param({
+                sessionId: sessionId
+            }),
+            type: 'DELETE',
+            contentType: 'application/json',
+            success: function (response) {
+                loadCart();
+            },
+            error: function (xhr) {
+                console.log('AJAX error when clearing cart. Status: ' + xhr.status);
+            }
+        });
     });
 
     $("#checkoutBtn").on("click", function() {
