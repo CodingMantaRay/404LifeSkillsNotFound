@@ -264,18 +264,18 @@ function loadProducts() {
                 html += `
                 <div class="col-md-6 col-md-6 mb-3">
                     <div class="entry-card border rounded p-3 bg-white h-100" style="border-left: 3px solid brown;">
-                    <div class="d-flex justify-content-between align-items-start">
+                    <div class="d-flex justify-content-between align-items-start gap-2">
                         <div>
-                            <div class="fw-bold">${product.description}</div>
-                            <div class="mt-1">
-                            <span class="bade text-bg-brown">${product.category}</span>
+                            <div class="fw-bold">${product.id}</div>
+                            <div class="mt-1 d-flex flex-wrap gap-1">
+                            <span class="badge text-bg-brown">${product.category}</span>
                             <span class="badge text-bg-brown-light">${product.unit}</span>
                             </div>
                         </div>
                         <button type="button" class="btn btn-sm btn-brown addToCartBtn" data-id="${product.id}">Add to Cart</button>
                         </div>
                         <div class="mt-2 fw-semibold">${product.description}</div>
-                        <div class="text-muted small mt-1">$${parseFloat(product.price).toFixed(2)}</div>
+                        <div class="text-muted small mt-2">$${parseFloat(product.price).toFixed(2)}</div>
                     </div>
                 </div>`;
             }
@@ -349,7 +349,7 @@ $(document).ready(function() {
 
     $("#checkoutBtn").on("click", function() {
        const checkoutData = {
-        sessionId: localStorage.getItem("cart_session"),
+        sessionId: sessionId,
        };
 
        
