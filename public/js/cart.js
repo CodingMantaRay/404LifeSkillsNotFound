@@ -5,8 +5,8 @@ let $productForm, $productId, $productDesc, $category, $unit, $price, $weight, $
 let $cartTable;
 let categories, units;
 let formWidgets, formItems;
-const sessionId = localStorage.getItem("cart_session") || (Math.random().toString(36).substring(2) + Date.now().toString(36));
-localStorage.setItem("cart_session", sessionId);
+const sessionId = localStorage.getItem("sessionId") || crypto.randomUUID();
+localStorage.setItem("sessionId", sessionId);
 
 // -----------------------------------------------------------------------------------------------
 // Utility functions:                                                                            |

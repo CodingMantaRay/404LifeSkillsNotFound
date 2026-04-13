@@ -182,7 +182,11 @@ function clearForm() {
 }
 
 function loadCart() {
-    const sessionId = localStorage.getItem("cart_session");
+ 
+
+    const sessionId = localStorage.getItem("sessionId");
+
+    console.log("SESSION ID:", sessionId);
 
     if (!sessionId) {
         console.error("Missing sessionId");
@@ -196,6 +200,8 @@ function loadCart() {
         data: { sessionId },
 
         success: function(response) {
+
+            console.log("RAW CART RESPONSE:", response);
 
             const cart = Array.isArray(response)
                 ? response
@@ -260,7 +266,7 @@ function onCompletePayment(event) {
         alert("Error: No purchase ID found. Please try again.");
         return;
     }
-    billingInfo.sessionId = localStorage.getItem("cart_session");
+    billingInfo.sessionId = localStorage.getItem("sessionId");
     billingInfo.email = "student.example@university.edu";
     billingInfo.totalAmount = parseFloat($("#total").text().replace("$", ""));
 
@@ -272,7 +278,7 @@ function onCompletePayment(event) {
         url: '/api/purchase',
         type: 'POST',
         contentType: 'application/json',
-        data: JSON.stringify({ sessionId: localStorage.getItem("cart_session") }),
+        data: JSON.stringify({ sessionId: localStorage.getItem("sessionId") }),
         success: function (response) {
             // Save purchaseId
             billingInfo.purchaseId = response.purchaseId;

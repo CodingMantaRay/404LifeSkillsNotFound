@@ -174,15 +174,14 @@ function clearForm() {
 }
 
 function loadPurchases() {
-    
-    const sessionId = localStorage.getItem('sessionId') || "ses1";
+    const sessionId = localStorage.getItem('sessionId') || crypto.randomUUID();
     console.log("Loading purchases for session:", sessionId);
 
     $.ajax({
         url: '/api/purchase/items',
         type: 'GET',
         data: { sessionId: sessionId },
-success: function(purchases) {
+        success: function (purchases) {
             console.log("Purchases received:", purchases);
 
             const $container = $("#returnProductCards");
@@ -205,25 +204,25 @@ success: function(purchases) {
 
                 if (matchesSearch && matchesFilter) {
                     html += `
-<div class="col-md-6">
-  <div class="entry-card border rounded p-3 bg-white h-100" style="border-left: 3px solid brown;">
-    <div class="d-flex justify-content-between align-items-start gap-2">
-      <div>
-        <div class="fw-bold">${product.description}</div>
-        <div class="mt-1 d-flex flex-wrap gap-1">
-          <span class="badge text-bg-brown">${product.category}</span>
-        </div>
-      </div>
-      <button type="button"
- class="btn btn-sm btn-brown selectBtn"
-        data-id="${product.productId}"
-data-price="${product.price}">
-        Select
-      </button>
-    </div>
-    <div class="text-muted small mt-2">$${product.price}</div>
-  </div>
-</div>`;
+                        <div class="col-md-6">
+                        <div class="entry-card border rounded p-3 bg-white h-100" style="border-left: 3px solid brown;">
+                            <div class="d-flex justify-content-between align-items-start gap-2">
+                            <div>
+                                <div class="fw-bold">${product.description}</div>
+                                <div class="mt-1 d-flex flex-wrap gap-1">
+                                <span class="badge text-bg-brown">${product.category}</span>
+                                </div>
+                            </div>
+                            <button type="button"
+                        class="btn btn-sm btn-brown selectBtn"
+                                data-id="${product.productId}"
+                        data-price="${product.price}">
+                                Select
+                            </button>
+                            </div>
+                            <div class="text-muted small mt-2">$${product.price}</div>
+                        </div>
+                        </div>`;
                 }
             }
 
@@ -231,7 +230,7 @@ data-price="${product.price}">
             $container.find(".selectBtn").on("click", onSelect);
         },
 
-        error: function(xhr) {
+        error: function (xhr) {
             console.error("Error loading purchases:", xhr.responseText);
             $("#returnProductCards").html(
                 `<p class="text-danger">Error loading purchases. Please try again later.</p>`
