@@ -174,47 +174,69 @@ function clearForm() {
 }
 
 function loadPurchases() {
+    
+    const sessionId = localStorage.getItem('sessionId') || "ses1";
+    console.log("Loading purchases for session:", sessionId);
+
     $.ajax({
         url: '/api/purchase/items',
         type: 'GET',
-        success: function(purchases) {
-            const $container = $("#returnProductCards")
+        data: { sessionId: sessionId },
+success: function(purchases) {
+            console.log("Purchases received:", purchases);
+
+            const $container = $("#returnProductCards");
             let html = "";
-            if (!purchases || purchases.length == 0) {
+
+            if (!purchases || purchases.length === 0) {
                 $container.html(`<p class="text-muted">No purchases found.</p>`);
                 return;
             }
-           
 
-    const searchTerm = $("#returnSearch").val().trim().toLowerCase();
-    const typeFilter = $("#returnFilter").val();
-    // TODO fix return filter
+            const searchTerm = ($("#returnSearch").val() || "").trim().toLowerCase();
+            const typeFilter = $("#returnFilter").val();
 
-    
-    for (let product of purchases) {
-        const matchesSearch = product.description.toLowerCase().includes(searchTerm);
-        const matchesFilter = (typeFilter === "All" || product.unit.toLowerCase() === typeFilter.toLowerCase());
-        if (matchesSearch && matchesFilter) {
-            // TODO change "Guides" to actual category
-            html += `<div class="col-md-6">
-                        <div class="card h-100 border-start border-brown-3">
-                        <div class="card-body d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="mb-1 fw-bold">${product.description}</h6>
-                                <span class="badge bg-light text-brown border">${product.category}</span>
-                            </div>
-                            <button class="btn btn-sm btn-brown selectBtn" data-id="${product.id}" data-price="${product.price}">Use Idea</button>
-                        </div>
-                    </div>`;
+            for (let product of purchases) {
+                const matchesSearch = product.description.toLowerCase().includes(searchTerm);
+                const matchesFilter = (
+                    typeFilter === "All" ||
+                    product.category.toLowerCase() === typeFilter.toLowerCase()
+                );
+
+                if (matchesSearch && matchesFilter) {
+                    html += `
+<div class="col-md-6">
+  <div class="entry-card border rounded p-3 bg-white h-100" style="border-left: 3px solid brown;">
+    <div class="d-flex justify-content-between align-items-start gap-2">
+      <div>
+        <div class="fw-bold">${product.description}</div>
+        <div class="mt-1 d-flex flex-wrap gap-1">
+          <span class="badge text-bg-brown">${product.category}</span>
+        </div>
+      </div>
+      <button type="button"
+ class="btn btn-sm btn-brown selectBtn"
+        data-id="${product.productId}"
+data-price="${product.price}">
+        Select
+      </button>
+    </div>
+    <div class="text-muted small mt-2">$${product.price}</div>
+  </div>
+</div>`;
+                }
+            }
+
+            $container.html(html || `<p class="text-muted">No purchases found.</p>`);
+            $container.find(".selectBtn").on("click", onSelect);
+        },
+
+        error: function(xhr) {
+            console.error("Error loading purchases:", xhr.responseText);
+            $("#returnProductCards").html(
+                `<p class="text-danger">Error loading purchases. Please try again later.</p>`
+            );
         }
-    }
-        $container.html(html || `<p class="text-muted">No purchases found.</p>`);
-        $container.find(".selectBtn").on("click", onSelect);
-
-    },
-error: function() {
-    $("#returnProductCards").html(`<p class="text-danger">Error loading purchases. Please try again later.</p>`);
-}
     });
 }
 

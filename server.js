@@ -649,22 +649,26 @@ function updateProductQuantity(cartId, productId, newQuantity, callback) {
 //     "category", "unit", "price", "weight", "color", "details"];
 const cartItemCols = ["id", "description", "category", "unit", "price", "weight", "color", "details", "quantity"];
 
-app.get("/api/purchase/items", (req, finalRes) => {
-    if (req.query && "sessionId" in req.query) {
-        const query = `SELECT i.productId, i.quantity, i.description, i.category, i.unit, i.price, i.weight, i.color, i.details 
-            FROM purchases AS p INNER JOIN purchasedItems AS i
-            ON p.purchaseId = i.purchaseId
-            WHERE p.sessionId = ?`;
-        
-        db.all(query, [req.query.sessionId], (err, rows) => {
-            if (err) {
-                console.error(err.message);
-                finalRes.status(500).json("Server Error");
-            } else {
-                finalRes.json(rows);
-            }
-        });
+app.get("/api/purchase/items", (req, res) => {
+    if (!req.query || !req.query.sessionId) {
+        return res.status(400).json({ message: "Missing sessionId" });
     }
+
+    const query = `
+        SELECT i.productId, i.quantity, i.description, i.category, i.unit, i.price, i.weight, i.color, i.details 
+        FROM purchases AS p 
+        INNER JOIN purchasedItems AS i
+        ON p.purchaseId = i.purchaseId
+        WHERE p.sessionId = ?
+    `;
+    
+    db.all(query, [req.query.sessionId], (err, rows) => {
+        if (err) {
+            console.error(err.message);
+            return res.status(500).json("Server Error");
+        }
+        res.json(rows);
+    });
 });
 
 // Post purchase - get purchaseId back
