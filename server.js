@@ -254,12 +254,25 @@ function putApprove(req, res) {
 const articleFields = ["id", "title", "category", "format", "value", "notes"];
 
 app.get('/api/articles', (req, res) => {
-    db.all("SELECT * FROM articles", [], (err, rows) => {
+    let articleId = null;
+    if (req.query && "id" in req.query) {
+        articleId = req.query.id;
+    }
+    let query = "SELECT * FROM articles";
+    let params = [];
+    if (articleId) {
+        query += " WHERE id=?";
+        params.push(req.query.id);
+    }
+    db.all(query, params, (err, rows) => {
         if (err) {
             console.error(err.message);
             res.status(500).json({ message: 'Error reading articles' });
         } else {
-            res.json(rows);
+            if (articleId && rows.length > 0)
+                res.json(rows[0])
+            else 
+                res.json(rows);
         }
     });
 });

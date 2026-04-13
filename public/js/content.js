@@ -16,7 +16,7 @@ function setError($widget, isError) {
 function loadOptions($select) {
     let options = [];
     // Loop through "option" children of $select
-   $select.children("option").each(function() {
+    $select.children("option").each(function () {
         let $option = $(this);
         // Don't include options with value "" (i.e. placeholder options)
         if ($option.val() != "") {
@@ -24,11 +24,11 @@ function loadOptions($select) {
             options.push($option.text());
         }
     });
-    return options; 
+    return options;
 }
 
 function isValidOption(chosenOption, options) {
-    return chosenOption == "" || options.includes(chosenOption);
+    return options.includes(chosenOption);
 }
 
 /**
@@ -53,24 +53,24 @@ function checkForm() {
     setError($articleTitle, isError);
     if (isError)
         formIsValid = false;
-    
+
     // Check article category
     article.category = $category.val().trim();
-    isError = isValidOption(article.category, categories);
+    isError = !isValidOption(article.category, categories);
     setError($category, isError);
     if (isError)
         formIsValid = false;
 
     // Check article format
     article.format = $format.val().trim();
-    isError = isValidOption(article.format, formats);
+    isError = !isValidOption(article.format, formats);
     setError($format, isError);
     if (isError)
         formIsValid = false;
 
     // Check article value
     article.value = $value.val().trim();
-    isError = isValidOption(article.value, values);
+    isError = !isValidOption(article.value, values);
     setError($value, isError);
     if (isError)
         formIsValid = false;
@@ -180,10 +180,10 @@ function addArticle(article) {
  */
 function updateArticle(articleId, newArticle) {
     // Verify newArticle parameter
-    if (!("id" in newArticle && "title" in newArticle && "category" in newArticle 
-            && "format" in newArticle && "value" in newArticle && "notes" in newArticle))
+    if (!("id" in newArticle && "title" in newArticle && "category" in newArticle
+        && "format" in newArticle && "value" in newArticle && "notes" in newArticle))
         throw new Error("New article missing a required property");
-    
+
     let articles = getArticles();
     if (articles == undefined) {
         // No saved articles - create new article list
@@ -224,7 +224,7 @@ function deleteArticle(articleId) {
         // No saved articles
         return;
     }
-    
+
     // Delete all article with the given id (articleId parameter)
     let numArticles = articles.length;
     articles = articles.filter(function (a) {
@@ -233,46 +233,60 @@ function deleteArticle(articleId) {
     if (articles.length < numArticles) {
         localStorage.setItem("articles", JSON.stringify(articles));
     }
-    
+
 }
 
 async function loadArticles() {
     try {
-    const response = await fetch("/api/articles");
-    const articles = await response.json();
-   
+        const response = await fetch("/api/articles");
+        const articles = await response.json();
 
-   
-   
-       if (!articles) return;
-    let searchText = $("#contentSearch").val() ? $("#contentSearch").val().toLowerCase() : "";
-    let filterCat = $("#filterCategory").val() || "All";
+        if (!articles) return;
+        let searchText = $("#contentSearch").val() ? $("#contentSearch").val().toLowerCase() : "";
+        let filterCat = $("#filterCategory").val() || "All";
 
-    let html = "";
-    for (let article of articles) {
-        let matchesSearch = article.title.toLowerCase().includes(searchText) || article.id.toLowerCase().includes(searchText);
-        let matchesCategory = (filterCat === "All" || article.category === filterCat);
-        if (matchesSearch && matchesCategory) {
-        html += '<div class="col-md-6"><div class="border rounded p-3 h-100 bg-white">';
-        html += '<div class="d-flex justify-content-between align-items-start gap-2"><div>';
-        html += `<div class="fw-bold">${article.id}</div>`;
-        html += `<div class="text-muted small">${article.category} • ${article.format} • ${article.value}</div></div>`;
-        html += '<div class="d-flex gap-2">';
-        html += `<button type="button" class="btn btn-sm btn-outline-dark editBtn" data-id="${article.id}">Edit</button>`;
-        html += `<button type="button" class="btn btn-sm btn-outline-danger deleteBtn" data-id="${article.id}" data-bs-toggle="modal" data-bs-target="#deleteModal">Delete</button>`;
-        html += "</div></div>";
-        html += `<div class="mt-2">${article.title}</div>`;
-        html += `<div class="text-muted small mt-2">Notes: ${article.notes ? article.notes : "none"}</div>`;
-        html += "</div></div>";
+        let html = "";
+        for (let article of articles) {
+            let matchesSearch = article.title.toLowerCase().includes(searchText) || article.id.toLowerCase().includes(searchText);
+            let matchesCategory = (filterCat === "All" || article.category === filterCat);
+            if (matchesSearch && matchesCategory) {
+                html += `<div class="col-md-6">
+                    <div class="entry-card border rounded p-3 bg-white h-100" style="border-left: 3px solid brown;">
+                    <div class="d-flex justify-content-between align-items-start gap-2">
+                        <div>
+                        <div class="fw-bold">${article.id}</div>
+                        <div class="mt-1 d-flex flex-wrap gap-1">
+                            <span class="badge text-bg-brown">${article.category}</span>
+                            <span class="badge text-bg-brown-light">${article.format}</span>
+                            <span class="badge text-bg-brown-light">${article.value}</span>
+                        </div>
+                        </div>
+                        <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-sm btn-outline-brown editBtn" data-id="${article.id}">Edit</button>
+                        <button type="button" class="btn btn-sm btn-outline-danger deleteBtn" data-id="${article.id}" data-bs-toggle="modal" data-bs-target="#deleteModal">Delete</button>
+                        </div>
+                    </div>
+                    <div class="mt-2 fw-semibold">${article.title}</div>
+                    <div class="text-muted small mt-2">Notes: ${article.notes ? article.notes : "none"}</div>
+                    </div>
+                </div>`
+            }
         }
-    }
-    $("#contentCards").html(html);
-    $(".editBtn").on("click", onEdit);
-    $(".deleteBtn").on("click", handleDeleteBtn);
-} catch (err) {
-    console.error("Error loading articles:", err);
 
-}
+        if (articles.length == 0) {
+            html = `<div id="emptyState" class="col-12 text-center py-4 d-none">
+                <i class="bi bi-journal-x" style="font-size: 2.5rem; color: #c97a3a;"></i>
+                <p class="mt-2 text-muted mb-0">No articles yet. Use the form to add your first one.</p>
+              </div>`;
+        }
+        
+        $("#contentCards").html(html);
+        $(".editBtn").on("click", onEdit);
+        $(".deleteBtn").on("click", handleDeleteBtn);
+    } catch (err) {
+        console.error("Error loading articles:", err);
+
+    }
 }
 
 /**
@@ -286,25 +300,25 @@ function onSave(event) {
     if (!article)
         return;
 
-        const isEdit = ($contentForm.attr("data-mode") == "edit");
-        const apiUrl = isEdit ? "/api/articles/update" : "/api/articles/add";
+    const isEdit = ($contentForm.attr("data-mode") == "edit");
+    const apiUrl = "/api/articles";
 
-        $.ajax({
-            url: `${apiUrl}${isEdit ? `?id=${$editId.val()}` : ""}`,
-            type: "POST",
-            contentType: "application/json",
-            data: JSON.stringify(article),
-            success: function(response) {
-                alert(isEdit ? "Article updated successfully!" : "Article added successfully!");
-                changeToAddForm();
-                clearForm();
-                loadArticles();
-            },
-            error: function() {
-                alert("Error: Failed to save article");
-            }
-        });
-  
+    $.ajax({
+        url: `${apiUrl}${isEdit ? `?id=${$editId.val()}` : ""}`,
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify(article),
+        success: function (response) {
+            alert(isEdit ? "Article updated successfully!" : "Article added successfully!");
+            changeToAddForm();
+            clearForm();
+            loadArticles();
+        },
+        error: function () {
+            alert("Error: Failed to save article");
+        }
+    });
+
 }
 
 /**
@@ -317,22 +331,22 @@ async function onEdit() {
         return;
 
     changeToEditForm(id);
-   try {
-    const response = await fetch(`/api/articles?id=${id}`);
-    const data = await response.json();
-    const article = Array.isArray(data) ? data[0] : data;
-    
+    try {
+        const response = await fetch(`/api/articles?id=${id}`);
+        const data = await response.json();
+        const article = Array.isArray(data) ? data[0] : data;
 
-    if (article) {    // Update form to reflect the current article information
-    $articleId.val(article.id);
-    $articleTitle.val(article.title);
-    $category.val(article.category);
-    $format.val(article.format);
-    $value.val(article.value);
-    $notes.val(article.notes);
-}
-   } catch (err) {
-    console.error("Error loading article information:", err);
+
+        if (article) {    // Update form to reflect the current article information
+            $articleId.val(article.id);
+            $articleTitle.val(article.title);
+            $category.val(article.category);
+            $format.val(article.format);
+            $value.val(article.value);
+            $notes.val(article.notes);
+        }
+    } catch (err) {
+        console.error("Error loading article information:", err);
     }
 }
 
@@ -346,15 +360,19 @@ function onCancelEdit() {
  * Deletes the article with an ID matching the button's data-id. 
  */
 function onDelete() {
-   const articleId = $confirmDeleteButton.attr("data-id");
+    const articleId = $confirmDeleteButton.attr("data-id");
     $.ajax({
-        url: `/api/articles/delete?id=${articleId}`,
+        url: `/api/articles`,
         type: "DELETE",
-        success: function() {
+        contentType: 'application/json',
+        data: JSON.stringify({
+            "id": articleId,
+        }),
+        success: function () {
             $("#deleteModal").modal("hide");
             loadArticles();
         },
-        error: function() {
+        error: function () {
             alert("Error: Failed to delete article");
         }
     });
@@ -372,13 +390,10 @@ function handleDeleteBtn() {
 
 function onCancelDelete() {
     changeToAddForm();
-        clearForm();
+    clearForm();
 }
 
-$(document).ready(function() {
-    
-  
-    
+$(document).ready(function () {
     $formHeader = $("#formHeader");
     $formModeBadge = $("#formModeBadge");
     $editModeBanner = $("#editModeBanner");
@@ -393,13 +408,17 @@ $(document).ready(function() {
     $notes = $($contentForm.find("#notes")[0]);
     $confirmDeleteButton = $("#confirmDeleteButton");
 
-    const checkEmpty = function() {
+    const checkEmpty = function () {
         setError($(this), ($(this).val().trim() == ""));
     };
 
-        const checkOption = function($select, options) {
-        setError($select, isValidOption($select.val().trim(), options));
+    const checkOption = function ($select, options) {
+        setError($select, !isValidOption($select.val().trim(), options));
     };
+
+    categories = loadOptions($category);
+    formats = loadOptions($format);
+    values = loadOptions($value);
 
     $contentForm.on("submit", onSave);
     $articleId.on("keyup", checkEmpty);
@@ -409,14 +428,11 @@ $(document).ready(function() {
     $value.on("change", () => checkOption($value, values));
     $confirmDeleteButton.on("click", onDelete);
     $("#cancelEditBtn").on("click", onCancelEdit);
-   
-     $("#contentSearch, #filterCategory").on("keyup change", function () {
+    $("#clearBtn").on("click", clearForm);
+
+    $("#contentSearch, #filterCategory").on("keyup change", function () {
         loadArticles();
-     });
-     
-    categories = loadOptions($category);
-    formats = loadOptions($format);
-    values = loadOptions($value);
+    });
 
     changeToAddForm();
     loadArticles();
