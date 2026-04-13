@@ -47,26 +47,6 @@ function loadOptions($select) {
     return options;
 }
 
-/**
- * Gets the given collection (a JSON array) from local storage.
- * If collection not found (i.e. item with key == collectionName not found 
- * in local storage), then returns undefined.
- * 
- * @param {string} collectionName - name (key) of collection to get from storage
- * @returns Array of objects converted from JSON, or undefined
- */
-function getItems(collectionName, defaultValue = undefined) {
-    let json = localStorage.getItem(collectionName);
-    let items;
-    if (json == null) {
-        return defaultValue;
-    }
-    items = JSON.parse(json);
-    if (!Array.isArray(items))
-        throw new Error(`localStorage item ${collectionName} is not an array`);
-    return items;
-}
-
 function checkEmpty($widget) {
     const value = $widget.val().trim();
     const isError = (value == "");
@@ -201,16 +181,9 @@ function clearForm() {
     $("#billingJsonPreview").text("");
 }
 
-/*(function getCart() {
-    const products = new Map(getItems("products", []).map((o)=> [o.id, o]));
-    const cart = getItems("cart", []).map((o)=>products.get(o));
-    return cart;
-}
-*/
 function loadCart() {
-     const sessionId = localStorage.getItem("sessionId") 
-     currentCart = cart;
-     if (!sessionId) {
+    const sessionId = localStorage.getItem("cart_session");
+    if (!sessionId) {
         console.error("No session ID found in localStorage");
         return;
      }
@@ -282,51 +255,67 @@ function onCompletePayment(event) {
         alert("Error: No purchase ID found. Please try again.");
         return;
     }
-    billingInfo.sessionId = localStorage.getItem("sessionId") || "ses1";
+    billingInfo.sessionId = localStorage.getItem("cart_session");
     billingInfo.email = "student.example@university.edu";
     billingInfo.totalAmount = parseFloat($("#total").text().replace("$", ""));
 
     const jsonString = JSON.stringify(billingInfo, null, 2);
     $("#billingJsonPreview").text(jsonString);
     
-    
+    let purchaseId = null;
     $.ajax({
-        url: '/api/billing',
-        method: 'POST',
+        url: '/api/purchase',
+        type: 'POST',
         contentType: 'application/json',
-        data: JSON.stringify(billingInfo),
-        cartItems: currentCart,
-        success: function(response) {
-            
-            const purchase = {
-                billingId: response.billingId,
-                sessionId: billingInfo.sessionId,
-                items: currentCart,
-                total: billingInfo.totalAmount
-            };
+        data: JSON.stringify({ sessionId: localStorage.getItem("cart_session") }),
+        success: function (response) {
+            // Save purchaseId
+            billingInfo.purchaseId = response.purchaseId;
 
-            sessionStorage.setItem("lastPurchase", JSON.stringify(purchase));
-            $("#paymentStatus")
+            // Send billing info
+            $.ajax({
+                url: '/api/billing',
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(billingInfo),
+                success: function (response) {
 
-            .removeClass("alert-brown")
-            .addClass("alert-success")
-            .html(`<i class="bi bi-check-circle"></i> Success! Order ID: ${response.billingId}`);
+                    const purchase = {
+                        billingId: response.billingId,
+                        sessionId: billingInfo.sessionId,
+                        items: $("#cartItems").data() || [],
+                        total: billingInfo.totalAmount
+                    };
 
-            localStorage.setItem("cart", JSON.stringify([]));
-            loadCart();
+                    sessionStorage.setItem("lastPurchase", JSON.stringify(purchase));
+                    $("#paymentStatus")
 
-            setTimeout(() => {
-                window.location.href = "finalizationpage.html";
-            }, 3000);
+                        .removeClass("alert-brown")
+                        .addClass("alert-success")
+                        .html(`<i class="bi bi-check-circle"></i> Success! Order ID: ${response.billingId}`);
+
+                    localStorage.setItem("cart", JSON.stringify([]));
+                    loadCart();
+
+                    setTimeout(() => {
+                        window.location.href = "finalizationpage.html";
+                    }, 3000);
+                },
+                error: function (xhr) {
+                    $("#paymentStatus")
+                        .removeClass("alert-brown")
+                        .addClass("alert-danger")
+                        .text("Payment failed. Please try again.");
+                }
+            });
         },
-        error: function(xhr) {
+        error: function (xhr) {
             $("#paymentStatus")
             .removeClass("alert-brown")
             .addClass("alert-danger")
-            .text("Payment failed. Please try again.");
-        }
+            .text("Purchase failed. Please try again."); }
     });
-        }
+}
 
 
 $(document).ready(function () {
