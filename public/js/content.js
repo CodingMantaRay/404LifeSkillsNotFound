@@ -91,6 +91,7 @@ function changeToAddForm() {
     $editId.val("");
     $contentForm.attr("data-mode", "add");
     $articleId.attr("disabled", false);
+    $articleId.removeAttr("readonly");
     $contentForm.find("#saveBtn").removeClass("d-none");
     $contentForm.find("#updateBtn").addClass("d-none");
 }
@@ -102,6 +103,7 @@ function changeToEditForm(id) {
     $editId.val(id);
     $contentForm.attr("data-mode", "edit");
     $articleId.attr("disabled", true);
+    $articleId.attr("readonly");
     $contentForm.find("#saveBtn").addClass("d-none");
     $contentForm.find("#updateBtn").removeClass("d-none");
 }
