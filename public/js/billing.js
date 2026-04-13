@@ -182,11 +182,7 @@ function clearForm() {
 }
 
 function loadCart() {
- 
-
-    const sessionId = localStorage.getItem("sessionId");
-
-    console.log("SESSION ID:", sessionId);
+    const sessionId = localStorage.getItem("cart_session");
 
     if (!sessionId) {
         console.error("Missing sessionId");
@@ -200,8 +196,6 @@ function loadCart() {
         data: { sessionId },
 
         success: function(response) {
-
-            console.log("RAW CART RESPONSE:", response);
 
             const cart = Array.isArray(response)
                 ? response
