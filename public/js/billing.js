@@ -208,31 +208,43 @@ function clearForm() {
 }
 */
 function loadCart() {
-     const sessionId = localStorage.getItem("sessionId") 
-     currentCart = cart;
-     if (!sessionId) {
-        console.error("No session ID found in localStorage");
+ 
+
+    const sessionId = localStorage.getItem("sessionId");
+
+    console.log("SESSION ID:", sessionId);
+
+    if (!sessionId) {
+        console.error("Missing sessionId");
+        $("#cartItems").html("<div class='text-danger'>No session found.</div>");
         return;
-     }
+    }
 
     $.ajax({
         url: "/api/cart",
         method: "GET",
         data: { sessionId },
-        success: function(cart) {
 
-            console.log("CART RESPONSE:", cart);
+        success: function(response) {
+
+            console.log("RAW CART RESPONSE:", response);
+
+            const cart = Array.isArray(response)
+                ? response
+                : (response.cart || response.items || []);
 
             const $cart = $("#cartItems");
             let html = "";
             let subtotal = 0;
 
-            if (!Array.isArray(cart) || cart.length === 0) {
+            if (cart.length === 0) {
                 $cart.html("<div class='text-muted'>Your cart is empty.</div>");
                 $("#statItems").text("0");
                 $("#statTotal").text("$0.00");
                 return;
             }
+
+            currentCart = cart;
 
             cart.forEach(item => {
 
@@ -241,8 +253,7 @@ function loadCart() {
                 const description = item.description ?? item.name ?? "Item";
                 const unit = item.unit ?? "";
 
-                const lineTotal = price * quantity;
-                subtotal += lineTotal;
+                subtotal += price * quantity;
 
                 html += `
                 <div class="d-flex justify-content-between align-items-start mb-2">
@@ -250,7 +261,7 @@ function loadCart() {
                         <div class="fw-semibold">${description} (x${quantity})</div>
                         <div class="small text-muted">${unit}</div>
                     </div>
-                    <div class="fw-semibold">$${lineTotal.toFixed(2)}</div>
+                    <div class="fw-semibold">$${(price * quantity).toFixed(2)}</div>
                 </div>`;
             });
 
@@ -261,11 +272,10 @@ function loadCart() {
         },
 
         error: function(xhr) {
-            console.error("Cart load failed:", xhr);
-            $("#cartItems").html("<div class='text-danger'>Failed to load cart items.</div>");
+            console.error(xhr);
+            $("#cartItems").html("<div class='text-danger'>Cart failed to load.</div>");
         }
     });
-
 }
 
 /**
@@ -344,7 +354,13 @@ $(document).ready(function () {
     //     const initialData = ["HS101", "HS102"];
     //     localStorage.setItem("cart", JSON.stringify(initialData));
     // }
+let sessionId = localStorage.getItem("sessionId");
 
+if (!sessionId) {
+    sessionId = crypto.randomUUID();
+    localStorage.setItem("sessionId", sessionId);
+
+}
     $billingForm = $("#billingForm");
     form.$fullName = $($billingForm.find("#fullName")[0]); 
     form.$address = $($billingForm.find("#address")[0]); 
